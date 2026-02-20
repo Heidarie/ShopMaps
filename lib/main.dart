@@ -62,6 +62,14 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0E7C7B)),
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0E7C7B),
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.system,
       home: HomeScreen(
         controller: _controller,
       ),

@@ -22,6 +22,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
   late final TextEditingController _itemController;
   List<ItemHint> _hints = const [];
   String? _selectedCategory;
+  int _selectedQuantity = 1;
 
   @override
   void initState() {
@@ -79,23 +80,50 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                                       style: Theme.of(context).textTheme.titleMedium,
                                     ),
                                     const SizedBox(height: 8),
-                                    ...entry.value.map(
-                                      (item) => ListTile(
+                                    for (var itemIndex = 0;
+                                        itemIndex < entry.value.length;
+                                        itemIndex++) ...[
+                                      ListTile(
                                         dense: true,
                                         contentPadding: EdgeInsets.zero,
-                                        title: Text(item.name),
-                                        trailing: IconButton(
-                                          tooltip: l10n.deleteItem,
-                                          icon: const Icon(Icons.delete_outline),
-                                          onPressed: () {
-                                            widget.controller.removeItemFromList(
-                                              listId: groceryList.id,
-                                              itemId: item.id,
-                                            );
-                                          },
+                                        onTap: () {
+                                          _editItem(
+                                            listId: groceryList.id,
+                                            item: entry.value[itemIndex],
+                                          );
+                                        },
+                                        title: Text(
+                                          '${entry.value[itemIndex].name} x ${entry.value[itemIndex].quantity}',
+                                        ),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              tooltip: l10n.edit,
+                                              icon: const Icon(Icons.edit_outlined),
+                                              onPressed: () {
+                                                _editItem(
+                                                  listId: groceryList.id,
+                                                  item: entry.value[itemIndex],
+                                                );
+                                              },
+                                            ),
+                                            IconButton(
+                                              tooltip: l10n.deleteItem,
+                                              icon: const Icon(Icons.delete_outline),
+                                              onPressed: () {
+                                                widget.controller.removeItemFromList(
+                                                  listId: groceryList.id,
+                                                  itemId: entry.value[itemIndex].id,
+                                                );
+                                              },
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
+                                      if (itemIndex < entry.value.length - 1)
+                                        const Divider(height: 1),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -143,6 +171,38 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                                     : l10n.categoryLabel(_selectedCategory!),
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                l10n.quantity,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                onPressed: _selectedQuantity > 1
+                                    ? () {
+                                        setState(() {
+                                          _selectedQuantity -= 1;
+                                        });
+                                      }
+                                    : null,
+                                icon: const Icon(Icons.remove_circle_outline),
+                              ),
+                              Text(
+                                '$_selectedQuantity',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedQuantity += 1;
+                                  });
+                                },
+                                icon: const Icon(Icons.add_circle_outline),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           if (_hints.isNotEmpty) ...[
@@ -296,6 +356,31 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     });
   }
 
+  Future<void> _editItem({
+    required String listId,
+    required GroceryItem item,
+  }) async {
+    final result = await showDialog<_EditItemResult>(
+      context: context,
+      builder: (_) => _EditItemDialog(
+        item: item,
+        categories: widget.controller.categories,
+      ),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    await widget.controller.updateItemInList(
+      listId: listId,
+      itemId: item.id,
+      itemName: result.name,
+      category: result.category,
+      quantity: result.quantity,
+    );
+  }
+
   Future<String?> _promptAndCreateCategory() async {
     final l10n = AppLocalizations.of(context);
     var draftName = '';
@@ -366,6 +451,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       listId: listId,
       itemName: itemName,
       category: _selectedCategory!,
+      quantity: _selectedQuantity,
     );
 
     if (!mounted) {
@@ -376,6 +462,165 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       _itemController.clear();
       _hints = const [];
       _selectedCategory = null;
+      _selectedQuantity = 1;
     });
+  }
+}
+
+class _EditItemResult {
+  const _EditItemResult({
+    required this.name,
+    required this.category,
+    required this.quantity,
+  });
+
+  final String name;
+  final String category;
+  final int quantity;
+}
+
+class _EditItemDialog extends StatefulWidget {
+  const _EditItemDialog({
+    required this.item,
+    required this.categories,
+  });
+
+  final GroceryItem item;
+  final List<String> categories;
+
+  @override
+  State<_EditItemDialog> createState() => _EditItemDialogState();
+}
+
+class _EditItemDialogState extends State<_EditItemDialog> {
+  late final TextEditingController _nameController;
+  late int _draftQuantity;
+  late String _draftCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.item.name);
+    _draftQuantity = widget.item.quantity;
+    _draftCategory = widget.item.category;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final categories = [...widget.categories];
+    if (!categories.any((entry) => entry.toLowerCase() == _draftCategory.toLowerCase())) {
+      categories.add(_draftCategory);
+    }
+    categories.sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
+          l10n.categoryLabel(b).toLowerCase(),
+        ));
+
+    String? selectedCategory;
+    for (final category in categories) {
+      if (category.toLowerCase() == _draftCategory.toLowerCase()) {
+        selectedCategory = category;
+        break;
+      }
+    }
+
+    return AlertDialog(
+      title: Text(l10n.editItem),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: l10n.itemName),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: selectedCategory,
+              items: categories
+                  .map(
+                    (category) => DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(l10n.categoryLabel(category)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) {
+                  return;
+                }
+                setState(() {
+                  _draftCategory = value;
+                });
+              },
+              decoration: InputDecoration(labelText: l10n.category),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  l10n.quantity,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: _draftQuantity > 1
+                      ? () {
+                          setState(() {
+                            _draftQuantity -= 1;
+                          });
+                        }
+                      : null,
+                  icon: const Icon(Icons.remove_circle_outline),
+                ),
+                Text(
+                  '$_draftQuantity',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _draftQuantity += 1;
+                    });
+                  },
+                  icon: const Icon(Icons.add_circle_outline),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () {
+            final cleanedName = _nameController.text.trim();
+            if (cleanedName.isEmpty || _draftCategory.trim().isEmpty) {
+              return;
+            }
+            Navigator.pop(
+              context,
+              _EditItemResult(
+                name: cleanedName,
+                category: _draftCategory,
+                quantity: _draftQuantity,
+              ),
+            );
+          },
+          child: Text(l10n.save),
+        ),
+      ],
+    );
   }
 }

@@ -21,6 +21,19 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTab = 0;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedTab);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   Future<void> _startGoShoppingFlow() async {
     final l10n = AppLocalizations.of(context);
@@ -163,8 +176,16 @@ class _HomeScreenState extends State<HomeScreen> {
           appBar: AppBar(
             title: Text(l10n.appTitle),
           ),
-          body: IndexedStack(
-            index: _selectedTab,
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              if (_selectedTab == index) {
+                return;
+              }
+              setState(() {
+                _selectedTab = index;
+              });
+            },
             children: [
               _MarketLayoutsTab(controller: widget.controller),
               _GroceryListsTab(controller: widget.controller),
@@ -188,9 +209,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 NavigationBar(
                   selectedIndex: _selectedTab,
                   onDestinationSelected: (index) {
+                    if (index == _selectedTab) {
+                      return;
+                    }
                     setState(() {
                       _selectedTab = index;
                     });
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                    );
                   },
                   destinations: [
                     NavigationDestination(

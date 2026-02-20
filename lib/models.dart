@@ -169,6 +169,7 @@ class GroceryItem {
     required this.id,
     required this.name,
     required this.category,
+    required this.quantity,
   });
 
   factory GroceryItem.fromJson(Map<String, dynamic> json) {
@@ -176,15 +177,22 @@ class GroceryItem {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       category: (json['category'] ?? '').toString(),
+      quantity: _toPositiveInt(json['quantity']),
     );
   }
 
   final String id;
   final String name;
   final String category;
+  final int quantity;
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'category': category};
+    return {
+      'id': id,
+      'name': name,
+      'category': category,
+      'quantity': quantity,
+    };
   }
 }
 
@@ -251,6 +259,16 @@ List<Map<String, dynamic>> _toDynamicList(dynamic source) {
       .whereType<Map>()
       .map((map) => Map<String, dynamic>.from(map))
       .toList();
+}
+
+int _toPositiveInt(dynamic source, {int fallback = 1}) {
+  final parsed = switch (source) {
+    int value => value,
+    String value => int.tryParse(value) ?? fallback,
+    _ => fallback,
+  };
+
+  return parsed < 1 ? fallback : parsed;
 }
 
 List<String> _uniqueCaseInsensitive(List<String> source) {
