@@ -169,6 +169,7 @@ class AppController extends ChangeNotifier {
     required String listId,
     required String itemName,
     required String category,
+    required int quantity,
   }) async {
     final cleanedName = itemName.trim();
     if (cleanedName.isEmpty) {
@@ -179,6 +180,7 @@ class AppController extends ChangeNotifier {
     if (canonicalCategory.isEmpty) {
       return;
     }
+    final normalizedQuantity = quantity < 1 ? 1 : quantity;
 
     if (_resolveCategory(canonicalCategory) == null) {
       await addCategory(canonicalCategory);
@@ -193,7 +195,12 @@ class AppController extends ChangeNotifier {
     final list = next[index];
     final updatedItems = [
       ...list.items,
-      GroceryItem(id: createId(), name: cleanedName, category: canonicalCategory),
+      GroceryItem(
+        id: createId(),
+        name: cleanedName,
+        category: canonicalCategory,
+        quantity: normalizedQuantity,
+      ),
     ];
     final updatedMemory = _upsertItemCategoryMemory(
       source: _data.itemCategoryMemory,
@@ -202,6 +209,62 @@ class AppController extends ChangeNotifier {
     );
 
     next[index] = list.copyWith(items: updatedItems);
+    _data = _data.copyWith(
+      groceryLists: next,
+      itemCategoryMemory: updatedMemory,
+    );
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> updateItemInList({
+    required String listId,
+    required String itemId,
+    required String itemName,
+    required String category,
+    required int quantity,
+  }) async {
+    final cleanedName = itemName.trim();
+    if (cleanedName.isEmpty) {
+      return;
+    }
+
+    final canonicalCategory = _resolveCategory(category) ?? category.trim();
+    if (canonicalCategory.isEmpty) {
+      return;
+    }
+    final normalizedQuantity = quantity < 1 ? 1 : quantity;
+
+    if (_resolveCategory(canonicalCategory) == null) {
+      await addCategory(canonicalCategory);
+    }
+
+    final next = [..._data.groceryLists];
+    final listIndex = next.indexWhere((list) => list.id == listId);
+    if (listIndex == -1) {
+      return;
+    }
+
+    final list = next[listIndex];
+    final itemIndex = list.items.indexWhere((item) => item.id == itemId);
+    if (itemIndex == -1) {
+      return;
+    }
+
+    final updatedItems = [...list.items];
+    updatedItems[itemIndex] = GroceryItem(
+      id: list.items[itemIndex].id,
+      name: cleanedName,
+      category: canonicalCategory,
+      quantity: normalizedQuantity,
+    );
+    final updatedMemory = _upsertItemCategoryMemory(
+      source: _data.itemCategoryMemory,
+      itemName: cleanedName,
+      category: canonicalCategory,
+    );
+
+    next[listIndex] = list.copyWith(items: updatedItems);
     _data = _data.copyWith(
       groceryLists: next,
       itemCategoryMemory: updatedMemory,
@@ -320,7 +383,7 @@ class AppController extends ChangeNotifier {
       if (normalizedName.isEmpty) {
         continue;
       }
-      if (normalizedName.contains(normalizedQuery)) {
+      if (normalizedName.startsWith(normalizedQuery)) {
         byName[normalizedName] = ItemHint(
           itemName: remembered.itemName,
           category: _resolveCategory(remembered.category) ?? remembered.category,
@@ -334,7 +397,7 @@ class AppController extends ChangeNotifier {
         if (normalizedName.isEmpty) {
           continue;
         }
-        if (normalizedName.contains(normalizedQuery) &&
+        if (normalizedName.startsWith(normalizedQuery) &&
             !byName.containsKey(normalizedName)) {
           byName[normalizedName] = ItemHint(
             itemName: item.name,
@@ -345,22 +408,9 @@ class AppController extends ChangeNotifier {
     }
 
     final hints = byName.values.toList();
-    hints.sort((a, b) {
-      final aName = a.itemName.toLowerCase();
-      final bName = b.itemName.toLowerCase();
-      final aStartsWith = aName.startsWith(normalizedQuery);
-      final bStartsWith = bName.startsWith(normalizedQuery);
+    hints.sort((a, b) => a.itemName.toLowerCase().compareTo(b.itemName.toLowerCase()));
 
-      if (aStartsWith && !bStartsWith) {
-        return -1;
-      }
-      if (!aStartsWith && bStartsWith) {
-        return 1;
-      }
-      return aName.compareTo(bName);
-    });
-
-    return hints.take(8).toList();
+    return hints.take(5).toList();
   }
 
   String? findCategoryForExactItem(String itemName) {

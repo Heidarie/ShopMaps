@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
+import '../models.dart';
 
 class GoShoppingScreen extends StatefulWidget {
   const GoShoppingScreen({
@@ -21,19 +22,38 @@ class GoShoppingScreen extends StatefulWidget {
 
 class _GoShoppingScreenState extends State<GoShoppingScreen> {
   final List<CompletedShoppingItemRemoval> _undoStack = [];
+  final Set<String> _checkedItemIds = {};
+  final Set<String> _processingItemIds = {};
 
   Future<void> _completeItem(String itemId) async {
-    final removal = await widget.controller.completeShoppingItem(
-      listId: widget.groceryListId,
-      itemId: itemId,
-    );
-
-    if (!mounted || removal == null) {
+    if (_processingItemIds.contains(itemId)) {
       return;
     }
 
     setState(() {
-      _undoStack.add(removal);
+      _checkedItemIds.add(itemId);
+      _processingItemIds.add(itemId);
+    });
+
+    await Future<void>.delayed(const Duration(seconds: 1));
+    if (!mounted) {
+      return;
+    }
+
+    final removal = await widget.controller.completeShoppingItem(
+      listId: widget.groceryListId,
+      itemId: itemId,
+    );
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _checkedItemIds.remove(itemId);
+      _processingItemIds.remove(itemId);
+      if (removal != null) {
+        _undoStack.add(removal);
+      }
     });
   }
 
@@ -53,7 +73,10 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
       return;
     }
 
-    setState(() {});
+    setState(() {
+      _checkedItemIds.remove(removal.item.id);
+      _processingItemIds.remove(removal.item.id);
+    });
   }
 
   @override
@@ -78,6 +101,13 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
           listId: widget.groceryListId,
           marketLayoutId: widget.marketLayoutId,
         );
+        final visibleItemIds = <String>{
+          for (final section in sections) ...[
+            for (final item in section.items) item.id,
+          ],
+        };
+        _checkedItemIds.removeWhere((id) => !visibleItemIds.contains(id));
+        _processingItemIds.removeWhere((id) => !visibleItemIds.contains(id));
 
         return Scaffold(
           appBar: AppBar(title: Text(l10n.goShoppingFlow)),
@@ -116,17 +146,13 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
                                 ),
                               ),
                             const SizedBox(height: 8),
-                            ...section.items.map(
-                              (item) => ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: Checkbox(
-                                  value: false,
-                                  onChanged: (_) => _completeItem(item.id),
-                                ),
-                                title: Text(item.name),
+                            for (var itemIndex = 0;
+                                itemIndex < section.items.length;
+                                itemIndex++)
+                              _buildShoppingItem(
+                                item: section.items[itemIndex],
+                                isLast: itemIndex == section.items.length - 1,
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -138,6 +164,42 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
           bottomNavigationBar: _bottomActions(l10n),
         );
       },
+    );
+  }
+
+  Widget _buildShoppingItem({
+    required GroceryItem item,
+    required bool isLast,
+  }) {
+    final isChecked = _checkedItemIds.contains(item.id);
+
+    return KeyedSubtree(
+      key: ValueKey(item.id),
+      child: Column(
+      children: [
+        ListTile(
+          key: ValueKey('tile_${item.id}'),
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: Checkbox(
+            key: ValueKey('checkbox_${item.id}'),
+            value: isChecked,
+            onChanged: (value) {
+              if (value == true && !isChecked) {
+                _completeItem(item.id);
+              }
+            },
+          ),
+          title: Text(
+            '${item.name} x ${item.quantity}',
+            style: isChecked
+                ? const TextStyle(decoration: TextDecoration.lineThrough)
+                : null,
+          ),
+        ),
+        if (!isLast) const Divider(height: 1),
+      ],
+      ),
     );
   }
 

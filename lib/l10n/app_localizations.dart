@@ -49,7 +49,9 @@ class AppLocalizations {
       'emptyGroceryLists': 'No grocery lists yet.',
       'items': 'items',
       'addItem': 'Add item',
+      'editItem': 'Edit item',
       'itemName': 'Item name',
+      'quantity': 'Quantity',
       'itemHint': 'Hint from history',
       'noHints': 'No similar item found in history.',
       'selectedCategory': 'Selected category',
@@ -114,7 +116,9 @@ class AppLocalizations {
       'emptyGroceryLists': 'Brak list zakupów.',
       'items': 'pozycji',
       'addItem': 'Dodaj produkt',
+      'editItem': 'Edytuj produkt',
       'itemName': 'Nazwa produktu',
+      'quantity': 'Ilość',
       'itemHint': 'Podpowiedź z historii',
       'noHints': 'Brak podobnych produktów w historii.',
       'selectedCategory': 'Wybrana kategoria',
@@ -211,7 +215,9 @@ class AppLocalizations {
   String get emptyGroceryLists => _t('emptyGroceryLists');
   String get items => _t('items');
   String get addItem => _t('addItem');
+  String get editItem => _t('editItem');
   String get itemName => _t('itemName');
+  String get quantity => _t('quantity');
   String get itemHint => _t('itemHint');
   String get noHints => _t('noHints');
   String get selectedCategory => _t('selectedCategory');
