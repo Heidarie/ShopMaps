@@ -37,7 +37,7 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Shopping Planner',
+      title: 'ShopMaps',
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -59,12 +59,12 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
         return const Locale('en');
       },
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0E7C7B)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF168D82)),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0E7C7B),
+          seedColor: const Color(0xFF168D82),
           brightness: Brightness.dark,
         ),
         useMaterial3: true,

@@ -21,7 +21,7 @@ class AppLocalizations {
 
   static const Map<String, Map<String, String>> _localizedValues = {
     'en': {
-      'appTitle': 'Shopping Planner',
+      'appTitle': 'ShopMaps',
       'market': 'Market',
       'groceryList': 'Grocery list',
       'goShopping': 'Go shopping',
@@ -88,7 +88,7 @@ class AppLocalizations {
       'categoryHousehold': 'Household',
     },
     'pl': {
-      'appTitle': 'Shopping Planner',
+      'appTitle': 'ShopMaps',
       'market': 'Sklep',
       'groceryList': 'Lista zakupów',
       'goShopping': 'Idź na zakupy',

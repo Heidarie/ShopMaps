@@ -166,9 +166,18 @@ class _HomeScreenState extends State<HomeScreen> {
       listenable: widget.controller,
       builder: (context, _) {
         if (widget.controller.isLoading) {
-          return Scaffold(
-            appBar: AppBar(title: Text(l10n.appTitle)),
-            body: const Center(child: CircularProgressIndicator()),
+          return const Scaffold(
+            backgroundColor: Color(0xFF318887),
+            body: Center(
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
           );
         }
 

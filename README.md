@@ -1,4 +1,4 @@
-# Shopping Planner
+# ShopMaps
 
 A new Flutter project.
 
