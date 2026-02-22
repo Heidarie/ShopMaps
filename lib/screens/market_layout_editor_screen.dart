@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+
+const int _maxInputChars = 100;
 
 class MarketLayoutEditorScreen extends StatefulWidget {
   const MarketLayoutEditorScreen({
@@ -52,6 +55,9 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
           children: [
             TextField(
               controller: _nameController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(_maxInputChars),
+              ],
               decoration: InputDecoration(labelText: l10n.marketLayoutName),
             ),
             const SizedBox(height: 12),
@@ -156,9 +162,10 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
                   ),
                 if (available.isNotEmpty)
                   Flexible(
-                    child: ListView.builder(
+                    child: ListView.separated(
                       shrinkWrap: true,
                       itemCount: available.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final category = available[index];
                         return ListTile(
@@ -213,6 +220,9 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
         return AlertDialog(
           title: Text(l10n.addNewCategory),
           content: TextField(
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(_maxInputChars),
+            ],
             decoration: InputDecoration(labelText: l10n.newCategoryName),
             autofocus: true,
             onChanged: (value) {

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+
+const int _maxInputChars = 100;
 
 class GroceryListEditorScreen extends StatefulWidget {
   const GroceryListEditorScreen({
@@ -110,7 +113,10 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                                             ),
                                             IconButton(
                                               tooltip: l10n.deleteItem,
-                                              icon: const Icon(Icons.delete_outline),
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: Theme.of(context).colorScheme.error,
+                                              ),
                                               onPressed: () {
                                                 widget.controller.removeItemFromList(
                                                   listId: groceryList.id,
@@ -144,6 +150,9 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                         children: [
                           TextField(
                             controller: _itemController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(_maxInputChars),
+                            ],
                             decoration: InputDecoration(
                               labelText: l10n.itemName,
                             ),
@@ -317,9 +326,10 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                 ),
               if (categories.isNotEmpty)
                 Flexible(
-                  child: ListView.builder(
+                  child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: categories.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final category = categories[index];
                       return ListTile(
@@ -391,6 +401,9 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         return AlertDialog(
           title: Text(l10n.addNewCategory),
           content: TextField(
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(_maxInputChars),
+            ],
             decoration: InputDecoration(labelText: l10n.newCategoryName),
             autofocus: true,
             onChanged: (value) {
@@ -539,6 +552,9 @@ class _EditItemDialogState extends State<_EditItemDialog> {
           children: [
             TextField(
               controller: _nameController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(_maxInputChars),
+              ],
               decoration: InputDecoration(labelText: l10n.itemName),
               autofocus: true,
             ),

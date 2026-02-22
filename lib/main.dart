@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/services.dart';
 
 import 'app_controller.dart';
 import 'l10n/app_localizations.dart';
 import 'local_store.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   runApp(const ShoppingGuideApp());
 }
 
@@ -36,6 +40,14 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
 
   @override
   Widget build(BuildContext context) {
+    final lightColorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF168D82),
+    );
+    final darkColorScheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF168D82),
+      brightness: Brightness.dark,
+    );
+
     return MaterialApp(
       title: 'ShopMaps',
       supportedLocales: AppLocalizations.supportedLocales,
@@ -59,13 +71,26 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
         return const Locale('en');
       },
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF168D82)),
+        colorScheme: lightColorScheme,
+        appBarTheme: AppBarTheme(
+          backgroundColor: lightColorScheme.surface,
+          foregroundColor: lightColorScheme.onSurface,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+        ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF168D82),
-          brightness: Brightness.dark,
+        colorScheme: darkColorScheme,
+        appBarTheme: AppBarTheme(
+          backgroundColor: darkColorScheme.surface,
+          foregroundColor: darkColorScheme.onSurface,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: Colors.transparent,
         ),
         useMaterial3: true,
       ),

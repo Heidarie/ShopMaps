@@ -10,11 +10,13 @@ class GoShoppingScreen extends StatefulWidget {
     required this.controller,
     required this.groceryListId,
     required this.marketLayoutId,
+    required this.shoppingStartedAt,
   });
 
   final AppController controller;
   final String groceryListId;
   final String marketLayoutId;
+  final DateTime shoppingStartedAt;
 
   @override
   State<GoShoppingScreen> createState() => _GoShoppingScreenState();
@@ -24,10 +26,16 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
   final List<CompletedShoppingItemRemoval> _undoStack = [];
   final Set<String> _checkedItemIds = {};
   final Set<String> _processingItemIds = {};
+  bool _completionRewardShown = false;
+  Duration? _pendingRewardElapsed;
 
   Future<void> _completeItem(String itemId) async {
     if (_processingItemIds.contains(itemId)) {
       return;
+    }
+    final isFinalCheck = _isFinalPendingCheck(itemId);
+    if (isFinalCheck && !_completionRewardShown) {
+      _pendingRewardElapsed = DateTime.now().difference(widget.shoppingStartedAt);
     }
 
     setState(() {
@@ -55,6 +63,29 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
         _undoStack.add(removal);
       }
     });
+
+    if (removal == null || _completionRewardShown || _pendingRewardElapsed == null) {
+      return;
+    }
+
+    final updatedList = widget.controller.getGroceryListById(widget.groceryListId);
+    if (updatedList == null || updatedList.items.isNotEmpty) {
+      return;
+    }
+
+    _completionRewardShown = true;
+    final l10n = AppLocalizations.of(context);
+    final elapsed = _pendingRewardElapsed!.isNegative ? Duration.zero : _pendingRewardElapsed!;
+    final minutes = elapsed.inMinutes;
+    final seconds = elapsed.inSeconds % 60;
+    _pendingRewardElapsed = null;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.shoppingDoneMessage(minutes, seconds)),
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   Future<void> _undoLastRemoval() async {
@@ -227,5 +258,23 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
         ),
       ),
     );
+  }
+
+  bool _isFinalPendingCheck(String itemId) {
+    final sections = widget.controller.buildShoppingSections(
+      listId: widget.groceryListId,
+      marketLayoutId: widget.marketLayoutId,
+    );
+    final pendingItemIds = <String>[];
+
+    for (final section in sections) {
+      for (final item in section.items) {
+        if (!_processingItemIds.contains(item.id)) {
+          pendingItemIds.add(item.id);
+        }
+      }
+    }
+
+    return pendingItemIds.length == 1 && pendingItemIds.first == itemId;
   }
 }

@@ -59,6 +59,7 @@ class AppLocalizations {
       'pickCategory': 'Pick category',
       'goShoppingFlow': 'Shopping route',
       'finishShopping': 'Finish shopping',
+      'shoppingDoneIn': "Nice! You've done your shopping in:",
       'undo': 'Undo',
       'step1': '1. Choose grocery list',
       'step2': '2. Choose market layout',
@@ -126,6 +127,7 @@ class AppLocalizations {
       'pickCategory': 'Wybierz kategorię',
       'goShoppingFlow': 'Trasa zakupów',
       'finishShopping': 'Zakończ zakupy',
+      'shoppingDoneIn': 'Super! Zrobiono zakupy w:',
       'undo': 'Cofnij',
       'step1': '1. Wybierz listę zakupów',
       'step2': '2. Wybierz układ sklepu',
@@ -225,6 +227,7 @@ class AppLocalizations {
   String get pickCategory => _t('pickCategory');
   String get goShoppingFlow => _t('goShoppingFlow');
   String get finishShopping => _t('finishShopping');
+  String get shoppingDoneIn => _t('shoppingDoneIn');
   String get undo => _t('undo');
   String get step1 => _t('step1');
   String get step2 => _t('step2');
@@ -257,6 +260,52 @@ class AppLocalizations {
 
   String hintLabel(String itemName, String category) {
     return '$itemName -> ${categoryLabel(category)}';
+  }
+
+  String shoppingDoneMessage(int minutes, int seconds) {
+    return '🎆🎆🎆 ${_t('shoppingDoneIn')} ${shoppingDurationLabel(minutes, seconds)}!';
+  }
+
+  String shoppingDurationLabel(int minutes, int seconds) {
+    if (locale.languageCode == 'pl') {
+      return '$minutes ${_polishMinuteLabel(minutes)} i $seconds ${_polishSecondLabel(seconds)}';
+    }
+
+    final minuteLabel = minutes == 1 ? 'minute' : 'minutes';
+    final secondLabel = seconds == 1 ? 'second' : 'seconds';
+    return '$minutes $minuteLabel and $seconds $secondLabel';
+  }
+
+  String _polishMinuteLabel(int value) {
+    if (_isPolishOne(value)) {
+      return 'minuta';
+    }
+    if (_isPolishFew(value)) {
+      return 'minuty';
+    }
+    return 'minut';
+  }
+
+  String _polishSecondLabel(int value) {
+    if (_isPolishOne(value)) {
+      return 'sekunda';
+    }
+    if (_isPolishFew(value)) {
+      return 'sekundy';
+    }
+    return 'sekund';
+  }
+
+  bool _isPolishOne(int value) {
+    final mod10 = value % 10;
+    final mod100 = value % 100;
+    return mod10 == 1 && mod100 != 11;
+  }
+
+  bool _isPolishFew(int value) {
+    final mod10 = value % 10;
+    final mod100 = value % 100;
+    return mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14);
   }
 }
 

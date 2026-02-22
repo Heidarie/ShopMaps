@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
@@ -6,6 +7,8 @@ import '../models.dart';
 import 'go_shopping_screen.dart';
 import 'grocery_list_editor_screen.dart';
 import 'market_layout_editor_screen.dart';
+
+const int _maxInputChars = 100;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -127,6 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _ShoppingSetupSelection(
                                   groceryListId: selectedListId!,
                                   marketLayoutId: selectedMarketLayoutId!,
+                                  startedAt: DateTime.now(),
                                 ),
                               );
                             }
@@ -153,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: widget.controller,
           groceryListId: selection.groceryListId,
           marketLayoutId: selection.marketLayoutId,
+          shoppingStartedAt: selection.startedAt,
         ),
       ),
     );
@@ -256,10 +261,12 @@ class _ShoppingSetupSelection {
   const _ShoppingSetupSelection({
     required this.groceryListId,
     required this.marketLayoutId,
+    required this.startedAt,
   });
 
   final String groceryListId;
   final String marketLayoutId;
+  final DateTime startedAt;
 }
 
 class _MarketLayoutsTab extends StatelessWidget {
@@ -364,9 +371,13 @@ class _MarketLayoutsTab extends StatelessWidget {
                                           onPressed: () => Navigator.pop(context, false),
                                           child: Text(l10n.cancel),
                                         ),
-                                        FilledButton(
+                                        TextButton.icon(
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Theme.of(context).colorScheme.error,
+                                          ),
                                           onPressed: () => Navigator.pop(context, true),
-                                          child: Text(l10n.delete),
+                                          icon: const Icon(Icons.delete_outline),
+                                          label: Text(l10n.delete),
                                         ),
                                       ],
                                     ),
@@ -377,14 +388,30 @@ class _MarketLayoutsTab extends StatelessWidget {
                                 await controller.deleteMarketLayout(layout.id);
                               }
                             },
-                            itemBuilder: (_) => [
+                            itemBuilder: (menuContext) => [
                               PopupMenuItem<String>(
                                 value: 'edit',
                                 child: Text(l10n.edit),
                               ),
                               PopupMenuItem<String>(
                                 value: 'delete',
-                                child: Text(l10n.delete),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: Theme.of(menuContext).colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.delete,
+                                      style: TextStyle(
+                                        color: Theme.of(menuContext).colorScheme.error,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -503,9 +530,13 @@ class _GroceryListsTab extends StatelessWidget {
                                           onPressed: () => Navigator.pop(context, false),
                                           child: Text(l10n.cancel),
                                         ),
-                                        FilledButton(
+                                        TextButton.icon(
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Theme.of(context).colorScheme.error,
+                                          ),
                                           onPressed: () => Navigator.pop(context, true),
-                                          child: Text(l10n.delete),
+                                          icon: const Icon(Icons.delete_outline),
+                                          label: Text(l10n.delete),
                                         ),
                                       ],
                                     ),
@@ -516,14 +547,30 @@ class _GroceryListsTab extends StatelessWidget {
                                 await controller.deleteGroceryList(list.id);
                               }
                             },
-                            itemBuilder: (_) => [
+                            itemBuilder: (menuContext) => [
                               PopupMenuItem<String>(
                                 value: 'rename',
                                 child: Text(l10n.rename),
                               ),
                               PopupMenuItem<String>(
                                 value: 'delete',
-                                child: Text(l10n.delete),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: Theme.of(menuContext).colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.delete,
+                                      style: TextStyle(
+                                        color: Theme.of(menuContext).colorScheme.error,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -553,6 +600,9 @@ class _GroceryListsTab extends StatelessWidget {
           title: Text(title),
           content: TextFormField(
             initialValue: initialValue,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(_maxInputChars),
+            ],
             decoration: InputDecoration(labelText: label),
             autofocus: true,
             onChanged: (value) {
