@@ -47,6 +47,7 @@ class AppLocalizations {
       'addGroceryList': 'Add grocery list',
       'groceryListName': 'List name',
       'emptyGroceryLists': 'No grocery lists yet.',
+      'emptyGroceryListItems': 'The list is empty.',
       'items': 'items',
       'addItem': 'Add item',
       'editItem': 'Edit item',
@@ -64,6 +65,7 @@ class AppLocalizations {
       'step1': '1. Choose grocery list',
       'step2': '2. Choose market layout',
       'shoppingResult': 'Shopping list in market order',
+      'emptyShoppingList': 'The list is empty!',
       'missingInLayout': 'Category not present in selected market layout',
       'nothingToShow': 'Nothing to show yet.',
       'language': 'Language',
@@ -73,6 +75,7 @@ class AppLocalizations {
       'createCategoryFirst': 'No categories yet. Add one first.',
       'nameCannotBeEmpty': 'Name cannot be empty.',
       'selectCategoryFirst': 'Select category first.',
+      'maxCategoriesReached': 'Maximum categories limit reached ({max}).',
       'selectListAndMarket': 'Create at least one grocery list and one market layout.',
       'deleteItem': 'Delete item',
       'deleteLayout': 'Delete market layout',
@@ -115,6 +118,7 @@ class AppLocalizations {
       'addGroceryList': 'Dodaj listę zakupów',
       'groceryListName': 'Nazwa listy',
       'emptyGroceryLists': 'Brak list zakupów.',
+      'emptyGroceryListItems': 'Lista jest pusta.',
       'items': 'pozycji',
       'addItem': 'Dodaj produkt',
       'editItem': 'Edytuj produkt',
@@ -132,6 +136,7 @@ class AppLocalizations {
       'step1': '1. Wybierz listę zakupów',
       'step2': '2. Wybierz układ sklepu',
       'shoppingResult': 'Lista zakupów w kolejności sklepu',
+      'emptyShoppingList': 'Lista jest pusta!',
       'missingInLayout': 'Kategoria nie występuje w wybranym układzie sklepu',
       'nothingToShow': 'Na razie brak danych.',
       'language': 'Język',
@@ -141,6 +146,7 @@ class AppLocalizations {
       'createCategoryFirst': 'Brak kategorii. Najpierw dodaj kategorię.',
       'nameCannotBeEmpty': 'Nazwa nie może być pusta.',
       'selectCategoryFirst': 'Najpierw wybierz kategorię.',
+      'maxCategoriesReached': 'Osiągnięto limit kategorii ({max}).',
       'selectListAndMarket': 'Utwórz przynajmniej jedną listę i jeden układ sklepu.',
       'deleteItem': 'Usuń produkt',
       'deleteLayout': 'Usuń układ sklepu',
@@ -215,6 +221,7 @@ class AppLocalizations {
   String get addGroceryList => _t('addGroceryList');
   String get groceryListName => _t('groceryListName');
   String get emptyGroceryLists => _t('emptyGroceryLists');
+  String get emptyGroceryListItems => _t('emptyGroceryListItems');
   String get items => _t('items');
   String get addItem => _t('addItem');
   String get editItem => _t('editItem');
@@ -232,6 +239,7 @@ class AppLocalizations {
   String get step1 => _t('step1');
   String get step2 => _t('step2');
   String get shoppingResult => _t('shoppingResult');
+  String get emptyShoppingList => _t('emptyShoppingList');
   String get missingInLayout => _t('missingInLayout');
   String get nothingToShow => _t('nothingToShow');
   String get language => _t('language');
@@ -241,6 +249,7 @@ class AppLocalizations {
   String get createCategoryFirst => _t('createCategoryFirst');
   String get nameCannotBeEmpty => _t('nameCannotBeEmpty');
   String get selectCategoryFirst => _t('selectCategoryFirst');
+  String maxCategoriesReached(int max) => _t('maxCategoriesReached').replaceAll('{max}', '$max');
   String get selectListAndMarket => _t('selectListAndMarket');
   String get deleteItem => _t('deleteItem');
   String get deleteLayout => _t('deleteLayout');

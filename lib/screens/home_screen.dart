@@ -187,69 +187,74 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         return Scaffold(
+          extendBody: true,
           appBar: AppBar(
-            title: Text(l10n.appTitle),
+            title: Text(
+              l10n.appTitle,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
           ),
-          body: PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              if (_selectedTab == index) {
-                return;
-              }
-              setState(() {
-                _selectedTab = index;
-              });
-            },
+          body: Stack(
             children: [
-              _MarketLayoutsTab(controller: widget.controller),
-              _GroceryListsTab(controller: widget.controller),
-            ],
-          ),
-          bottomNavigationBar: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _startGoShoppingFlow,
-                      icon: const Icon(Icons.shopping_cart_checkout),
-                      label: Text(l10n.goShopping),
-                    ),
+              PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  if (_selectedTab == index) {
+                    return;
+                  }
+                  setState(() {
+                    _selectedTab = index;
+                  });
+                },
+                children: [
+                  _MarketLayoutsTab(controller: widget.controller),
+                  _GroceryListsTab(controller: widget.controller),
+                ],
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _startGoShoppingFlow,
+                            icon: const Icon(Icons.shopping_cart_checkout),
+                            label: Text(l10n.goShopping),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        child: _HomeTabSwitcher(
+                          selectedIndex: _selectedTab,
+                          leftLabel: l10n.market,
+                          rightLabel: l10n.groceryList,
+                          onChanged: (index) {
+                            if (index == _selectedTab) {
+                              return;
+                            }
+                            setState(() {
+                              _selectedTab = index;
+                            });
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                NavigationBar(
-                  selectedIndex: _selectedTab,
-                  onDestinationSelected: (index) {
-                    if (index == _selectedTab) {
-                      return;
-                    }
-                    setState(() {
-                      _selectedTab = index;
-                    });
-                    _pageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 280),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
-                  destinations: [
-                    NavigationDestination(
-                      icon: const Icon(Icons.store_mall_directory_outlined),
-                      selectedIcon: const Icon(Icons.store_mall_directory),
-                      label: l10n.market,
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.playlist_add_check_outlined),
-                      selectedIcon: const Icon(Icons.playlist_add_check),
-                      label: l10n.groceryList,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -267,6 +272,151 @@ class _ShoppingSetupSelection {
   final String groceryListId;
   final String marketLayoutId;
   final DateTime startedAt;
+}
+
+class _HomeTabSwitcher extends StatelessWidget {
+  const _HomeTabSwitcher({
+    required this.selectedIndex,
+    required this.leftLabel,
+    required this.rightLabel,
+    required this.onChanged,
+  });
+
+  final int selectedIndex;
+  final String leftLabel;
+  final String rightLabel;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1C1C1E).withValues(alpha: 0.94)
+            : Colors.white.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.06),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: [
+            Expanded(
+              child: _HomeTabButton(
+                label: leftLabel,
+                selected: selectedIndex == 0,
+                selectedIcon: Icons.store_mall_directory,
+                unselectedIcon: Icons.store_mall_directory_outlined,
+                onTap: () => onChanged(0),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: _HomeTabButton(
+                label: rightLabel,
+                selected: selectedIndex == 1,
+                selectedIcon: Icons.playlist_add_check,
+                unselectedIcon: Icons.playlist_add_check_outlined,
+                onTap: () => onChanged(1),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeTabButton extends StatelessWidget {
+  const _HomeTabButton({
+    required this.label,
+    required this.selected,
+    required this.selectedIcon,
+    required this.unselectedIcon,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final IconData selectedIcon;
+  final IconData unselectedIcon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final selectedColor = isDark ? Colors.white : theme.colorScheme.primary;
+    final unselectedColor = theme.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: selected
+                ? (isDark
+                      ? Colors.white.withValues(alpha: 0.14)
+                      : theme.colorScheme.primary.withValues(alpha: 0.12))
+                : Colors.transparent,
+            border: Border.all(
+              color: selected
+                  ? (isDark
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : theme.colorScheme.primary.withValues(alpha: 0.16))
+                  : Colors.transparent,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                selected ? selectedIcon : unselectedIcon,
+                size: 22,
+                color: selected ? selectedColor : unselectedColor,
+              ),
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                style: theme.textTheme.labelSmall!.copyWith(
+                  color: selected ? selectedColor : unselectedColor,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _MarketLayoutsTab extends StatelessWidget {
@@ -316,6 +466,7 @@ class _MarketLayoutsTab extends StatelessWidget {
             child: controller.marketLayouts.isEmpty
                 ? Center(child: Text(l10n.emptyMarketLayouts))
                 : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 170),
                     itemCount: controller.marketLayouts.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
@@ -483,6 +634,7 @@ class _GroceryListsTab extends StatelessWidget {
             child: controller.groceryLists.isEmpty
                 ? Center(child: Text(l10n.emptyGroceryLists))
                 : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 170),
                     itemCount: controller.groceryLists.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
@@ -501,7 +653,11 @@ class _GroceryListsTab extends StatelessWidget {
                             );
                           },
                           title: Text(list.name),
-                          subtitle: Text(l10n.itemsCount(list.items.length)),
+                          subtitle: Text(
+                            list.items.isEmpty
+                                ? l10n.emptyGroceryListItems
+                                : l10n.itemsCount(list.items.length),
+                          ),
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) async {
                               if (value == 'rename') {

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
@@ -40,12 +41,22 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
 
   @override
   Widget build(BuildContext context) {
+    const brandColor = Color(0xFF168D82);
+    const lightScaffold = Color(0xFFF2F2F7);
+    const darkScaffold = Color(0xFF000000);
+
     final lightColorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF168D82),
+      seedColor: brandColor,
     );
     final darkColorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF168D82),
+      seedColor: brandColor,
       brightness: Brightness.dark,
+    );
+    final cupertinoTransitions = PageTransitionsTheme(
+      builders: {
+        for (final platform in TargetPlatform.values)
+          platform: const CupertinoPageTransitionsBuilder(),
+      },
     );
 
     return MaterialApp(
@@ -71,26 +82,174 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
         return const Locale('en');
       },
       theme: ThemeData(
+        platform: TargetPlatform.iOS,
         colorScheme: lightColorScheme,
+        scaffoldBackgroundColor: lightScaffold,
+        canvasColor: lightScaffold,
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        pageTransitionsTheme: cupertinoTransitions,
+        cupertinoOverrideTheme: const CupertinoThemeData(
+          primaryColor: brandColor,
+          scaffoldBackgroundColor: lightScaffold,
+          barBackgroundColor: Color(0xCCF2F2F7),
+        ),
         appBarTheme: AppBarTheme(
-          backgroundColor: lightColorScheme.surface,
+          backgroundColor: lightScaffold,
           foregroundColor: lightColorScheme.onSurface,
           elevation: 0,
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
+          centerTitle: true,
+        ),
+        cardColor: Colors.white,
+        dividerColor: const Color(0x1F3C3C43),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            elevation: 0,
+            backgroundColor: brandColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            side: BorderSide(color: lightColorScheme.outlineVariant),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: brandColor, width: 1.4),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
+        platform: TargetPlatform.iOS,
         colorScheme: darkColorScheme,
+        scaffoldBackgroundColor: darkScaffold,
+        canvasColor: darkScaffold,
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        pageTransitionsTheme: cupertinoTransitions,
+        cupertinoOverrideTheme: const CupertinoThemeData(
+          primaryColor: brandColor,
+          scaffoldBackgroundColor: darkScaffold,
+          barBackgroundColor: Color(0xCC1C1C1E),
+        ),
         appBarTheme: AppBarTheme(
-          backgroundColor: darkColorScheme.surface,
+          backgroundColor: const Color(0xFF1C1C1E),
           foregroundColor: darkColorScheme.onSurface,
           elevation: 0,
           scrolledUnderElevation: 0,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
+          centerTitle: true,
+        ),
+        cardColor: const Color(0xFF1C1C1E),
+        dividerColor: const Color(0x4D545458),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            elevation: 0,
+            backgroundColor: brandColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            side: BorderSide(color: darkColorScheme.outlineVariant),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF2C2C2E),
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.58),
+          ),
+          labelStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.72),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.10),
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.12),
+            ),
+          ),
+          disabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: brandColor, width: 1.4),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: darkColorScheme.error,
+              width: 1.2,
+            ),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: darkColorScheme.error,
+              width: 1.4,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         ),
         useMaterial3: true,
       ),

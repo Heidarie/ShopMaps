@@ -1,5 +1,7 @@
 import 'dart:math';
 
+const int maxCategoryCount = 1000;
+
 const List<String> defaultCategories = [
   'Drinks',
   'Sweets',

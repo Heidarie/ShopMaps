@@ -301,6 +301,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
   Future<void> _pickCategory() async {
     final l10n = AppLocalizations.of(context);
+    final canCreateNewCategory = widget.controller.categories.length < maxCategoryCount;
 
     final selection = await showModalBottomSheet<String>(
       context: context,
@@ -317,7 +318,13 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
               ListTile(
                 leading: const Icon(Icons.add_circle_outline),
                 title: Text(l10n.addNewCategory),
-                onTap: () => Navigator.pop(sheetContext, '__add_new__'),
+                subtitle: canCreateNewCategory
+                    ? null
+                    : Text(l10n.maxCategoriesReached(maxCategoryCount)),
+                enabled: canCreateNewCategory,
+                onTap: canCreateNewCategory
+                    ? () => Navigator.pop(sheetContext, '__add_new__')
+                    : null,
               ),
               if (categories.isEmpty)
                 Padding(
@@ -370,6 +377,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     required String listId,
     required GroceryItem item,
   }) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<_EditItemResult>(
       context: context,
       builder: (_) => _EditItemDialog(
@@ -382,17 +390,30 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    await widget.controller.updateItemInList(
+    final updated = await widget.controller.updateItemInList(
       listId: listId,
       itemId: item.id,
       itemName: result.name,
       category: result.category,
       quantity: result.quantity,
     );
+    if (!mounted || updated) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+    );
   }
 
   Future<String?> _promptAndCreateCategory() async {
     final l10n = AppLocalizations.of(context);
+    if (widget.controller.categories.length >= maxCategoryCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+      );
+      return null;
+    }
     var draftName = '';
 
     final name = await showDialog<String>(
@@ -460,12 +481,21 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    await widget.controller.addItemToList(
+    final added = await widget.controller.addItemToList(
       listId: listId,
       itemName: itemName,
       category: _selectedCategory!,
       quantity: _selectedQuantity,
     );
+    if (!added) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+      );
+      return;
+    }
 
     if (!mounted) {
       return;

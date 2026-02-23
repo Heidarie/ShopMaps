@@ -133,6 +133,7 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
 
   Future<void> _addCategory() async {
     final l10n = AppLocalizations.of(context);
+    final canCreateNewCategory = _allCategories.length < maxCategoryCount;
     final available = _allCategories
         .where((category) =>
             !_orderedCategories.any((selected) => selected.toLowerCase() == category.toLowerCase()))
@@ -153,7 +154,13 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
                 ListTile(
                   leading: const Icon(Icons.add_circle_outline),
                   title: Text(l10n.addNewCategory),
-                  onTap: () => Navigator.pop(sheetContext, '__add_new__'),
+                  subtitle: canCreateNewCategory
+                      ? null
+                      : Text(l10n.maxCategoriesReached(maxCategoryCount)),
+                  enabled: canCreateNewCategory,
+                  onTap: canCreateNewCategory
+                      ? () => Navigator.pop(sheetContext, '__add_new__')
+                      : null,
                 ),
                 if (available.isEmpty)
                   Padding(
@@ -212,6 +219,12 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
 
   Future<String?> _promptAndCreateCategory() async {
     final l10n = AppLocalizations.of(context);
+    if (_allCategories.length >= maxCategoryCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+      );
+      return null;
+    }
     var draftName = '';
 
     final name = await showDialog<String>(

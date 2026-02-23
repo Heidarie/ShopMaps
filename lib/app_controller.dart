@@ -31,6 +31,7 @@ class AppController extends ChangeNotifier {
   List<String> get categories => _data.categories;
   List<MarketLayout> get marketLayouts => _data.marketLayouts;
   List<GroceryListModel> get groceryLists => _data.groceryLists;
+  bool get hasReachedCategoryLimit => _data.categories.length >= maxCategoryCount;
 
   Future<void> load() async {
     _isLoading = true;
@@ -69,6 +70,10 @@ class AppController extends ChangeNotifier {
     final existing = _resolveCategory(cleaned);
     if (existing != null) {
       return existing;
+    }
+
+    if (_data.categories.length >= maxCategoryCount) {
+      return null;
     }
 
     final updated = [..._data.categories, cleaned];
@@ -165,7 +170,7 @@ class AppController extends ChangeNotifier {
     await _persist();
   }
 
-  Future<void> addItemToList({
+  Future<bool> addItemToList({
     required String listId,
     required String itemName,
     required String category,
@@ -173,23 +178,26 @@ class AppController extends ChangeNotifier {
   }) async {
     final cleanedName = itemName.trim();
     if (cleanedName.isEmpty) {
-      return;
+      return false;
     }
 
     final canonicalCategory = _resolveCategory(category) ?? category.trim();
     if (canonicalCategory.isEmpty) {
-      return;
+      return false;
     }
     final normalizedQuantity = quantity < 1 ? 1 : quantity;
 
     if (_resolveCategory(canonicalCategory) == null) {
-      await addCategory(canonicalCategory);
+      final addedCategory = await addCategory(canonicalCategory);
+      if (addedCategory == null) {
+        return false;
+      }
     }
 
     final next = [..._data.groceryLists];
     final index = next.indexWhere((list) => list.id == listId);
     if (index == -1) {
-      return;
+      return false;
     }
 
     final list = next[index];
@@ -215,9 +223,10 @@ class AppController extends ChangeNotifier {
     );
     notifyListeners();
     await _persist();
+    return true;
   }
 
-  Future<void> updateItemInList({
+  Future<bool> updateItemInList({
     required String listId,
     required String itemId,
     required String itemName,
@@ -226,29 +235,32 @@ class AppController extends ChangeNotifier {
   }) async {
     final cleanedName = itemName.trim();
     if (cleanedName.isEmpty) {
-      return;
+      return false;
     }
 
     final canonicalCategory = _resolveCategory(category) ?? category.trim();
     if (canonicalCategory.isEmpty) {
-      return;
+      return false;
     }
     final normalizedQuantity = quantity < 1 ? 1 : quantity;
 
     if (_resolveCategory(canonicalCategory) == null) {
-      await addCategory(canonicalCategory);
+      final addedCategory = await addCategory(canonicalCategory);
+      if (addedCategory == null) {
+        return false;
+      }
     }
 
     final next = [..._data.groceryLists];
     final listIndex = next.indexWhere((list) => list.id == listId);
     if (listIndex == -1) {
-      return;
+      return false;
     }
 
     final list = next[listIndex];
     final itemIndex = list.items.indexWhere((item) => item.id == itemId);
     if (itemIndex == -1) {
-      return;
+      return false;
     }
 
     final updatedItems = [...list.items];
@@ -271,6 +283,7 @@ class AppController extends ChangeNotifier {
     );
     notifyListeners();
     await _persist();
+    return true;
   }
 
   Future<void> removeItemFromList({

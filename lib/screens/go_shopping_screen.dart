@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
@@ -23,9 +24,13 @@ class GoShoppingScreen extends StatefulWidget {
 }
 
 class _GoShoppingScreenState extends State<GoShoppingScreen> {
+  static const Duration _itemCheckedVisibleDuration = Duration(seconds: 1);
+  static const Duration _sectionCollapseDuration = Duration(milliseconds: 260);
+
   final List<CompletedShoppingItemRemoval> _undoStack = [];
   final Set<String> _checkedItemIds = {};
   final Set<String> _processingItemIds = {};
+  final Set<String> _collapsingSectionCategories = {};
   bool _completionRewardShown = false;
   Duration? _pendingRewardElapsed;
 
@@ -38,14 +43,28 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
       _pendingRewardElapsed = DateTime.now().difference(widget.shoppingStartedAt);
     }
 
+    HapticFeedback.lightImpact();
+
     setState(() {
       _checkedItemIds.add(itemId);
       _processingItemIds.add(itemId);
     });
 
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(_itemCheckedVisibleDuration);
     if (!mounted) {
       return;
+    }
+
+    final collapsingCategory = _findSingleVisibleItemSectionCategory(itemId);
+    if (collapsingCategory != null) {
+      setState(() {
+        _collapsingSectionCategories.add(collapsingCategory);
+      });
+
+      await Future<void>.delayed(_sectionCollapseDuration);
+      if (!mounted) {
+        return;
+      }
     }
 
     final removal = await widget.controller.completeShoppingItem(
@@ -59,6 +78,9 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
     setState(() {
       _checkedItemIds.remove(itemId);
       _processingItemIds.remove(itemId);
+      if (collapsingCategory != null) {
+        _collapsingSectionCategories.remove(collapsingCategory);
+      }
       if (removal != null) {
         _undoStack.add(removal);
       }
@@ -150,45 +172,68 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
               Text('${l10n.market}: ${marketLayout.name}'),
               const SizedBox(height: 12),
               if (sections.isEmpty)
-                Text(l10n.nothingToShow)
+                Text(l10n.emptyShoppingList)
               else
                 ...sections.map(
-                  (section) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.categoryLabel(section.category),
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            if (!section.inLayoutOrder)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  l10n.missingInLayout,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(color: Theme.of(context).colorScheme.error),
-                                ),
-                              ),
-                            const SizedBox(height: 8),
-                            for (var itemIndex = 0;
-                                itemIndex < section.items.length;
-                                itemIndex++)
-                              _buildShoppingItem(
-                                item: section.items[itemIndex],
-                                isLast: itemIndex == section.items.length - 1,
-                              ),
-                          ],
+                  (section) {
+                    final isCollapsing =
+                        _collapsingSectionCategories.contains(section.category);
+                    return Padding(
+                      key: ValueKey('section_wrap_${section.category}'),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: AnimatedOpacity(
+                        duration: _sectionCollapseDuration,
+                        curve: Curves.easeInOutCubic,
+                        opacity: isCollapsing ? 0 : 1,
+                        child: ClipRect(
+                          child: AnimatedSize(
+                            duration: _sectionCollapseDuration,
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            child: isCollapsing
+                                ? const SizedBox.shrink()
+                                : Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            l10n.categoryLabel(section.category),
+                                            style: Theme.of(context).textTheme.titleMedium,
+                                          ),
+                                          if (!section.inLayoutOrder)
+                                            Padding(
+                                              padding: const EdgeInsets.only(top: 4),
+                                              child: Text(
+                                                l10n.missingInLayout,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.error,
+                                                    ),
+                                              ),
+                                            ),
+                                          const SizedBox(height: 8),
+                                          for (var itemIndex = 0;
+                                              itemIndex < section.items.length;
+                                              itemIndex++)
+                                            _buildShoppingItem(
+                                              item: section.items[itemIndex],
+                                              isLast: itemIndex == section.items.length - 1,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
             ],
           ),
@@ -276,5 +321,23 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
     }
 
     return pendingItemIds.length == 1 && pendingItemIds.first == itemId;
+  }
+
+  String? _findSingleVisibleItemSectionCategory(String itemId) {
+    final sections = widget.controller.buildShoppingSections(
+      listId: widget.groceryListId,
+      marketLayoutId: widget.marketLayoutId,
+    );
+
+    for (final section in sections) {
+      if (section.items.length != 1) {
+        continue;
+      }
+      if (section.items.first.id == itemId) {
+        return section.category;
+      }
+    }
+
+    return null;
   }
 }
