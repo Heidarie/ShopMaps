@@ -295,24 +295,24 @@ class _HomeTabSwitcher extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark
-            ? const Color(0xFF1C1C1E).withValues(alpha: 0.94)
-            : Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(18),
+            ? const Color(0xFF1D1F21).withValues(alpha: 0.92)
+            : Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.06),
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.black.withValues(alpha: 0.04),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: isDark ? 0.10 : 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(3),
         child: Row(
           children: [
             Expanded(
@@ -324,7 +324,7 @@ class _HomeTabSwitcher extends StatelessWidget {
                 onTap: () => onChanged(0),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
             Expanded(
               child: _HomeTabButton(
                 label: rightLabel,
@@ -367,43 +367,37 @@ class _HomeTabButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         splashFactory: NoSplash.splashFactory,
         highlightColor: Colors.transparent,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 160),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             color: selected
                 ? (isDark
-                      ? Colors.white.withValues(alpha: 0.14)
-                      : theme.colorScheme.primary.withValues(alpha: 0.12))
+                      ? Colors.white.withValues(alpha: 0.10)
+                      : theme.colorScheme.primary.withValues(alpha: 0.08))
                 : Colors.transparent,
-            border: Border.all(
-              color: selected
-                  ? (isDark
-                        ? Colors.white.withValues(alpha: 0.18)
-                        : theme.colorScheme.primary.withValues(alpha: 0.16))
-                  : Colors.transparent,
-            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 selected ? selectedIcon : unselectedIcon,
-                size: 22,
+                size: 20,
                 color: selected ? selectedColor : unselectedColor,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
+                duration: const Duration(milliseconds: 160),
                 curve: Curves.easeOutCubic,
                 style: theme.textTheme.labelSmall!.copyWith(
                   color: selected ? selectedColor : unselectedColor,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 ),
                 child: Text(
                   label,

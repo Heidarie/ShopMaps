@@ -43,7 +43,9 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
   Widget build(BuildContext context) {
     const brandColor = Color(0xFF168D82);
     const lightScaffold = Color(0xFFF2F2F7);
-    const darkScaffold = Color(0xFF000000);
+    const darkScaffold = Color(0xFF111315);
+    const darkBar = Color(0xFF17191B);
+    const darkCard = Color(0xFF1C1C1E);
 
     final lightColorScheme = ColorScheme.fromSeed(
       seedColor: brandColor,
@@ -163,10 +165,10 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
         cupertinoOverrideTheme: const CupertinoThemeData(
           primaryColor: brandColor,
           scaffoldBackgroundColor: darkScaffold,
-          barBackgroundColor: Color(0xCC1C1C1E),
+          barBackgroundColor: Color(0xCC17191B),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF1C1C1E),
+          backgroundColor: darkBar,
           foregroundColor: darkColorScheme.onSurface,
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -174,7 +176,7 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
           shadowColor: Colors.transparent,
           centerTitle: true,
         ),
-        cardColor: const Color(0xFF1C1C1E),
+        cardColor: darkCard,
         dividerColor: const Color(0x4D545458),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
