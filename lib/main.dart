@@ -25,6 +25,7 @@ class ShoppingGuideApp extends StatefulWidget {
 
 class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
   late final AppController _controller;
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
@@ -37,6 +38,19 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _toggleThemeMode() {
+    final effectiveBrightness = switch (_themeMode) {
+      ThemeMode.light => Brightness.light,
+      ThemeMode.dark => Brightness.dark,
+      ThemeMode.system => WidgetsBinding.instance.platformDispatcher.platformBrightness,
+    };
+
+    setState(() {
+      _themeMode =
+          effectiveBrightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+    });
   }
 
   @override
@@ -64,6 +78,7 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
     return MaterialApp(
       title: 'ShopMaps',
       supportedLocales: AppLocalizations.supportedLocales,
+      debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -255,9 +270,10 @@ class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
         ),
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
+      themeMode: _themeMode,
       home: HomeScreen(
         controller: _controller,
+        onToggleThemeMode: _toggleThemeMode,
       ),
     );
   }

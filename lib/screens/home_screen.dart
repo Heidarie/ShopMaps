@@ -14,9 +14,11 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.controller,
+    required this.onToggleThemeMode,
   });
 
   final AppController controller;
+  final VoidCallback onToggleThemeMode;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -193,6 +195,16 @@ class _HomeScreenState extends State<HomeScreen> {
               l10n.appTitle,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
+            actions: [
+              IconButton(
+                onPressed: widget.onToggleThemeMode,
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
+                ),
+              ),
+            ],
           ),
           body: Stack(
             children: [
