@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+
+const int _maxInputChars = 100;
 
 class GroceryListEditorScreen extends StatefulWidget {
   const GroceryListEditorScreen({
@@ -110,7 +113,10 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                                             ),
                                             IconButton(
                                               tooltip: l10n.deleteItem,
-                                              icon: const Icon(Icons.delete_outline),
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: Theme.of(context).colorScheme.error,
+                                              ),
                                               onPressed: () {
                                                 widget.controller.removeItemFromList(
                                                   listId: groceryList.id,
@@ -144,6 +150,9 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                         children: [
                           TextField(
                             controller: _itemController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(_maxInputChars),
+                            ],
                             decoration: InputDecoration(
                               labelText: l10n.itemName,
                             ),
@@ -292,6 +301,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
   Future<void> _pickCategory() async {
     final l10n = AppLocalizations.of(context);
+    final canCreateNewCategory = widget.controller.categories.length < maxCategoryCount;
 
     final selection = await showModalBottomSheet<String>(
       context: context,
@@ -308,7 +318,13 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
               ListTile(
                 leading: const Icon(Icons.add_circle_outline),
                 title: Text(l10n.addNewCategory),
-                onTap: () => Navigator.pop(sheetContext, '__add_new__'),
+                subtitle: canCreateNewCategory
+                    ? null
+                    : Text(l10n.maxCategoriesReached(maxCategoryCount)),
+                enabled: canCreateNewCategory,
+                onTap: canCreateNewCategory
+                    ? () => Navigator.pop(sheetContext, '__add_new__')
+                    : null,
               ),
               if (categories.isEmpty)
                 Padding(
@@ -317,9 +333,10 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                 ),
               if (categories.isNotEmpty)
                 Flexible(
-                  child: ListView.builder(
+                  child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: categories.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final category = categories[index];
                       return ListTile(
@@ -360,6 +377,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     required String listId,
     required GroceryItem item,
   }) async {
+    final l10n = AppLocalizations.of(context);
     final result = await showDialog<_EditItemResult>(
       context: context,
       builder: (_) => _EditItemDialog(
@@ -372,17 +390,30 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    await widget.controller.updateItemInList(
+    final updated = await widget.controller.updateItemInList(
       listId: listId,
       itemId: item.id,
       itemName: result.name,
       category: result.category,
       quantity: result.quantity,
     );
+    if (!mounted || updated) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+    );
   }
 
   Future<String?> _promptAndCreateCategory() async {
     final l10n = AppLocalizations.of(context);
+    if (widget.controller.categories.length >= maxCategoryCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+      );
+      return null;
+    }
     var draftName = '';
 
     final name = await showDialog<String>(
@@ -391,6 +422,9 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         return AlertDialog(
           title: Text(l10n.addNewCategory),
           content: TextField(
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(_maxInputChars),
+            ],
             decoration: InputDecoration(labelText: l10n.newCategoryName),
             autofocus: true,
             onChanged: (value) {
@@ -447,12 +481,21 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    await widget.controller.addItemToList(
+    final added = await widget.controller.addItemToList(
       listId: listId,
       itemName: itemName,
       category: _selectedCategory!,
       quantity: _selectedQuantity,
     );
+    if (!added) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+      );
+      return;
+    }
 
     if (!mounted) {
       return;
@@ -539,6 +582,9 @@ class _EditItemDialogState extends State<_EditItemDialog> {
           children: [
             TextField(
               controller: _nameController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(_maxInputChars),
+              ],
               decoration: InputDecoration(labelText: l10n.itemName),
               autofocus: true,
             ),

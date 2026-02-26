@@ -1,6 +1,6 @@
 {
-    "name": "Shopping Planner",
-    "short_name": "Shopping Planner",
+    "name": "ShopMaps",
+    "short_name": "ShopMaps",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

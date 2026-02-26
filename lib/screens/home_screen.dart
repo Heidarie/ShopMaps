@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
@@ -7,13 +8,17 @@ import 'go_shopping_screen.dart';
 import 'grocery_list_editor_screen.dart';
 import 'market_layout_editor_screen.dart';
 
+const int _maxInputChars = 100;
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.controller,
+    required this.onToggleThemeMode,
   });
 
   final AppController controller;
+  final VoidCallback onToggleThemeMode;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -127,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _ShoppingSetupSelection(
                                   groceryListId: selectedListId!,
                                   marketLayoutId: selectedMarketLayoutId!,
+                                  startedAt: DateTime.now(),
                                 ),
                               );
                             }
@@ -153,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: widget.controller,
           groceryListId: selection.groceryListId,
           marketLayoutId: selection.marketLayoutId,
+          shoppingStartedAt: selection.startedAt,
         ),
       ),
     );
@@ -166,76 +173,100 @@ class _HomeScreenState extends State<HomeScreen> {
       listenable: widget.controller,
       builder: (context, _) {
         if (widget.controller.isLoading) {
-          return Scaffold(
-            appBar: AppBar(title: Text(l10n.appTitle)),
-            body: const Center(child: CircularProgressIndicator()),
+          return const Scaffold(
+            backgroundColor: Color(0xFF318887),
+            body: Center(
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
           );
         }
 
         return Scaffold(
+          extendBody: true,
           appBar: AppBar(
-            title: Text(l10n.appTitle),
-          ),
-          body: PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              if (_selectedTab == index) {
-                return;
-              }
-              setState(() {
-                _selectedTab = index;
-              });
-            },
-            children: [
-              _MarketLayoutsTab(controller: widget.controller),
-              _GroceryListsTab(controller: widget.controller),
+            title: Text(
+              l10n.appTitle,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            actions: [
+              IconButton(
+                onPressed: widget.onToggleThemeMode,
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
+                ),
+              ),
             ],
           ),
-          bottomNavigationBar: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _startGoShoppingFlow,
-                      icon: const Icon(Icons.shopping_cart_checkout),
-                      label: Text(l10n.goShopping),
-                    ),
+          body: Stack(
+            children: [
+              PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  if (_selectedTab == index) {
+                    return;
+                  }
+                  setState(() {
+                    _selectedTab = index;
+                  });
+                },
+                children: [
+                  _MarketLayoutsTab(controller: widget.controller),
+                  _GroceryListsTab(controller: widget.controller),
+                ],
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _startGoShoppingFlow,
+                            icon: const Icon(Icons.shopping_cart_checkout),
+                            label: Text(l10n.goShopping),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        child: _HomeTabSwitcher(
+                          selectedIndex: _selectedTab,
+                          leftLabel: l10n.market,
+                          rightLabel: l10n.groceryList,
+                          onChanged: (index) {
+                            if (index == _selectedTab) {
+                              return;
+                            }
+                            setState(() {
+                              _selectedTab = index;
+                            });
+                            _pageController.animateToPage(
+                              index,
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                NavigationBar(
-                  selectedIndex: _selectedTab,
-                  onDestinationSelected: (index) {
-                    if (index == _selectedTab) {
-                      return;
-                    }
-                    setState(() {
-                      _selectedTab = index;
-                    });
-                    _pageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 280),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
-                  destinations: [
-                    NavigationDestination(
-                      icon: const Icon(Icons.store_mall_directory_outlined),
-                      selectedIcon: const Icon(Icons.store_mall_directory),
-                      label: l10n.market,
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.playlist_add_check_outlined),
-                      selectedIcon: const Icon(Icons.playlist_add_check),
-                      label: l10n.groceryList,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -247,10 +278,151 @@ class _ShoppingSetupSelection {
   const _ShoppingSetupSelection({
     required this.groceryListId,
     required this.marketLayoutId,
+    required this.startedAt,
   });
 
   final String groceryListId;
   final String marketLayoutId;
+  final DateTime startedAt;
+}
+
+class _HomeTabSwitcher extends StatelessWidget {
+  const _HomeTabSwitcher({
+    required this.selectedIndex,
+    required this.leftLabel,
+    required this.rightLabel,
+    required this.onChanged,
+  });
+
+  final int selectedIndex;
+  final String leftLabel;
+  final String rightLabel;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1D1F21).withValues(alpha: 0.92)
+            : Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.black.withValues(alpha: 0.04),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.10 : 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Row(
+          children: [
+            Expanded(
+              child: _HomeTabButton(
+                label: leftLabel,
+                selected: selectedIndex == 0,
+                selectedIcon: Icons.store_mall_directory,
+                unselectedIcon: Icons.store_mall_directory_outlined,
+                onTap: () => onChanged(0),
+              ),
+            ),
+            const SizedBox(width: 3),
+            Expanded(
+              child: _HomeTabButton(
+                label: rightLabel,
+                selected: selectedIndex == 1,
+                selectedIcon: Icons.playlist_add_check,
+                unselectedIcon: Icons.playlist_add_check_outlined,
+                onTap: () => onChanged(1),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeTabButton extends StatelessWidget {
+  const _HomeTabButton({
+    required this.label,
+    required this.selected,
+    required this.selectedIcon,
+    required this.unselectedIcon,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final IconData selectedIcon;
+  final IconData unselectedIcon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final selectedColor = isDark ? Colors.white : theme.colorScheme.primary;
+    final unselectedColor = theme.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: selected
+                ? (isDark
+                      ? Colors.white.withValues(alpha: 0.10)
+                      : theme.colorScheme.primary.withValues(alpha: 0.08))
+                : Colors.transparent,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                selected ? selectedIcon : unselectedIcon,
+                size: 20,
+                color: selected ? selectedColor : unselectedColor,
+              ),
+              const SizedBox(height: 1),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 160),
+                curve: Curves.easeOutCubic,
+                style: theme.textTheme.labelSmall!.copyWith(
+                  color: selected ? selectedColor : unselectedColor,
+                  fontSize: 11,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _MarketLayoutsTab extends StatelessWidget {
@@ -300,6 +472,7 @@ class _MarketLayoutsTab extends StatelessWidget {
             child: controller.marketLayouts.isEmpty
                 ? Center(child: Text(l10n.emptyMarketLayouts))
                 : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 170),
                     itemCount: controller.marketLayouts.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
@@ -355,9 +528,13 @@ class _MarketLayoutsTab extends StatelessWidget {
                                           onPressed: () => Navigator.pop(context, false),
                                           child: Text(l10n.cancel),
                                         ),
-                                        FilledButton(
+                                        TextButton.icon(
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Theme.of(context).colorScheme.error,
+                                          ),
                                           onPressed: () => Navigator.pop(context, true),
-                                          child: Text(l10n.delete),
+                                          icon: const Icon(Icons.delete_outline),
+                                          label: Text(l10n.delete),
                                         ),
                                       ],
                                     ),
@@ -368,14 +545,30 @@ class _MarketLayoutsTab extends StatelessWidget {
                                 await controller.deleteMarketLayout(layout.id);
                               }
                             },
-                            itemBuilder: (_) => [
+                            itemBuilder: (menuContext) => [
                               PopupMenuItem<String>(
                                 value: 'edit',
                                 child: Text(l10n.edit),
                               ),
                               PopupMenuItem<String>(
                                 value: 'delete',
-                                child: Text(l10n.delete),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: Theme.of(menuContext).colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.delete,
+                                      style: TextStyle(
+                                        color: Theme.of(menuContext).colorScheme.error,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -447,6 +640,7 @@ class _GroceryListsTab extends StatelessWidget {
             child: controller.groceryLists.isEmpty
                 ? Center(child: Text(l10n.emptyGroceryLists))
                 : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 170),
                     itemCount: controller.groceryLists.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
@@ -465,7 +659,11 @@ class _GroceryListsTab extends StatelessWidget {
                             );
                           },
                           title: Text(list.name),
-                          subtitle: Text(l10n.itemsCount(list.items.length)),
+                          subtitle: Text(
+                            list.items.isEmpty
+                                ? l10n.emptyGroceryListItems
+                                : l10n.itemsCount(list.items.length),
+                          ),
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) async {
                               if (value == 'rename') {
@@ -494,9 +692,13 @@ class _GroceryListsTab extends StatelessWidget {
                                           onPressed: () => Navigator.pop(context, false),
                                           child: Text(l10n.cancel),
                                         ),
-                                        FilledButton(
+                                        TextButton.icon(
+                                          style: TextButton.styleFrom(
+                                            foregroundColor: Theme.of(context).colorScheme.error,
+                                          ),
                                           onPressed: () => Navigator.pop(context, true),
-                                          child: Text(l10n.delete),
+                                          icon: const Icon(Icons.delete_outline),
+                                          label: Text(l10n.delete),
                                         ),
                                       ],
                                     ),
@@ -507,14 +709,30 @@ class _GroceryListsTab extends StatelessWidget {
                                 await controller.deleteGroceryList(list.id);
                               }
                             },
-                            itemBuilder: (_) => [
+                            itemBuilder: (menuContext) => [
                               PopupMenuItem<String>(
                                 value: 'rename',
                                 child: Text(l10n.rename),
                               ),
                               PopupMenuItem<String>(
                                 value: 'delete',
-                                child: Text(l10n.delete),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: Theme.of(menuContext).colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.delete,
+                                      style: TextStyle(
+                                        color: Theme.of(menuContext).colorScheme.error,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
@@ -544,6 +762,9 @@ class _GroceryListsTab extends StatelessWidget {
           title: Text(title),
           content: TextFormField(
             initialValue: initialValue,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(_maxInputChars),
+            ],
             decoration: InputDecoration(labelText: label),
             autofocus: true,
             onChanged: (value) {
