@@ -13,17 +13,17 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
-  runApp(const ShoppingGuideApp());
+  runApp(const ShopMapsApp());
 }
 
-class ShoppingGuideApp extends StatefulWidget {
-  const ShoppingGuideApp({super.key});
+class ShopMapsApp extends StatefulWidget {
+  const ShopMapsApp({super.key});
 
   @override
-  State<ShoppingGuideApp> createState() => _ShoppingGuideAppState();
+  State<ShopMapsApp> createState() => _ShopMapsAppState();
 }
 
-class _ShoppingGuideAppState extends State<ShoppingGuideApp> {
+class _ShopMapsAppState extends State<ShopMapsApp> {
   late final AppController _controller;
   ThemeMode _themeMode = ThemeMode.system;
 
