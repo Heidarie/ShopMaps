@@ -110,6 +110,7 @@ class AppData {
     required this.marketLayouts,
     required this.groceryLists,
     required this.itemCategoryMemory,
+    required this.frequentItemStats,
   });
 
   factory AppData.empty() {
@@ -118,6 +119,7 @@ class AppData {
       marketLayouts: const [],
       groceryLists: const [],
       itemCategoryMemory: const [],
+      frequentItemStats: const [],
     );
   }
 
@@ -137,6 +139,10 @@ class AppData {
       baseline: memoryFromLists,
       overrides: memoryFromStorage,
     );
+    final frequentItemStats = _toDynamicList(json['frequentItemStats'])
+        .map(FrequentItemStat.fromJson)
+        .where((entry) => entry.itemName.isNotEmpty && entry.category.isNotEmpty)
+        .toList();
 
     return AppData(
       categories: loadedCategories.isEmpty
@@ -145,6 +151,7 @@ class AppData {
       marketLayouts: marketLayouts,
       groceryLists: groceryLists,
       itemCategoryMemory: mergedMemory,
+      frequentItemStats: _mergeFrequentItemStats(frequentItemStats),
     );
   }
 
@@ -152,18 +159,21 @@ class AppData {
   final List<MarketLayout> marketLayouts;
   final List<GroceryListModel> groceryLists;
   final List<RememberedItemCategory> itemCategoryMemory;
+  final List<FrequentItemStat> frequentItemStats;
 
   AppData copyWith({
     List<String>? categories,
     List<MarketLayout>? marketLayouts,
     List<GroceryListModel>? groceryLists,
     List<RememberedItemCategory>? itemCategoryMemory,
+    List<FrequentItemStat>? frequentItemStats,
   }) {
     return AppData(
       categories: categories ?? this.categories,
       marketLayouts: marketLayouts ?? this.marketLayouts,
       groceryLists: groceryLists ?? this.groceryLists,
       itemCategoryMemory: itemCategoryMemory ?? this.itemCategoryMemory,
+      frequentItemStats: frequentItemStats ?? this.frequentItemStats,
     );
   }
 
@@ -174,6 +184,8 @@ class AppData {
       'groceryLists': groceryLists.map((list) => list.toJson()).toList(),
       'itemCategoryMemory':
           itemCategoryMemory.map((entry) => entry.toJson()).toList(),
+      'frequentItemStats':
+          frequentItemStats.map((entry) => entry.toJson()).toList(),
     };
   }
 }
@@ -306,6 +318,38 @@ class RememberedItemCategory {
   }
 }
 
+class FrequentItemStat {
+  const FrequentItemStat({
+    required this.itemName,
+    required this.category,
+    required this.occurrenceCount,
+    required this.lastAddedAt,
+  });
+
+  factory FrequentItemStat.fromJson(Map<String, dynamic> json) {
+    return FrequentItemStat(
+      itemName: (json['itemName'] ?? '').toString().trim(),
+      category: (json['category'] ?? '').toString().trim(),
+      occurrenceCount: _toPositiveInt(json['occurrenceCount']),
+      lastAddedAt: _toDateTime(json['lastAddedAt']),
+    );
+  }
+
+  final String itemName;
+  final String category;
+  final int occurrenceCount;
+  final DateTime lastAddedAt;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'itemName': itemName,
+      'category': category,
+      'occurrenceCount': occurrenceCount,
+      'lastAddedAt': lastAddedAt.toUtc().toIso8601String(),
+    };
+  }
+}
+
 class ItemHint {
   const ItemHint({required this.itemName, required this.category});
 
@@ -355,6 +399,17 @@ int _toPositiveInt(dynamic source, {int fallback = 1}) {
   };
 
   return parsed < 1 ? fallback : parsed;
+}
+
+DateTime _toDateTime(dynamic source) {
+  if (source is String) {
+    final parsed = DateTime.tryParse(source);
+    if (parsed != null) {
+      return parsed;
+    }
+  }
+
+  return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 }
 
 List<String> _uniqueCaseInsensitive(List<String> source) {
@@ -411,6 +466,33 @@ List<RememberedItemCategory> _mergeRememberedItems({
       continue;
     }
     byItem[key] = entry;
+  }
+
+  return byItem.values.toList();
+}
+
+List<FrequentItemStat> _mergeFrequentItemStats(List<FrequentItemStat> source) {
+  final byItem = <String, FrequentItemStat>{};
+
+  for (final entry in source) {
+    final key = normalizeLatinText(entry.itemName);
+    if (key.isEmpty) {
+      continue;
+    }
+
+    final existing = byItem[key];
+    if (existing == null) {
+      byItem[key] = entry;
+      continue;
+    }
+
+    final existingIsNewer = !entry.lastAddedAt.isAfter(existing.lastAddedAt);
+    byItem[key] = FrequentItemStat(
+      itemName: existingIsNewer ? existing.itemName : entry.itemName,
+      category: existingIsNewer ? existing.category : entry.category,
+      occurrenceCount: existing.occurrenceCount + entry.occurrenceCount,
+      lastAddedAt: existingIsNewer ? existing.lastAddedAt : entry.lastAddedAt,
+    );
   }
 
   return byItem.values.toList();

@@ -58,6 +58,10 @@ class CategoryUsageSummary {
 class AppController extends ChangeNotifier {
   AppController(this._store);
 
+  static const Duration _frequentItemRetention = Duration(days: 14);
+  static const int _minimumFrequentItemOccurrences = 3;
+  static const int _maxFrequentItemsToSuggest = 10;
+
   final LocalStore _store;
 
   AppData _data = AppData.empty();
@@ -74,6 +78,13 @@ class AppController extends ChangeNotifier {
     notifyListeners();
 
     _data = await _store.load();
+    final prunedFrequentItems = _pruneExpiredFrequentItemStats(
+      _data.frequentItemStats,
+    );
+    if (prunedFrequentItems.length != _data.frequentItemStats.length) {
+      _data = _data.copyWith(frequentItemStats: prunedFrequentItems);
+      await _persist();
+    }
 
     _isLoading = false;
     notifyListeners();
@@ -95,6 +106,122 @@ class AppController extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  List<FrequentItemStat> getTopFrequentItems() {
+    final suggestions = <FrequentItemStat>[];
+
+    for (final entry in _pruneExpiredFrequentItemStats(_data.frequentItemStats)) {
+      if (entry.occurrenceCount < _minimumFrequentItemOccurrences) {
+        continue;
+      }
+
+      final canonicalCategory = _resolveCategory(entry.category);
+      if (canonicalCategory == null) {
+        continue;
+      }
+
+      suggestions.add(
+        FrequentItemStat(
+          itemName: entry.itemName,
+          category: canonicalCategory,
+          occurrenceCount: entry.occurrenceCount,
+          lastAddedAt: entry.lastAddedAt,
+        ),
+      );
+    }
+
+    suggestions.sort((left, right) {
+      final countComparison = right.occurrenceCount.compareTo(left.occurrenceCount);
+      if (countComparison != 0) {
+        return countComparison;
+      }
+
+      final lastAddedComparison = right.lastAddedAt.compareTo(left.lastAddedAt);
+      if (lastAddedComparison != 0) {
+        return lastAddedComparison;
+      }
+
+      return normalizeLatinText(left.itemName).compareTo(
+        normalizeLatinText(right.itemName),
+      );
+    });
+
+    return suggestions.take(_maxFrequentItemsToSuggest).toList();
+  }
+
+  Future<int> loadTopFrequentItemsIntoList(
+    String listId, {
+    List<FrequentItemStat>? suggestions,
+  }) async {
+    final resolvedSuggestions = suggestions ?? getTopFrequentItems();
+    if (resolvedSuggestions.isEmpty) {
+      return 0;
+    }
+
+    final nextLists = [..._data.groceryLists];
+    final listIndex = nextLists.indexWhere((list) => list.id == listId);
+    if (listIndex == -1) {
+      return 0;
+    }
+
+    final targetList = nextLists[listIndex];
+    final timestamp = DateTime.now().toUtc();
+    final updatedItems = [...targetList.items];
+    final existingItemKeys = updatedItems
+        .map((item) => normalizeLatinText(item.name))
+        .where((key) => key.isNotEmpty)
+        .toSet();
+    var addedCount = 0;
+    var updatedMemory = _data.itemCategoryMemory;
+    var updatedFrequentItems = _pruneExpiredFrequentItemStats(
+      _data.frequentItemStats,
+      referenceTime: timestamp,
+    );
+
+    for (final suggestion in resolvedSuggestions) {
+      final suggestionKey = normalizeLatinText(suggestion.itemName);
+      if (suggestionKey.isEmpty || existingItemKeys.contains(suggestionKey)) {
+        continue;
+      }
+
+      updatedItems.add(
+        GroceryItem(
+          id: createId(),
+          name: suggestion.itemName,
+          category: suggestion.category,
+          quantity: 1,
+        ),
+      );
+      addedCount += 1;
+      existingItemKeys.add(suggestionKey);
+      updatedMemory = _upsertItemCategoryMemory(
+        source: updatedMemory,
+        itemName: suggestion.itemName,
+        category: suggestion.category,
+      );
+      updatedFrequentItems = _recordFrequentItemAddition(
+        source: updatedFrequentItems,
+        itemName: suggestion.itemName,
+        category: suggestion.category,
+        addedAt: timestamp,
+      );
+    }
+
+    if (updatedItems.length == targetList.items.length) {
+      return 0;
+    }
+
+    nextLists[listIndex] = targetList.copyWith(items: updatedItems);
+    _data = _data.copyWith(
+      groceryLists: nextLists,
+      itemCategoryMemory: updatedMemory,
+      frequentItemStats: updatedFrequentItems,
+    );
+    notifyListeners();
+    await _persist();
+
+    return addedCount;
   }
 
   String? findCategoryConflict(String candidate, {String? excludingCategory}) {
@@ -249,12 +376,25 @@ class AppController extends ChangeNotifier {
             : entry.category,
       );
     }
+    final updatedFrequentItems = _data.frequentItemStats.map((entry) {
+      if (!sameNormalizedText(entry.category, currentCanonical)) {
+        return entry;
+      }
+
+      return FrequentItemStat(
+        itemName: entry.itemName,
+        category: targetCategory,
+        occurrenceCount: entry.occurrenceCount,
+        lastAddedAt: entry.lastAddedAt,
+      );
+    }).toList();
 
     _data = _data.copyWith(
       categories: updatedCategories,
       marketLayouts: updatedLayouts,
       groceryLists: updatedLists,
       itemCategoryMemory: updatedMemory,
+      frequentItemStats: updatedFrequentItems,
     );
     notifyListeners();
     await _persist();
@@ -274,10 +414,14 @@ class AppController extends ChangeNotifier {
     final updatedMemory = _data.itemCategoryMemory
         .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
         .toList();
+    final updatedFrequentItems = _data.frequentItemStats
+        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
+        .toList();
 
     _data = _data.copyWith(
       categories: updatedCategories,
       itemCategoryMemory: updatedMemory,
+      frequentItemStats: updatedFrequentItems,
     );
     notifyListeners();
     await _persist();
@@ -310,12 +454,16 @@ class AppController extends ChangeNotifier {
     final updatedMemory = _data.itemCategoryMemory
         .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
         .toList();
+    final updatedFrequentItems = _data.frequentItemStats
+        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
+        .toList();
 
     _data = _data.copyWith(
       categories: updatedCategories,
       marketLayouts: updatedLayouts,
       groceryLists: updatedLists,
       itemCategoryMemory: updatedMemory,
+      frequentItemStats: updatedFrequentItems,
     );
     notifyListeners();
     await _persist();
@@ -454,11 +602,17 @@ class AppController extends ChangeNotifier {
       itemName: cleanedName,
       category: canonicalCategory,
     );
+    final updatedFrequentItems = _recordFrequentItemAddition(
+      source: _data.frequentItemStats,
+      itemName: cleanedName,
+      category: canonicalCategory,
+    );
 
     next[index] = list.copyWith(items: updatedItems);
     _data = _data.copyWith(
       groceryLists: next,
       itemCategoryMemory: updatedMemory,
+      frequentItemStats: updatedFrequentItems,
     );
     notifyListeners();
     await _persist();
@@ -802,6 +956,56 @@ class AppController extends ChangeNotifier {
     }
 
     return next;
+  }
+
+  List<FrequentItemStat> _recordFrequentItemAddition({
+    required List<FrequentItemStat> source,
+    required String itemName,
+    required String category,
+    DateTime? addedAt,
+  }) {
+    final cleanedName = itemName.trim();
+    final canonicalCategory = _resolveCategory(category) ?? category.trim();
+    final timestamp = (addedAt ?? DateTime.now()).toUtc();
+    if (cleanedName.isEmpty || canonicalCategory.isEmpty) {
+      return source;
+    }
+
+    final next = _pruneExpiredFrequentItemStats(
+      source,
+      referenceTime: timestamp,
+    );
+    final index = next.indexWhere(
+      (entry) => sameNormalizedText(entry.itemName, cleanedName),
+    );
+    final currentCount = index == -1 ? 0 : next[index].occurrenceCount;
+    final updatedEntry = FrequentItemStat(
+      itemName: cleanedName,
+      category: canonicalCategory,
+      occurrenceCount: currentCount + 1,
+      lastAddedAt: timestamp,
+    );
+
+    if (index == -1) {
+      next.add(updatedEntry);
+    } else {
+      next[index] = updatedEntry;
+    }
+
+    return next;
+  }
+
+  List<FrequentItemStat> _pruneExpiredFrequentItemStats(
+    List<FrequentItemStat> source, {
+    DateTime? referenceTime,
+  }) {
+    final cutoff = (referenceTime ?? DateTime.now().toUtc()).subtract(
+      _frequentItemRetention,
+    );
+
+    return source
+        .where((entry) => !entry.lastAddedAt.toUtc().isBefore(cutoff))
+        .toList();
   }
 
   String? _findCategoryInList(

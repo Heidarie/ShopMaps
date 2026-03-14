@@ -60,6 +60,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'The list is empty.',
       'items': 'items',
       'addItem': 'Add item',
+      'loadFrequentItems': 'Load frequent items',
+      'frequentItemsDialogTitle': '10 most frequent items:',
+      'frequentItemsDialogExplanation':
+          'We show items that were added at least 3 times in the last 2 weeks. The list is sorted by number of additions, and entries older than 2 weeks are removed automatically.',
+      'frequentItemsDialogEmpty': 'No items meet these rules yet.',
+      'load': 'Load',
       'editItem': 'Edit item',
       'itemName': 'Item name',
       'quantity': 'Quantity',
@@ -143,6 +149,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'Lista jest pusta.',
       'items': 'pozycji',
       'addItem': 'Dodaj produkt',
+      'loadFrequentItems': 'Załaduj najczęstsze artykuły',
+      'frequentItemsDialogTitle': '10 najczęściej występujących artykułów:',
+      'frequentItemsDialogExplanation':
+          'Pokazujemy artykuły dodane co najmniej 3 razy w ciągu ostatnich 2 tygodni. Lista jest sortowana po liczbie dodań, a starsze wpisy są automatycznie usuwane.',
+      'frequentItemsDialogEmpty': 'Brak artykułów spełniających te zasady.',
+      'load': 'Załaduj',
       'editItem': 'Edytuj produkt',
       'itemName': 'Nazwa produktu',
       'quantity': 'Ilość',
@@ -226,6 +238,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'Die Liste ist leer.',
       'items': 'Artikel',
       'addItem': 'Artikel hinzufügen',
+      'loadFrequentItems': 'Häufige Artikel laden',
+      'frequentItemsDialogTitle': '10 häufigste Artikel:',
+      'frequentItemsDialogExplanation':
+          'Wir zeigen Artikel, die in den letzten 2 Wochen mindestens 3 Mal hinzugefügt wurden. Die Liste ist nach der Anzahl der Hinzufügungen sortiert, und ältere Einträge werden automatisch entfernt.',
+      'frequentItemsDialogEmpty': 'Noch keine Artikel, die diese Regeln erfüllen.',
+      'load': 'Laden',
       'editItem': 'Artikel bearbeiten',
       'itemName': 'Artikelname',
       'quantity': 'Menge',
@@ -310,6 +328,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'De lijst is leeg.',
       'items': 'items',
       'addItem': 'Item toevoegen',
+      'loadFrequentItems': 'Vaak gebruikte items laden',
+      'frequentItemsDialogTitle': '10 meest voorkomende items:',
+      'frequentItemsDialogExplanation':
+          'We tonen items die in de afgelopen 2 weken minstens 3 keer zijn toegevoegd. De lijst is gesorteerd op aantal toevoegingen en oudere vermeldingen worden automatisch verwijderd.',
+      'frequentItemsDialogEmpty': 'Er zijn nog geen items die aan deze regels voldoen.',
+      'load': 'Laden',
       'editItem': 'Item bewerken',
       'itemName': 'Itemnaam',
       'quantity': 'Aantal',
@@ -394,6 +418,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'La lista está vacía.',
       'items': 'elementos',
       'addItem': 'Añadir producto',
+      'loadFrequentItems': 'Cargar artículos frecuentes',
+      'frequentItemsDialogTitle': '10 artículos más frecuentes:',
+      'frequentItemsDialogExplanation':
+          'Mostramos los artículos que se añadieron al menos 3 veces en las últimas 2 semanas. La lista se ordena por número de adiciones y las entradas de más de 2 semanas se eliminan automáticamente.',
+      'frequentItemsDialogEmpty': 'Todavía no hay artículos que cumplan estas reglas.',
+      'load': 'Cargar',
       'editItem': 'Editar producto',
       'itemName': 'Nombre del producto',
       'quantity': 'Cantidad',
@@ -478,6 +508,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'La liste est vide.',
       'items': 'articles',
       'addItem': 'Ajouter un article',
+      'loadFrequentItems': 'Charger les articles fréquents',
+      'frequentItemsDialogTitle': '10 articles les plus fréquents :',
+      'frequentItemsDialogExplanation':
+          'Nous affichons les articles ajoutés au moins 3 fois au cours des 2 dernières semaines. La liste est triée par nombre d’ajouts et les entrées de plus de 2 semaines sont supprimées automatiquement.',
+      'frequentItemsDialogEmpty': 'Aucun article ne respecte encore ces règles.',
+      'load': 'Charger',
       'editItem': "Modifier l'article",
       'itemName': "Nom de l'article",
       'quantity': 'Quantité',
@@ -562,6 +598,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'Список порожній.',
       'items': 'позицій',
       'addItem': 'Додати товар',
+      'loadFrequentItems': 'Завантажити часті товари',
+      'frequentItemsDialogTitle': '10 найчастіших товарів:',
+      'frequentItemsDialogExplanation':
+          'Ми показуємо товари, які додавали щонайменше 3 рази за останні 2 тижні. Список відсортовано за кількістю додавань, а старіші записи автоматично видаляються.',
+      'frequentItemsDialogEmpty': 'Поки немає товарів, які відповідають цим правилам.',
+      'load': 'Завантажити',
       'editItem': 'Редагувати товар',
       'itemName': 'Назва товару',
       'quantity': 'Кількість',
@@ -646,6 +688,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'La lista è vuota.',
       'items': 'elementi',
       'addItem': 'Aggiungi articolo',
+      'loadFrequentItems': 'Carica articoli frequenti',
+      'frequentItemsDialogTitle': '10 articoli più frequenti:',
+      'frequentItemsDialogExplanation':
+          'Mostriamo gli articoli aggiunti almeno 3 volte nelle ultime 2 settimane. La lista è ordinata per numero di aggiunte e le voci più vecchie di 2 settimane vengono rimosse automaticamente.',
+      'frequentItemsDialogEmpty': 'Non ci sono ancora articoli che rispettano queste regole.',
+      'load': 'Carica',
       'editItem': 'Modifica articolo',
       'itemName': 'Nome articolo',
       'quantity': 'Quantità',
@@ -730,6 +778,12 @@ class AppLocalizations {
       'emptyGroceryListItems': 'A lista está vazia.',
       'items': 'itens',
       'addItem': 'Adicionar item',
+      'loadFrequentItems': 'Carregar itens frequentes',
+      'frequentItemsDialogTitle': '10 itens mais frequentes:',
+      'frequentItemsDialogExplanation':
+          'Mostramos os itens adicionados pelo menos 3 vezes nas últimas 2 semanas. A lista é ordenada pelo número de adições e os registros com mais de 2 semanas são removidos automaticamente.',
+      'frequentItemsDialogEmpty': 'Ainda não há itens que atendam a essas regras.',
+      'load': 'Carregar',
       'editItem': 'Editar item',
       'itemName': 'Nome do item',
       'quantity': 'Quantidade',
@@ -846,6 +900,11 @@ class AppLocalizations {
   String get emptyGroceryListItems => _t('emptyGroceryListItems');
   String get items => _t('items');
   String get addItem => _t('addItem');
+  String get loadFrequentItems => _t('loadFrequentItems');
+  String get frequentItemsDialogTitle => _t('frequentItemsDialogTitle');
+  String get frequentItemsDialogExplanation => _t('frequentItemsDialogExplanation');
+  String get frequentItemsDialogEmpty => _t('frequentItemsDialogEmpty');
+  String get load => _t('load');
   String get editItem => _t('editItem');
   String get itemName => _t('itemName');
   String get quantity => _t('quantity');
