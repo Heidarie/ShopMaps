@@ -257,6 +257,11 @@ class AppLocalizations {
       'deleteItem': 'Artikel löschen',
       'editCategory': 'Kategorie bearbeiten',
       'deleteCategory': 'Kategorie löschen',
+      'deleteCategoryConfirmMessage': 'Möchtest du diese Kategorie löschen?',
+      'deleteCategoryUsageLists': 'Verwendet in Einkaufslisten:',
+      'deleteCategoryUsageMarkets': 'Verwendet in Marktlayouts:',
+      'deleteCategoryRemovesItems':
+          'Das Löschen dieser Kategorie entfernt auch zugehörige Artikel aus Einkaufslisten und löscht die gespeicherte Artikel-Kategorie-Zuordnung.',
       'categoryInUseCannotDelete':
           'Eine Kategorie, die in Einkaufslisten oder Marktlayouts verwendet wird, kann nicht gelöscht werden.',
       'deleteLayout': 'Marktlayout löschen',
@@ -295,10 +300,10 @@ class AppLocalizations {
       'newCategoryName': 'Categorienaam',
       'categoryAlreadyExists': 'Deze categorie bestaat al.',
       'category': 'Categorie',
-      'categoriesTab': 'Categorieen',
+      'categoriesTab': 'Categorieën',
       'chooseCategory': 'Kies categorie',
       'noCategoriesInLayout': 'Nog geen categorieën in deze winkelindeling.',
-      'emptyCategories': 'Nog geen categorieen.',
+      'emptyCategories': 'Nog geen categorieën.',
       'addGroceryList': 'Boodschappenlijst toevoegen',
       'groceryListName': 'Lijstnaam',
       'emptyGroceryLists': 'Nog geen boodschappenlijsten.',
@@ -336,6 +341,11 @@ class AppLocalizations {
       'deleteItem': 'Item verwijderen',
       'editCategory': 'Categorie bewerken',
       'deleteCategory': 'Categorie verwijderen',
+      'deleteCategoryConfirmMessage': 'Wil je deze categorie verwijderen?',
+      'deleteCategoryUsageLists': 'Gebruikt in boodschappenlijsten:',
+      'deleteCategoryUsageMarkets': 'Gebruikt in winkelindelingen:',
+      'deleteCategoryRemovesItems':
+          'Het verwijderen van deze categorie verwijdert ook gekoppelde items uit boodschappenlijsten en wist de opgeslagen item-categoriekoppeling.',
       'categoryInUseCannotDelete':
           'Een categorie die in boodschappenlijsten of winkelindelingen wordt gebruikt, kan niet worden verwijderd.',
       'deleteLayout': 'Winkelindeling verwijderen',
@@ -415,6 +425,11 @@ class AppLocalizations {
       'deleteItem': 'Eliminar producto',
       'editCategory': 'Editar categoría',
       'deleteCategory': 'Eliminar categoría',
+      'deleteCategoryConfirmMessage': '¿Quieres eliminar esta categoría?',
+      'deleteCategoryUsageLists': 'Usada en listas de compras:',
+      'deleteCategoryUsageMarkets': 'Usada en diseños de tienda:',
+      'deleteCategoryRemovesItems':
+          'Al eliminar esta categoría también se eliminarán los productos asociados de las listas de compras y se borrará la memoria guardada de producto-categoría.',
       'categoryInUseCannotDelete':
           'No se puede eliminar una categoría usada en listas de compras o diseños de tienda.',
       'deleteLayout': 'Eliminar diseño de tienda',
@@ -494,6 +509,11 @@ class AppLocalizations {
       'deleteItem': "Supprimer l'article",
       'editCategory': 'Modifier la catégorie',
       'deleteCategory': 'Supprimer la catégorie',
+      'deleteCategoryConfirmMessage': 'Voulez-vous supprimer cette catégorie ?',
+      'deleteCategoryUsageLists': 'Utilisée dans les listes de courses :',
+      'deleteCategoryUsageMarkets': 'Utilisée dans les plans de magasin :',
+      'deleteCategoryRemovesItems':
+          'La suppression de cette catégorie supprimera aussi les articles associés des listes de courses et effacera la mémoire enregistrée article-catégorie.',
       'categoryInUseCannotDelete':
           'Impossible de supprimer une catégorie utilisée dans des listes de courses ou des plans de magasin.',
       'deleteLayout': 'Supprimer le plan du magasin',
@@ -573,6 +593,11 @@ class AppLocalizations {
       'deleteItem': 'Видалити товар',
       'editCategory': 'Редагувати категорію',
       'deleteCategory': 'Видалити категорію',
+      'deleteCategoryConfirmMessage': 'Видалити цю категорію?',
+      'deleteCategoryUsageLists': 'Використовується у списках покупок:',
+      'deleteCategoryUsageMarkets': 'Використовується у планах магазину:',
+      'deleteCategoryRemovesItems':
+          'Видалення цієї категорії також видалить пов’язані товари зі списків покупок і очистить збережену пам’ять відповідності товар-категорія.',
       'categoryInUseCannotDelete':
           'Не можна видалити категорію, яка використовується у списках покупок або планах магазину.',
       'deleteLayout': 'Видалити план магазину',
@@ -652,6 +677,11 @@ class AppLocalizations {
       'deleteItem': 'Elimina articolo',
       'editCategory': 'Modifica categoria',
       'deleteCategory': 'Elimina categoria',
+      'deleteCategoryConfirmMessage': 'Vuoi eliminare questa categoria?',
+      'deleteCategoryUsageLists': 'Usata nelle liste della spesa:',
+      'deleteCategoryUsageMarkets': 'Usata nei layout del negozio:',
+      'deleteCategoryRemovesItems':
+          'L’eliminazione di questa categoria rimuoverà anche gli articoli associati dalle liste della spesa e cancellerà la memoria salvata articolo-categoria.',
       'categoryInUseCannotDelete':
           'Non è possibile eliminare una categoria usata nelle liste della spesa o nei layout del negozio.',
       'deleteLayout': 'Elimina layout del negozio',
@@ -731,8 +761,13 @@ class AppLocalizations {
       'deleteItem': 'Excluir item',
       'editCategory': 'Editar categoria',
       'deleteCategory': 'Excluir categoria',
+      'deleteCategoryConfirmMessage': 'Deseja excluir esta categoria?',
+      'deleteCategoryUsageLists': 'Usada em listas de compras:',
+      'deleteCategoryUsageMarkets': 'Usada em layouts de loja:',
+      'deleteCategoryRemovesItems':
+          'Ao excluir esta categoria, os itens associados também serão removidos das listas de compras e a memória salva de item-categoria será apagada.',
       'categoryInUseCannotDelete':
-          'Nao e possivel excluir uma categoria usada em listas de compras ou layouts de loja.',
+          'Não é possível excluir uma categoria usada em listas de compras ou layouts de loja.',
       'deleteLayout': 'Excluir layout da loja',
       'deleteList': 'Excluir lista de compras',
       'categoryDrinks': 'Bebidas',

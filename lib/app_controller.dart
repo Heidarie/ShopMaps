@@ -141,7 +141,7 @@ class AppController extends ChangeNotifier {
     final groceryLists = <CategoryListUsage>[];
     for (final list in _data.groceryLists) {
       final itemCount = list.items.where(
-        (item) => _sameCategoryNames(item.category, canonicalCategory),
+        (item) => sameNormalizedText(item.category, canonicalCategory),
       ).length;
       if (itemCount > 0) {
         groceryLists.add(
@@ -157,7 +157,7 @@ class AppController extends ChangeNotifier {
     final marketLayouts = <CategoryLayoutUsage>[];
     for (final layout in _data.marketLayouts) {
       if (layout.categoryOrder.any(
-        (entry) => _sameCategoryNames(entry, canonicalCategory),
+        (entry) => sameNormalizedText(entry, canonicalCategory),
       )) {
         marketLayouts.add(
           CategoryLayoutUsage(
@@ -198,7 +198,7 @@ class AppController extends ChangeNotifier {
     final seenCategoryKeys = <String>{};
 
     for (final category in _data.categories) {
-      final nextCategory = _sameCategoryNames(category, currentCanonical)
+      final nextCategory = sameNormalizedText(category, currentCanonical)
           ? targetCategory
           : category;
       final key = normalizeLatinText(nextCategory);
@@ -215,7 +215,7 @@ class AppController extends ChangeNotifier {
       final updatedOrder = _canonicalCategoryList(
         layout.categoryOrder
             .map(
-              (category) => _sameCategoryNames(category, currentCanonical)
+              (category) => sameNormalizedText(category, currentCanonical)
                   ? targetCategory
                   : category,
             )
@@ -226,7 +226,7 @@ class AppController extends ChangeNotifier {
 
     final updatedLists = _data.groceryLists.map((list) {
       final updatedItems = list.items.map((item) {
-        if (!_sameCategoryNames(item.category, currentCanonical)) {
+        if (!sameNormalizedText(item.category, currentCanonical)) {
           return item;
         }
         return GroceryItem(
@@ -244,7 +244,7 @@ class AppController extends ChangeNotifier {
       updatedMemory = _upsertItemCategoryMemory(
         source: updatedMemory,
         itemName: entry.itemName,
-        category: _sameCategoryNames(entry.category, currentCanonical)
+        category: sameNormalizedText(entry.category, currentCanonical)
             ? targetCategory
             : entry.category,
       );
@@ -269,10 +269,10 @@ class AppController extends ChangeNotifier {
     }
 
     final updatedCategories = _data.categories
-        .where((entry) => !_sameCategoryNames(entry, canonicalCategory))
+        .where((entry) => !sameNormalizedText(entry, canonicalCategory))
         .toList();
     final updatedMemory = _data.itemCategoryMemory
-        .where((entry) => !_sameCategoryNames(entry.category, canonicalCategory))
+        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
         .toList();
 
     _data = _data.copyWith(
@@ -293,22 +293,22 @@ class AppController extends ChangeNotifier {
 
     final canonicalCategory = usage.category;
     final updatedCategories = _data.categories
-        .where((entry) => !_sameCategoryNames(entry, canonicalCategory))
+        .where((entry) => !sameNormalizedText(entry, canonicalCategory))
         .toList();
     final updatedLayouts = _data.marketLayouts.map((layout) {
       final updatedOrder = layout.categoryOrder
-          .where((entry) => !_sameCategoryNames(entry, canonicalCategory))
+          .where((entry) => !sameNormalizedText(entry, canonicalCategory))
           .toList();
       return layout.copyWith(categoryOrder: updatedOrder);
     }).toList();
     final updatedLists = _data.groceryLists.map((list) {
       final updatedItems = list.items
-          .where((item) => !_sameCategoryNames(item.category, canonicalCategory))
+          .where((item) => !sameNormalizedText(item.category, canonicalCategory))
           .toList();
       return list.copyWith(items: updatedItems);
     }).toList();
     final updatedMemory = _data.itemCategoryMemory
-        .where((entry) => !_sameCategoryNames(entry.category, canonicalCategory))
+        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
         .toList();
 
     _data = _data.copyWith(
@@ -828,10 +828,6 @@ class AppController extends ChangeNotifier {
     }
 
     return null;
-  }
-
-  bool _sameCategoryNames(String left, String right) {
-    return sameNormalizedText(left, right);
   }
 
   Future<void> _persist() async {
