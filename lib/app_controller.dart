@@ -150,9 +150,12 @@ class AppController extends ChangeNotifier {
     return suggestions.take(_maxFrequentItemsToSuggest).toList();
   }
 
-  Future<int> loadTopFrequentItemsIntoList(String listId) async {
-    final suggestions = getTopFrequentItems();
-    if (suggestions.isEmpty) {
+  Future<int> loadTopFrequentItemsIntoList(
+    String listId, {
+    List<FrequentItemStat>? suggestions,
+  }) async {
+    final resolvedSuggestions = suggestions ?? getTopFrequentItems();
+    if (resolvedSuggestions.isEmpty) {
       return 0;
     }
 
@@ -176,7 +179,7 @@ class AppController extends ChangeNotifier {
       referenceTime: timestamp,
     );
 
-    for (final suggestion in suggestions) {
+    for (final suggestion in resolvedSuggestions) {
       final suggestionKey = normalizeLatinText(suggestion.itemName);
       if (suggestionKey.isEmpty || existingItemKeys.contains(suggestionKey)) {
         continue;

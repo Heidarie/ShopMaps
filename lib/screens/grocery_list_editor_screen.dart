@@ -58,8 +58,6 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         }
 
         final grouped = _groupItems(groceryList.items, l10n);
-        final topFrequentItems = widget.controller.getTopFrequentItems();
-
         return Scaffold(
           appBar: AppBar(
             title: Text(groceryList.name),
@@ -67,10 +65,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
               IconButton(
                 tooltip: l10n.loadFrequentItems,
                 icon: const Icon(Icons.autorenew_rounded),
-                onPressed: () => _showLoadFrequentItemsDialog(
-                  listId: groceryList.id,
-                  suggestions: topFrequentItems,
-                ),
+                onPressed: () => _showLoadFrequentItemsDialog(listId: groceryList.id),
               ),
             ],
           ),
@@ -434,9 +429,9 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
   Future<void> _showLoadFrequentItemsDialog({
     required String listId,
-    required List<FrequentItemStat> suggestions,
   }) async {
     final l10n = AppLocalizations.of(context);
+    final suggestions = widget.controller.getTopFrequentItems();
 
     final shouldLoad = await showDialog<bool>(
           context: context,
@@ -499,7 +494,10 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    await widget.controller.loadTopFrequentItemsIntoList(listId);
+    await widget.controller.loadTopFrequentItemsIntoList(
+      listId,
+      suggestions: suggestions,
+    );
   }
 
   Future<void> _editItem({
