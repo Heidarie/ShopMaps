@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import '../widgets/category_name_prompt.dart';
+import '../widgets/delete_category_prompt.dart';
 
 const int _maxInputChars = 100;
 
@@ -301,53 +303,67 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
   Future<void> _pickCategory() async {
     final l10n = AppLocalizations.of(context);
-    final canCreateNewCategory = widget.controller.categories.length < maxCategoryCount;
 
     final selection = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) {
-        final categories = [...widget.controller.categories]
-          ..sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
-                l10n.categoryLabel(b).toLowerCase(),
-              ));
+        return ListenableBuilder(
+          listenable: widget.controller,
+          builder: (context, _) {
+            final canCreateNewCategory =
+                widget.controller.categories.length < maxCategoryCount;
+            final categories = [...widget.controller.categories]
+              ..sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
+                    l10n.categoryLabel(b).toLowerCase(),
+                  ));
 
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.add_circle_outline),
-                title: Text(l10n.addNewCategory),
-                subtitle: canCreateNewCategory
-                    ? null
-                    : Text(l10n.maxCategoriesReached(maxCategoryCount)),
-                enabled: canCreateNewCategory,
-                onTap: canCreateNewCategory
-                    ? () => Navigator.pop(sheetContext, '__add_new__')
-                    : null,
-              ),
-              if (categories.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(l10n.createCategoryFirst),
-                ),
-              if (categories.isNotEmpty)
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: categories.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      return ListTile(
-                        title: Text(l10n.categoryLabel(category)),
-                        onTap: () => Navigator.pop(sheetContext, category),
-                      );
-                    },
+            return SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.add_circle_outline),
+                    title: Text(l10n.addNewCategory),
+                    subtitle: canCreateNewCategory
+                        ? null
+                        : Text(l10n.maxCategoriesReached(maxCategoryCount)),
+                    enabled: canCreateNewCategory,
+                    onTap: canCreateNewCategory
+                        ? () => Navigator.pop(sheetContext, '__add_new__')
+                        : null,
                   ),
-                ),
-            ],
-          ),
+                  if (categories.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(l10n.createCategoryFirst),
+                    ),
+                  if (categories.isNotEmpty)
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: categories.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          return ListTile(
+                            title: Text(l10n.categoryLabel(category)),
+                            trailing: IconButton(
+                              tooltip: l10n.deleteCategory,
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              onPressed: () => _deleteCategoryFromPicker(category),
+                            ),
+                            onTap: () => Navigator.pop(sheetContext, category),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -370,6 +386,36 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
     setState(() {
       _selectedCategory = selection;
+    });
+  }
+
+  Future<void> _deleteCategoryFromPicker(String category) async {
+    final l10n = AppLocalizations.of(context);
+    final usage = widget.controller.getCategoryUsage(category);
+    if (usage == null) {
+      return;
+    }
+
+    final shouldDelete = await showDeleteCategoryPrompt(
+      context: context,
+      categoryLabel: l10n.categoryLabel(category),
+      rawCategoryName: category,
+      usage: usage,
+    );
+    if (!mounted || !shouldDelete) {
+      return;
+    }
+
+    await widget.controller.deleteCategoryAndUsages(category);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      if (_selectedCategory != null &&
+          sameNormalizedText(_selectedCategory!, category)) {
+        _selectedCategory = null;
+      }
     });
   }
 
@@ -414,46 +460,10 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       );
       return null;
     }
-    var draftName = '';
-
-    final name = await showDialog<String>(
+    final name = await showCategoryNamePrompt(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.addNewCategory),
-          content: TextField(
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(_maxInputChars),
-            ],
-            decoration: InputDecoration(labelText: l10n.newCategoryName),
-            autofocus: true,
-            onChanged: (value) {
-              draftName = value;
-            },
-            onSubmitted: (value) {
-              final trimmed = value.trim();
-              if (trimmed.isNotEmpty) {
-                Navigator.pop(dialogContext, trimmed);
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                final value = draftName.trim();
-                if (value.isNotEmpty) {
-                  Navigator.pop(dialogContext, value);
-                }
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        );
-      },
+      title: l10n.addNewCategory,
+      existingCategories: widget.controller.categories,
     );
 
     if (name == null || name.trim().isEmpty) {
@@ -558,7 +568,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final categories = [...widget.categories];
-    if (!categories.any((entry) => entry.toLowerCase() == _draftCategory.toLowerCase())) {
+    if (!categories.any((entry) => sameNormalizedText(entry, _draftCategory))) {
       categories.add(_draftCategory);
     }
     categories.sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
@@ -567,7 +577,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
 
     String? selectedCategory;
     for (final category in categories) {
-      if (category.toLowerCase() == _draftCategory.toLowerCase()) {
+      if (sameNormalizedText(category, _draftCategory)) {
         selectedCategory = category;
         break;
       }
