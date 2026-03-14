@@ -58,9 +58,22 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         }
 
         final grouped = _groupItems(groceryList.items, l10n);
+        final topFrequentItems = widget.controller.getTopFrequentItems();
 
         return Scaffold(
-          appBar: AppBar(title: Text(groceryList.name)),
+          appBar: AppBar(
+            title: Text(groceryList.name),
+            actions: [
+              IconButton(
+                tooltip: l10n.loadFrequentItems,
+                icon: const Icon(Icons.autorenew_rounded),
+                onPressed: () => _showLoadFrequentItemsDialog(
+                  listId: groceryList.id,
+                  suggestions: topFrequentItems,
+                ),
+              ),
+            ],
+          ),
           body: Column(
             children: [
               Expanded(
@@ -417,6 +430,76 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         _selectedCategory = null;
       }
     });
+  }
+
+  Future<void> _showLoadFrequentItemsDialog({
+    required String listId,
+    required List<FrequentItemStat> suggestions,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+
+    final shouldLoad = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: Text(l10n.frequentItemsDialogTitle),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(l10n.frequentItemsDialogExplanation),
+                      const SizedBox(height: 16),
+                      if (suggestions.isEmpty)
+                        Text(
+                          l10n.frequentItemsDialogEmpty,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      else
+                        for (var index = 0; index < suggestions.length; index++) ...[
+                          ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              radius: 14,
+                              child: Text('${index + 1}'),
+                            ),
+                            title: Text(suggestions[index].itemName),
+                            subtitle: Text(
+                              l10n.categoryLabel(suggestions[index].category),
+                            ),
+                          ),
+                          if (index < suggestions.length - 1)
+                            const Divider(height: 1),
+                        ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: suggestions.isEmpty
+                      ? null
+                      : () => Navigator.pop(dialogContext, true),
+                  child: Text(l10n.load),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!shouldLoad || !mounted) {
+      return;
+    }
+
+    await widget.controller.loadTopFrequentItemsIntoList(listId);
   }
 
   Future<void> _editItem({
