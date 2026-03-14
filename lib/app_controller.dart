@@ -19,6 +19,42 @@ class CompletedShoppingItemRemoval {
   final int itemIndex;
 }
 
+class CategoryListUsage {
+  const CategoryListUsage({
+    required this.listId,
+    required this.listName,
+    required this.itemCount,
+  });
+
+  final String listId;
+  final String listName;
+  final int itemCount;
+}
+
+class CategoryLayoutUsage {
+  const CategoryLayoutUsage({
+    required this.layoutId,
+    required this.layoutName,
+  });
+
+  final String layoutId;
+  final String layoutName;
+}
+
+class CategoryUsageSummary {
+  const CategoryUsageSummary({
+    required this.category,
+    required this.groceryLists,
+    required this.marketLayouts,
+  });
+
+  final String category;
+  final List<CategoryListUsage> groceryLists;
+  final List<CategoryLayoutUsage> marketLayouts;
+
+  bool get hasUsages => groceryLists.isNotEmpty || marketLayouts.isNotEmpty;
+}
+
 class AppController extends ChangeNotifier {
   AppController(this._store);
 
@@ -61,15 +97,23 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  String? findCategoryConflict(String candidate, {String? excludingCategory}) {
+    return _findCategoryInList(
+      _data.categories,
+      candidate,
+      excludingCategory: excludingCategory,
+    );
+  }
+
   Future<String?> addCategory(String rawName) async {
     final cleaned = rawName.trim();
     if (cleaned.isEmpty) {
       return null;
     }
 
-    final existing = _resolveCategory(cleaned);
+    final existing = findCategoryConflict(cleaned);
     if (existing != null) {
-      return existing;
+      return null;
     }
 
     if (_data.categories.length >= maxCategoryCount) {
@@ -82,6 +126,201 @@ class AppController extends ChangeNotifier {
     await _persist();
 
     return cleaned;
+  }
+
+  bool isCategoryUsed(String category) {
+    return getCategoryUsage(category)?.hasUsages ?? false;
+  }
+
+  CategoryUsageSummary? getCategoryUsage(String category) {
+    final canonicalCategory = _resolveCategory(category) ?? category.trim();
+    if (canonicalCategory.isEmpty) {
+      return null;
+    }
+
+    final groceryLists = <CategoryListUsage>[];
+    for (final list in _data.groceryLists) {
+      final itemCount = list.items.where(
+        (item) => _sameCategoryNames(item.category, canonicalCategory),
+      ).length;
+      if (itemCount > 0) {
+        groceryLists.add(
+          CategoryListUsage(
+            listId: list.id,
+            listName: list.name,
+            itemCount: itemCount,
+          ),
+        );
+      }
+    }
+
+    final marketLayouts = <CategoryLayoutUsage>[];
+    for (final layout in _data.marketLayouts) {
+      if (layout.categoryOrder.any(
+        (entry) => _sameCategoryNames(entry, canonicalCategory),
+      )) {
+        marketLayouts.add(
+          CategoryLayoutUsage(
+            layoutId: layout.id,
+            layoutName: layout.name,
+          ),
+        );
+      }
+    }
+
+    return CategoryUsageSummary(
+      category: canonicalCategory,
+      groceryLists: groceryLists,
+      marketLayouts: marketLayouts,
+    );
+  }
+
+  Future<String?> renameCategory({
+    required String currentName,
+    required String newName,
+  }) async {
+    final currentCanonical = _resolveCategory(currentName);
+    final cleanedName = newName.trim();
+    if (currentCanonical == null || cleanedName.isEmpty) {
+      return null;
+    }
+
+    final existingConflict = findCategoryConflict(
+      cleanedName,
+      excludingCategory: currentCanonical,
+    );
+    if (existingConflict != null) {
+      return null;
+    }
+
+    final targetCategory = cleanedName;
+    final updatedCategories = <String>[];
+    final seenCategoryKeys = <String>{};
+
+    for (final category in _data.categories) {
+      final nextCategory = _sameCategoryNames(category, currentCanonical)
+          ? targetCategory
+          : category;
+      final key = normalizeLatinText(nextCategory);
+      if (key.isNotEmpty && seenCategoryKeys.add(key)) {
+        updatedCategories.add(nextCategory);
+      }
+    }
+
+    if (_findCategoryInList(updatedCategories, targetCategory) == null) {
+      updatedCategories.add(targetCategory);
+    }
+
+    final updatedLayouts = _data.marketLayouts.map((layout) {
+      final updatedOrder = _canonicalCategoryList(
+        layout.categoryOrder
+            .map(
+              (category) => _sameCategoryNames(category, currentCanonical)
+                  ? targetCategory
+                  : category,
+            )
+            .toList(),
+      );
+      return layout.copyWith(categoryOrder: updatedOrder);
+    }).toList();
+
+    final updatedLists = _data.groceryLists.map((list) {
+      final updatedItems = list.items.map((item) {
+        if (!_sameCategoryNames(item.category, currentCanonical)) {
+          return item;
+        }
+        return GroceryItem(
+          id: item.id,
+          name: item.name,
+          category: targetCategory,
+          quantity: item.quantity,
+        );
+      }).toList();
+      return list.copyWith(items: updatedItems);
+    }).toList();
+
+    var updatedMemory = <RememberedItemCategory>[];
+    for (final entry in _data.itemCategoryMemory) {
+      updatedMemory = _upsertItemCategoryMemory(
+        source: updatedMemory,
+        itemName: entry.itemName,
+        category: _sameCategoryNames(entry.category, currentCanonical)
+            ? targetCategory
+            : entry.category,
+      );
+    }
+
+    _data = _data.copyWith(
+      categories: updatedCategories,
+      marketLayouts: updatedLayouts,
+      groceryLists: updatedLists,
+      itemCategoryMemory: updatedMemory,
+    );
+    notifyListeners();
+    await _persist();
+
+    return targetCategory;
+  }
+
+  Future<bool> deleteCategory(String category) async {
+    final canonicalCategory = _resolveCategory(category);
+    if (canonicalCategory == null || isCategoryUsed(canonicalCategory)) {
+      return false;
+    }
+
+    final updatedCategories = _data.categories
+        .where((entry) => !_sameCategoryNames(entry, canonicalCategory))
+        .toList();
+    final updatedMemory = _data.itemCategoryMemory
+        .where((entry) => !_sameCategoryNames(entry.category, canonicalCategory))
+        .toList();
+
+    _data = _data.copyWith(
+      categories: updatedCategories,
+      itemCategoryMemory: updatedMemory,
+    );
+    notifyListeners();
+    await _persist();
+
+    return true;
+  }
+
+  Future<bool> deleteCategoryAndUsages(String category) async {
+    final usage = getCategoryUsage(category);
+    if (usage == null) {
+      return false;
+    }
+
+    final canonicalCategory = usage.category;
+    final updatedCategories = _data.categories
+        .where((entry) => !_sameCategoryNames(entry, canonicalCategory))
+        .toList();
+    final updatedLayouts = _data.marketLayouts.map((layout) {
+      final updatedOrder = layout.categoryOrder
+          .where((entry) => !_sameCategoryNames(entry, canonicalCategory))
+          .toList();
+      return layout.copyWith(categoryOrder: updatedOrder);
+    }).toList();
+    final updatedLists = _data.groceryLists.map((list) {
+      final updatedItems = list.items
+          .where((item) => !_sameCategoryNames(item.category, canonicalCategory))
+          .toList();
+      return list.copyWith(items: updatedItems);
+    }).toList();
+    final updatedMemory = _data.itemCategoryMemory
+        .where((entry) => !_sameCategoryNames(entry.category, canonicalCategory))
+        .toList();
+
+    _data = _data.copyWith(
+      categories: updatedCategories,
+      marketLayouts: updatedLayouts,
+      groceryLists: updatedLists,
+      itemCategoryMemory: updatedMemory,
+    );
+    notifyListeners();
+    await _persist();
+
+    return true;
   }
 
   Future<void> upsertMarketLayout(MarketLayout layout) async {
@@ -465,7 +704,7 @@ class AppController extends ChangeNotifier {
 
     for (final item in groceryList.items) {
       final category = _resolveCategory(item.category) ?? item.category;
-      final key = category.toLowerCase();
+      final key = normalizeLatinText(category);
       categoryByKey.putIfAbsent(key, () => category);
       grouped.putIfAbsent(key, () => []).add(item);
     }
@@ -478,7 +717,7 @@ class AppController extends ChangeNotifier {
     final used = <String>{};
 
     for (final category in _canonicalCategoryList(marketLayout.categoryOrder)) {
-      final key = category.toLowerCase();
+      final key = normalizeLatinText(category);
       final items = grouped[key];
       if (items == null || items.isEmpty) {
         continue;
@@ -523,7 +762,7 @@ class AppController extends ChangeNotifier {
         continue;
       }
 
-      final key = canonical.toLowerCase();
+      final key = normalizeLatinText(canonical);
       if (seen.add(key)) {
         result.add(canonical);
       }
@@ -565,19 +804,34 @@ class AppController extends ChangeNotifier {
     return next;
   }
 
-  String? _findCategoryInList(List<String> list, String candidate) {
-    final normalized = candidate.trim().toLowerCase();
+  String? _findCategoryInList(
+    List<String> list,
+    String candidate, {
+    String? excludingCategory,
+  }) {
+    final normalized = normalizeLatinText(candidate);
+    final excludedNormalized = excludingCategory == null
+        ? null
+        : normalizeLatinText(excludingCategory);
     if (normalized.isEmpty) {
       return null;
     }
 
     for (final existing in list) {
-      if (existing.toLowerCase() == normalized) {
+      final existingNormalized = normalizeLatinText(existing);
+      if (excludedNormalized != null && existingNormalized == excludedNormalized) {
+        continue;
+      }
+      if (existingNormalized == normalized) {
         return existing;
       }
     }
 
     return null;
+  }
+
+  bool _sameCategoryNames(String left, String right) {
+    return sameNormalizedText(left, right);
   }
 
   Future<void> _persist() async {

@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import '../widgets/category_name_prompt.dart';
+import '../widgets/delete_category_prompt.dart';
 
 const int _maxInputChars = 100;
 
 class MarketLayoutEditorScreen extends StatefulWidget {
   const MarketLayoutEditorScreen({
     super.key,
+    required this.controller,
     this.layout,
     List<String>? categories,
   }) : categories = categories ?? const [];
 
+  final AppController controller;
   final MarketLayout? layout;
   final List<String> categories;
 
@@ -92,13 +97,26 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
                               index: index,
                               child: const Icon(Icons.drag_indicator),
                             ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                setState(() {
-                                  _orderedCategories.removeAt(index);
-                                });
-                              },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: l10n.deleteCategory,
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                  onPressed: () => _deleteCategory(category),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    setState(() {
+                                      _orderedCategories.removeAt(index);
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -133,58 +151,80 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
 
   Future<void> _addCategory() async {
     final l10n = AppLocalizations.of(context);
-    final canCreateNewCategory = _allCategories.length < maxCategoryCount;
-    final available = _allCategories
-        .where((category) =>
-            !_orderedCategories.any((selected) => selected.toLowerCase() == category.toLowerCase()))
-        .toList()
-      ..sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
-            l10n.categoryLabel(b).toLowerCase(),
-          ));
 
     final selection = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.add_circle_outline),
-                  title: Text(l10n.addNewCategory),
-                  subtitle: canCreateNewCategory
-                      ? null
-                      : Text(l10n.maxCategoriesReached(maxCategoryCount)),
-                  enabled: canCreateNewCategory,
-                  onTap: canCreateNewCategory
-                      ? () => Navigator.pop(sheetContext, '__add_new__')
-                      : null,
-                ),
-                if (available.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(l10n.createCategoryFirst),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final canCreateNewCategory = _allCategories.length < maxCategoryCount;
+            final modalAvailable = _allCategories
+                .where(
+                  (category) => !_orderedCategories.any(
+                    (selected) => sameNormalizedText(selected, category),
                   ),
-                if (available.isNotEmpty)
-                  Flexible(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: available.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final category = available[index];
-                        return ListTile(
-                          title: Text(l10n.categoryLabel(category)),
-                          onTap: () => Navigator.pop(sheetContext, category),
-                        );
-                      },
+                )
+                .toList()
+              ..sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
+                    l10n.categoryLabel(b).toLowerCase(),
+                  ));
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.add_circle_outline),
+                      title: Text(l10n.addNewCategory),
+                      subtitle: canCreateNewCategory
+                          ? null
+                          : Text(l10n.maxCategoriesReached(maxCategoryCount)),
+                      enabled: canCreateNewCategory,
+                      onTap: canCreateNewCategory
+                          ? () => Navigator.pop(sheetContext, '__add_new__')
+                          : null,
                     ),
-                  ),
-              ],
-            ),
-          ),
+                    if (modalAvailable.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(l10n.createCategoryFirst),
+                      ),
+                    if (modalAvailable.isNotEmpty)
+                      Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: modalAvailable.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final category = modalAvailable[index];
+                            return ListTile(
+                              title: Text(l10n.categoryLabel(category)),
+                              trailing: IconButton(
+                                tooltip: l10n.deleteCategory,
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                                onPressed: () async {
+                                  await _deleteCategory(category);
+                                  if (!context.mounted) {
+                                    return;
+                                  }
+                                  setModalState(() {});
+                                },
+                              ),
+                              onTap: () => Navigator.pop(sheetContext, category),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -200,10 +240,10 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
       }
 
       setState(() {
-        if (!_allCategories.any((existing) => existing.toLowerCase() == created.toLowerCase())) {
+        if (!_allCategories.any((existing) => sameNormalizedText(existing, created))) {
           _allCategories.add(created);
         }
-        if (!_orderedCategories.any((existing) => existing.toLowerCase() == created.toLowerCase())) {
+        if (!_orderedCategories.any((existing) => sameNormalizedText(existing, created))) {
           _orderedCategories.add(created);
         }
       });
@@ -211,7 +251,7 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
     }
 
     setState(() {
-      if (!_orderedCategories.any((existing) => existing.toLowerCase() == selection.toLowerCase())) {
+      if (!_orderedCategories.any((existing) => sameNormalizedText(existing, selection))) {
         _orderedCategories.add(selection);
       }
     });
@@ -225,46 +265,10 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
       );
       return null;
     }
-    var draftName = '';
-
-    final name = await showDialog<String>(
+    final name = await showCategoryNamePrompt(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.addNewCategory),
-          content: TextField(
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(_maxInputChars),
-            ],
-            decoration: InputDecoration(labelText: l10n.newCategoryName),
-            autofocus: true,
-            onChanged: (value) {
-              draftName = value;
-            },
-            onSubmitted: (value) {
-              final trimmed = value.trim();
-              if (trimmed.isNotEmpty) {
-                Navigator.pop(dialogContext, trimmed);
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                final value = draftName.trim();
-                if (value.isNotEmpty) {
-                  Navigator.pop(dialogContext, value);
-                }
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        );
-      },
+      title: l10n.addNewCategory,
+      existingCategories: _allCategories,
     );
 
     if (name == null || name.trim().isEmpty) {
@@ -272,6 +276,50 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
     }
 
     return name.trim();
+  }
+
+  Future<void> _deleteCategory(String category) async {
+    final l10n = AppLocalizations.of(context);
+    final existsInController = widget.controller.categories.any(
+      (entry) => sameNormalizedText(entry, category),
+    );
+
+    if (!existsInController) {
+      setState(() {
+        _allCategories.removeWhere((entry) => sameNormalizedText(entry, category));
+        _orderedCategories.removeWhere(
+          (entry) => sameNormalizedText(entry, category),
+        );
+      });
+      return;
+    }
+
+    final usage = widget.controller.getCategoryUsage(category);
+    if (usage == null) {
+      return;
+    }
+
+    final shouldDelete = await showDeleteCategoryPrompt(
+      context: context,
+      categoryLabel: l10n.categoryLabel(category),
+      rawCategoryName: category,
+      usage: usage,
+    );
+    if (!mounted || !shouldDelete) {
+      return;
+    }
+
+    await widget.controller.deleteCategoryAndUsages(category);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _allCategories.removeWhere((entry) => sameNormalizedText(entry, category));
+      _orderedCategories.removeWhere(
+        (entry) => sameNormalizedText(entry, category),
+      );
+    });
   }
 
   void _save() {

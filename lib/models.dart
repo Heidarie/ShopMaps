@@ -2,6 +2,75 @@ import 'dart:math';
 
 const int maxCategoryCount = 1000;
 
+const Map<String, String> _latinCharacterFoldMap = {
+  'a': 'a',
+  'à': 'a',
+  'á': 'a',
+  'â': 'a',
+  'ã': 'a',
+  'ä': 'a',
+  'å': 'a',
+  'ą': 'a',
+  'æ': 'ae',
+  'c': 'c',
+  'ç': 'c',
+  'ć': 'c',
+  'č': 'c',
+  'd': 'd',
+  'ď': 'd',
+  'e': 'e',
+  'è': 'e',
+  'é': 'e',
+  'ê': 'e',
+  'ë': 'e',
+  'ę': 'e',
+  'ě': 'e',
+  'g': 'g',
+  'ğ': 'g',
+  'i': 'i',
+  'ì': 'i',
+  'í': 'i',
+  'î': 'i',
+  'ï': 'i',
+  'ł': 'l',
+  'ľ': 'l',
+  'ĺ': 'l',
+  'n': 'n',
+  'ñ': 'n',
+  'ń': 'n',
+  'ň': 'n',
+  'o': 'o',
+  'ò': 'o',
+  'ó': 'o',
+  'ô': 'o',
+  'õ': 'o',
+  'ö': 'o',
+  'ø': 'o',
+  'œ': 'oe',
+  'r': 'r',
+  'ŕ': 'r',
+  'ř': 'r',
+  's': 's',
+  'ś': 's',
+  'š': 's',
+  'ß': 'ss',
+  't': 't',
+  'ť': 't',
+  'u': 'u',
+  'ù': 'u',
+  'ú': 'u',
+  'û': 'u',
+  'ü': 'u',
+  'ů': 'u',
+  'y': 'y',
+  'ý': 'y',
+  'ÿ': 'y',
+  'z': 'z',
+  'ź': 'z',
+  'ż': 'z',
+  'ž': 'z',
+};
+
 const List<String> defaultCategories = [
   'Drinks',
   'Sweets',
@@ -14,6 +83,21 @@ const List<String> defaultCategories = [
   'Frozen',
   'Household',
 ];
+
+String normalizeLatinText(String value) {
+  final buffer = StringBuffer();
+
+  for (final rune in value.trim().toLowerCase().runes) {
+    final character = String.fromCharCode(rune);
+    buffer.write(_latinCharacterFoldMap[character] ?? character);
+  }
+
+  return buffer.toString();
+}
+
+bool sameNormalizedText(String left, String right) {
+  return normalizeLatinText(left) == normalizeLatinText(right);
+}
 
 String createId() {
   final randomPart = Random().nextInt(1 << 32).toRadixString(16);
@@ -278,7 +362,7 @@ List<String> _uniqueCaseInsensitive(List<String> source) {
   final result = <String>[];
 
   for (final item in source) {
-    final key = item.toLowerCase();
+    final key = normalizeLatinText(item);
     if (seen.add(key)) {
       result.add(item);
     }

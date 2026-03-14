@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import '../widgets/category_name_prompt.dart';
+import '../widgets/delete_category_prompt.dart';
 import 'go_shopping_screen.dart';
 import 'grocery_list_editor_screen.dart';
 import 'market_layout_editor_screen.dart';
@@ -167,11 +169,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
+        final l10n = AppLocalizations.of(context);
+        final homePages = [
+          _MarketLayoutsTab(controller: widget.controller),
+          _GroceryListsTab(controller: widget.controller),
+          _CategoriesTab(controller: widget.controller),
+        ];
+        final homeTabs = [
+          _HomeTabItem(
+            label: l10n.market,
+            selectedIcon: Icons.store_mall_directory,
+            unselectedIcon: Icons.store_mall_directory_outlined,
+          ),
+          _HomeTabItem(
+            label: l10n.groceryList,
+            selectedIcon: Icons.playlist_add_check,
+            unselectedIcon: Icons.playlist_add_check_outlined,
+          ),
+          _HomeTabItem(
+            label: l10n.categoriesTab,
+            selectedIcon: Icons.category,
+            unselectedIcon: Icons.category_outlined,
+          ),
+        ];
+
         if (widget.controller.isLoading) {
           return const Scaffold(
             backgroundColor: Color(0xFF318887),
@@ -218,10 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _selectedTab = index;
                   });
                 },
-                children: [
-                  _MarketLayoutsTab(controller: widget.controller),
-                  _GroceryListsTab(controller: widget.controller),
-                ],
+                children: homePages,
               ),
               Align(
                 alignment: Alignment.bottomCenter,
@@ -244,9 +265,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                         child: _HomeTabSwitcher(
+                          items: homeTabs,
                           selectedIndex: _selectedTab,
-                          leftLabel: l10n.market,
-                          rightLabel: l10n.groceryList,
                           onChanged: (index) {
                             if (index == _selectedTab) {
                               return;
@@ -286,17 +306,27 @@ class _ShoppingSetupSelection {
   final DateTime startedAt;
 }
 
+class _HomeTabItem {
+  const _HomeTabItem({
+    required this.label,
+    required this.selectedIcon,
+    required this.unselectedIcon,
+  });
+
+  final String label;
+  final IconData selectedIcon;
+  final IconData unselectedIcon;
+}
+
 class _HomeTabSwitcher extends StatelessWidget {
   const _HomeTabSwitcher({
+    required this.items,
     required this.selectedIndex,
-    required this.leftLabel,
-    required this.rightLabel,
     required this.onChanged,
   });
 
+  final List<_HomeTabItem> items;
   final int selectedIndex;
-  final String leftLabel;
-  final String rightLabel;
   final ValueChanged<int> onChanged;
 
   @override
@@ -326,27 +356,23 @@ class _HomeTabSwitcher extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(3),
         child: Row(
-          children: [
-            Expanded(
+          children: List.generate(items.length * 2 - 1, (index) {
+            if (index.isOdd) {
+              return const SizedBox(width: 3);
+            }
+
+            final itemIndex = index ~/ 2;
+            final item = items[itemIndex];
+            return Expanded(
               child: _HomeTabButton(
-                label: leftLabel,
-                selected: selectedIndex == 0,
-                selectedIcon: Icons.store_mall_directory,
-                unselectedIcon: Icons.store_mall_directory_outlined,
-                onTap: () => onChanged(0),
+                label: item.label,
+                selected: selectedIndex == itemIndex,
+                selectedIcon: item.selectedIcon,
+                unselectedIcon: item.unselectedIcon,
+                onTap: () => onChanged(itemIndex),
               ),
-            ),
-            const SizedBox(width: 3),
-            Expanded(
-              child: _HomeTabButton(
-                label: rightLabel,
-                selected: selectedIndex == 1,
-                selectedIcon: Icons.playlist_add_check,
-                unselectedIcon: Icons.playlist_add_check_outlined,
-                onTap: () => onChanged(1),
-              ),
-            ),
-          ],
+            );
+          }),
         ),
       ),
     );
@@ -433,6 +459,8 @@ class _MarketLayoutsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final marketLayouts = List<MarketLayout>.of(controller.marketLayouts);
+    final categories = List<String>.of(controller.categories);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -452,8 +480,9 @@ class _MarketLayoutsTab extends StatelessWidget {
                   final result = await Navigator.of(context).push<MarketLayout>(
                     MaterialPageRoute(
                       builder: (_) => MarketLayoutEditorScreen(
+                        controller: controller,
                         layout: null,
-                        categories: controller.categories,
+                        categories: categories,
                       ),
                     ),
                   );
@@ -469,14 +498,14 @@ class _MarketLayoutsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: controller.marketLayouts.isEmpty
+            child: marketLayouts.isEmpty
                 ? Center(child: Text(l10n.emptyMarketLayouts))
                 : ListView.separated(
                     padding: const EdgeInsets.only(bottom: 170),
-                    itemCount: controller.marketLayouts.length,
+                    itemCount: marketLayouts.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final layout = controller.marketLayouts[index];
+                      final layout = marketLayouts[index];
 
                       return Card(
                         child: ListTile(
@@ -484,8 +513,9 @@ class _MarketLayoutsTab extends StatelessWidget {
                             final result = await Navigator.of(context).push<MarketLayout>(
                               MaterialPageRoute(
                                 builder: (_) => MarketLayoutEditorScreen(
+                                  controller: controller,
                                   layout: layout,
-                                  categories: controller.categories,
+                                  categories: categories,
                                 ),
                               ),
                             );
@@ -506,8 +536,9 @@ class _MarketLayoutsTab extends StatelessWidget {
                                 final result = await Navigator.of(context).push<MarketLayout>(
                                   MaterialPageRoute(
                                     builder: (_) => MarketLayoutEditorScreen(
+                                      controller: controller,
                                       layout: layout,
-                                      categories: controller.categories,
+                                      categories: categories,
                                     ),
                                   ),
                                 );
@@ -591,6 +622,7 @@ class _GroceryListsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final groceryLists = List<GroceryListModel>.of(controller.groceryLists);
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -607,7 +639,7 @@ class _GroceryListsTab extends StatelessWidget {
               ),
               FilledButton.icon(
                 onPressed: () async {
-                  final name = await _showNamePrompt(
+                  final name = await showNamePrompt(
                     context: context,
                     title: l10n.addGroceryList,
                     label: l10n.groceryListName,
@@ -637,14 +669,14 @@ class _GroceryListsTab extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Expanded(
-            child: controller.groceryLists.isEmpty
+            child: groceryLists.isEmpty
                 ? Center(child: Text(l10n.emptyGroceryLists))
                 : ListView.separated(
                     padding: const EdgeInsets.only(bottom: 170),
-                    itemCount: controller.groceryLists.length,
+                    itemCount: groceryLists.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final list = controller.groceryLists[index];
+                      final list = groceryLists[index];
 
                       return Card(
                         child: ListTile(
@@ -667,7 +699,7 @@ class _GroceryListsTab extends StatelessWidget {
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) async {
                               if (value == 'rename') {
-                                final name = await _showNamePrompt(
+                                final name = await showNamePrompt(
                                   context: context,
                                   title: l10n.rename,
                                   label: l10n.groceryListName,
@@ -745,58 +777,211 @@ class _GroceryListsTab extends StatelessWidget {
       ),
     );
   }
+}
 
-  Future<String?> _showNamePrompt({
-    required BuildContext context,
-    required String title,
-    required String label,
-    String initialValue = '',
-  }) async {
-    var draftName = initialValue;
+class _CategoriesTab extends StatelessWidget {
+  const _CategoriesTab({required this.controller});
+
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextFormField(
-            initialValue: initialValue,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(_maxInputChars),
-            ],
-            decoration: InputDecoration(labelText: label),
-            autofocus: true,
-            onChanged: (value) {
-              draftName = value;
-            },
-            onFieldSubmitted: (value) {
-              final trimmed = value.trim();
-              if (trimmed.isNotEmpty) {
-                Navigator.pop(dialogContext, trimmed);
-              }
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                final value = draftName.trim();
-                if (value.isEmpty) {
-                  return;
-                }
-                Navigator.pop(dialogContext, value);
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        );
-      },
+    final categories = List<String>.of(controller.categories);
+    categories.sort(
+      (a, b) => normalizeLatinText(
+        l10n.categoryLabel(a),
+      ).compareTo(normalizeLatinText(l10n.categoryLabel(b))),
     );
 
-    return result;
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.categoriesTab,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: controller.hasReachedCategoryLimit
+                    ? null
+                    : () async {
+                        final name = await showCategoryNamePrompt(
+                          context: context,
+                          title: l10n.addCategory,
+                          existingCategories: categories,
+                        );
+                        if (name == null) {
+                          return;
+                        }
+
+                        final addedCategory = await controller.addCategory(name);
+                        if (addedCategory != null || !context.mounted) {
+                          return;
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              l10n.maxCategoriesReached(maxCategoryCount),
+                            ),
+                          ),
+                        );
+                      },
+                icon: const Icon(Icons.add),
+                label: Text(l10n.add),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: categories.isEmpty
+                ? Center(child: Text(l10n.emptyCategories))
+                : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 170),
+                    itemCount: categories.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      final localizedLabel = l10n.categoryLabel(category);
+
+                      return Card(
+                        key: ValueKey(category),
+                        child: ListTile(
+                          title: Text(category),
+                          subtitle: localizedLabel == category
+                              ? null
+                              : Text(localizedLabel),
+                          trailing: PopupMenuButton<String>(
+                            onSelected: (value) async {
+                              if (value == 'edit') {
+                                final renamedCategory = await showCategoryNamePrompt(
+                                  context: context,
+                                  title: l10n.editCategory,
+                                  existingCategories: categories,
+                                  initialValue: category,
+                                  excludedCategory: category,
+                                );
+                                if (renamedCategory != null) {
+                                  await controller.renameCategory(
+                                    currentName: category,
+                                    newName: renamedCategory,
+                                  );
+                                }
+                                return;
+                              }
+
+                              final usage = controller.getCategoryUsage(category);
+                              if (usage == null) {
+                                return;
+                              }
+
+                              final shouldDelete = await showDeleteCategoryPrompt(
+                                context: context,
+                                categoryLabel: localizedLabel,
+                                rawCategoryName: category,
+                                usage: usage,
+                              );
+
+                              if (!shouldDelete) {
+                                return;
+                              }
+
+                              await controller.deleteCategoryAndUsages(category);
+                            },
+                            itemBuilder: (menuContext) => [
+                              PopupMenuItem<String>(
+                                value: 'edit',
+                                child: Text(l10n.edit),
+                              ),
+                              PopupMenuItem<String>(
+                                value: 'delete',
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: Theme.of(menuContext).colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      l10n.delete,
+                                      style: TextStyle(
+                                        color: Theme.of(menuContext).colorScheme.error,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
   }
+}
+
+Future<String?> showNamePrompt({
+  required BuildContext context,
+  required String title,
+  required String label,
+  String initialValue = '',
+}) async {
+  var draftName = initialValue;
+  final l10n = AppLocalizations.of(context);
+
+  final result = await showDialog<String>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: Text(title),
+        content: TextFormField(
+          initialValue: initialValue,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(_maxInputChars),
+          ],
+          decoration: InputDecoration(labelText: label),
+          autofocus: true,
+          onChanged: (value) {
+            draftName = value;
+          },
+          onFieldSubmitted: (value) {
+            final trimmed = value.trim();
+            if (trimmed.isNotEmpty) {
+              Navigator.pop(dialogContext, trimmed);
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = draftName.trim();
+              if (value.isEmpty) {
+                return;
+              }
+              Navigator.pop(dialogContext, value);
+            },
+            child: Text(l10n.save),
+          ),
+        ],
+      );
+    },
+  );
+
+  return result;
 }

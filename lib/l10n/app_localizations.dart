@@ -48,9 +48,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Add category to layout',
       'addNewCategory': 'Add new category',
       'newCategoryName': 'Category name',
+      'categoryAlreadyExists': 'This category already exists.',
       'category': 'Category',
+      'categoriesTab': 'Categories',
       'chooseCategory': 'Choose category',
       'noCategoriesInLayout': 'No categories in this market layout yet.',
+      'emptyCategories': 'No categories yet.',
       'addGroceryList': 'Add grocery list',
       'groceryListName': 'List name',
       'emptyGroceryLists': 'No grocery lists yet.',
@@ -85,6 +88,15 @@ class AppLocalizations {
       'maxCategoriesReached': 'Maximum categories limit reached ({max}).',
       'selectListAndMarket': 'Create at least one grocery list and one market layout.',
       'deleteItem': 'Delete item',
+      'editCategory': 'Edit category',
+      'deleteCategory': 'Delete category',
+      'deleteCategoryConfirmMessage': 'Do you want to delete this category?',
+      'deleteCategoryUsageLists': 'Used in grocery lists:',
+      'deleteCategoryUsageMarkets': 'Used in market layouts:',
+      'deleteCategoryRemovesItems':
+          'Deleting this category will also remove matching items from grocery lists and clear saved item-category memory.',
+      'categoryInUseCannotDelete':
+          'Cannot delete a category used in grocery lists or market layouts.',
       'deleteLayout': 'Delete market layout',
       'deleteList': 'Delete grocery list',
       'categoryDrinks': 'Drinks',
@@ -119,9 +131,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Dodaj kategorię do układu',
       'addNewCategory': 'Dodaj nową kategorię',
       'newCategoryName': 'Nazwa kategorii',
+      'categoryAlreadyExists': 'Taka kategoria już istnieje.',
       'category': 'Kategoria',
+      'categoriesTab': 'Kategorie',
       'chooseCategory': 'Wybierz kategorię',
       'noCategoriesInLayout': 'Brak kategorii w tym układzie sklepu.',
+      'emptyCategories': 'Brak kategorii.',
       'addGroceryList': 'Dodaj listę zakupów',
       'groceryListName': 'Nazwa listy',
       'emptyGroceryLists': 'Brak list zakupów.',
@@ -156,6 +171,15 @@ class AppLocalizations {
       'maxCategoriesReached': 'Osiągnięto limit kategorii ({max}).',
       'selectListAndMarket': 'Utwórz przynajmniej jedną listę i jeden układ sklepu.',
       'deleteItem': 'Usuń produkt',
+      'editCategory': 'Edytuj kategorię',
+      'deleteCategory': 'Usuń kategorię',
+      'deleteCategoryConfirmMessage': 'Czy chcesz usunąć tę kategorię?',
+      'deleteCategoryUsageLists': 'Używana na listach zakupów:',
+      'deleteCategoryUsageMarkets': 'Używana w układach sklepów:',
+      'deleteCategoryRemovesItems':
+          'Usunięcie tej kategorii usunie też przypisane do niej produkty z list zakupów oraz wyczyści zapamiętaną historię artykułów.',
+      'categoryInUseCannotDelete':
+          'Nie można usunąć kategorii używanej na listach zakupów lub w układach sklepów.',
       'deleteLayout': 'Usuń układ sklepu',
       'deleteList': 'Usuń listę zakupów',
       'categoryDrinks': 'Napoje',
@@ -190,9 +214,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Kategorie zum Layout hinzufügen',
       'addNewCategory': 'Neue Kategorie hinzufügen',
       'newCategoryName': 'Kategoriename',
+      'categoryAlreadyExists': 'Diese Kategorie existiert bereits.',
       'category': 'Kategorie',
+      'categoriesTab': 'Kategorien',
       'chooseCategory': 'Kategorie wählen',
       'noCategoriesInLayout': 'Noch keine Kategorien in diesem Marktlayout.',
+      'emptyCategories': 'Noch keine Kategorien.',
       'addGroceryList': 'Einkaufsliste hinzufügen',
       'groceryListName': 'Listenname',
       'emptyGroceryLists': 'Noch keine Einkaufslisten.',
@@ -228,6 +255,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Erstelle mindestens eine Einkaufsliste und ein Marktlayout.',
       'deleteItem': 'Artikel löschen',
+      'editCategory': 'Kategorie bearbeiten',
+      'deleteCategory': 'Kategorie löschen',
+      'categoryInUseCannotDelete':
+          'Eine Kategorie, die in Einkaufslisten oder Marktlayouts verwendet wird, kann nicht gelöscht werden.',
       'deleteLayout': 'Marktlayout löschen',
       'deleteList': 'Einkaufsliste löschen',
       'categoryDrinks': 'Getränke',
@@ -262,9 +293,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Categorie aan indeling toevoegen',
       'addNewCategory': 'Nieuwe categorie toevoegen',
       'newCategoryName': 'Categorienaam',
+      'categoryAlreadyExists': 'Deze categorie bestaat al.',
       'category': 'Categorie',
+      'categoriesTab': 'Categorieen',
       'chooseCategory': 'Kies categorie',
       'noCategoriesInLayout': 'Nog geen categorieën in deze winkelindeling.',
+      'emptyCategories': 'Nog geen categorieen.',
       'addGroceryList': 'Boodschappenlijst toevoegen',
       'groceryListName': 'Lijstnaam',
       'emptyGroceryLists': 'Nog geen boodschappenlijsten.',
@@ -300,6 +334,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Maak minimaal één boodschappenlijst en één winkelindeling aan.',
       'deleteItem': 'Item verwijderen',
+      'editCategory': 'Categorie bewerken',
+      'deleteCategory': 'Categorie verwijderen',
+      'categoryInUseCannotDelete':
+          'Een categorie die in boodschappenlijsten of winkelindelingen wordt gebruikt, kan niet worden verwijderd.',
       'deleteLayout': 'Winkelindeling verwijderen',
       'deleteList': 'Boodschappenlijst verwijderen',
       'categoryDrinks': 'Dranken',
@@ -334,9 +372,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Añadir categoría al diseño',
       'addNewCategory': 'Añadir nueva categoría',
       'newCategoryName': 'Nombre de la categoría',
+      'categoryAlreadyExists': 'Esta categoría ya existe.',
       'category': 'Categoría',
+      'categoriesTab': 'Categorías',
       'chooseCategory': 'Elegir categoría',
       'noCategoriesInLayout': 'Aún no hay categorías en este diseño de tienda.',
+      'emptyCategories': 'Aún no hay categorías.',
       'addGroceryList': 'Añadir lista de compras',
       'groceryListName': 'Nombre de la lista',
       'emptyGroceryLists': 'Aún no hay listas de compras.',
@@ -372,6 +413,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Crea al menos una lista de compras y un diseño de tienda.',
       'deleteItem': 'Eliminar producto',
+      'editCategory': 'Editar categoría',
+      'deleteCategory': 'Eliminar categoría',
+      'categoryInUseCannotDelete':
+          'No se puede eliminar una categoría usada en listas de compras o diseños de tienda.',
       'deleteLayout': 'Eliminar diseño de tienda',
       'deleteList': 'Eliminar lista de compras',
       'categoryDrinks': 'Bebidas',
@@ -406,9 +451,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Ajouter une catégorie au plan',
       'addNewCategory': 'Ajouter une nouvelle catégorie',
       'newCategoryName': 'Nom de la catégorie',
+      'categoryAlreadyExists': 'Cette catégorie existe déjà.',
       'category': 'Catégorie',
+      'categoriesTab': 'Catégories',
       'chooseCategory': 'Choisir une catégorie',
       'noCategoriesInLayout': "Aucune catégorie dans ce plan de magasin.",
+      'emptyCategories': 'Aucune catégorie pour le moment.',
       'addGroceryList': 'Ajouter une liste de courses',
       'groceryListName': 'Nom de la liste',
       'emptyGroceryLists': "Aucune liste de courses pour l'instant.",
@@ -444,6 +492,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Créez au moins une liste de courses et un plan de magasin.',
       'deleteItem': "Supprimer l'article",
+      'editCategory': 'Modifier la catégorie',
+      'deleteCategory': 'Supprimer la catégorie',
+      'categoryInUseCannotDelete':
+          'Impossible de supprimer une catégorie utilisée dans des listes de courses ou des plans de magasin.',
       'deleteLayout': 'Supprimer le plan du magasin',
       'deleteList': 'Supprimer la liste de courses',
       'categoryDrinks': 'Boissons',
@@ -478,9 +530,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Додати категорію до плану',
       'addNewCategory': 'Додати нову категорію',
       'newCategoryName': 'Назва категорії',
+      'categoryAlreadyExists': 'Така категорія вже існує.',
       'category': 'Категорія',
+      'categoriesTab': 'Категорії',
       'chooseCategory': 'Вибрати категорію',
       'noCategoriesInLayout': 'У цьому плані магазину ще немає категорій.',
+      'emptyCategories': 'Категорій ще немає.',
       'addGroceryList': 'Додати список покупок',
       'groceryListName': 'Назва списку',
       'emptyGroceryLists': 'Ще немає списків покупок.',
@@ -516,6 +571,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Створіть принаймні один список покупок і один план магазину.',
       'deleteItem': 'Видалити товар',
+      'editCategory': 'Редагувати категорію',
+      'deleteCategory': 'Видалити категорію',
+      'categoryInUseCannotDelete':
+          'Не можна видалити категорію, яка використовується у списках покупок або планах магазину.',
       'deleteLayout': 'Видалити план магазину',
       'deleteList': 'Видалити список покупок',
       'categoryDrinks': 'Напої',
@@ -550,9 +609,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Aggiungi categoria al layout',
       'addNewCategory': 'Aggiungi nuova categoria',
       'newCategoryName': 'Nome categoria',
+      'categoryAlreadyExists': 'Questa categoria esiste già.',
       'category': 'Categoria',
+      'categoriesTab': 'Categorie',
       'chooseCategory': 'Scegli categoria',
       'noCategoriesInLayout': 'Nessuna categoria in questo layout negozio.',
+      'emptyCategories': 'Nessuna categoria ancora.',
       'addGroceryList': 'Aggiungi lista della spesa',
       'groceryListName': 'Nome lista',
       'emptyGroceryLists': 'Nessuna lista della spesa ancora.',
@@ -588,6 +650,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Crea almeno una lista della spesa e un layout del negozio.',
       'deleteItem': 'Elimina articolo',
+      'editCategory': 'Modifica categoria',
+      'deleteCategory': 'Elimina categoria',
+      'categoryInUseCannotDelete':
+          'Non è possibile eliminare una categoria usata nelle liste della spesa o nei layout del negozio.',
       'deleteLayout': 'Elimina layout del negozio',
       'deleteList': 'Elimina lista della spesa',
       'categoryDrinks': 'Bevande',
@@ -622,9 +688,12 @@ class AppLocalizations {
       'addCategoryToLayout': 'Adicionar categoria ao layout',
       'addNewCategory': 'Adicionar nova categoria',
       'newCategoryName': 'Nome da categoria',
+      'categoryAlreadyExists': 'Esta categoria já existe.',
       'category': 'Categoria',
+      'categoriesTab': 'Categorias',
       'chooseCategory': 'Escolher categoria',
       'noCategoriesInLayout': 'Ainda não há categorias neste layout de loja.',
+      'emptyCategories': 'Ainda não há categorias.',
       'addGroceryList': 'Adicionar lista de compras',
       'groceryListName': 'Nome da lista',
       'emptyGroceryLists': 'Ainda não há listas de compras.',
@@ -660,6 +729,10 @@ class AppLocalizations {
       'selectListAndMarket':
           'Crie pelo menos uma lista de compras e um layout de loja.',
       'deleteItem': 'Excluir item',
+      'editCategory': 'Editar categoria',
+      'deleteCategory': 'Excluir categoria',
+      'categoryInUseCannotDelete':
+          'Nao e possivel excluir uma categoria usada em listas de compras ou layouts de loja.',
       'deleteLayout': 'Excluir layout da loja',
       'deleteList': 'Excluir lista de compras',
       'categoryDrinks': 'Bebidas',
@@ -726,9 +799,12 @@ class AppLocalizations {
   String get addCategoryToLayout => _t('addCategoryToLayout');
   String get addNewCategory => _t('addNewCategory');
   String get newCategoryName => _t('newCategoryName');
+  String get categoryAlreadyExists => _t('categoryAlreadyExists');
   String get category => _t('category');
+  String get categoriesTab => _t('categoriesTab');
   String get chooseCategory => _t('chooseCategory');
   String get noCategoriesInLayout => _t('noCategoriesInLayout');
+  String get emptyCategories => _t('emptyCategories');
   String get addGroceryList => _t('addGroceryList');
   String get groceryListName => _t('groceryListName');
   String get emptyGroceryLists => _t('emptyGroceryLists');
@@ -763,6 +839,13 @@ class AppLocalizations {
   String maxCategoriesReached(int max) => _t('maxCategoriesReached').replaceAll('{max}', '$max');
   String get selectListAndMarket => _t('selectListAndMarket');
   String get deleteItem => _t('deleteItem');
+  String get editCategory => _t('editCategory');
+  String get deleteCategory => _t('deleteCategory');
+  String get deleteCategoryConfirmMessage => _t('deleteCategoryConfirmMessage');
+  String get deleteCategoryUsageLists => _t('deleteCategoryUsageLists');
+  String get deleteCategoryUsageMarkets => _t('deleteCategoryUsageMarkets');
+  String get deleteCategoryRemovesItems => _t('deleteCategoryRemovesItems');
+  String get categoryInUseCannotDelete => _t('categoryInUseCannotDelete');
   String get deleteLayout => _t('deleteLayout');
   String get deleteList => _t('deleteList');
 
