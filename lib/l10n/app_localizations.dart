@@ -51,6 +51,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'This category already exists.',
       'category': 'Category',
       'categoriesTab': 'Categories',
+      'configurationTab': 'Configuration',
+      'topArticles': 'Top 10 items',
       'chooseCategory': 'Choose category',
       'noCategoriesInLayout': 'No categories in this market layout yet.',
       'emptyCategories': 'No categories yet.',
@@ -63,9 +65,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Load frequent items',
       'frequentItemsDialogTitle': '10 most frequent items:',
       'frequentItemsDialogExplanation':
-          'We show items that were added at least 3 times in the last 2 weeks. The list is sorted by number of additions, and entries older than 2 weeks are removed automatically.',
+          'Favorite items are always shown first. Other items appear after they were added at least 3 times in the last 2 weeks. Entries older than 2 weeks are removed automatically.',
       'frequentItemsDialogEmpty': 'No items meet these rules yet.',
       'load': 'Load',
+      'addToFavorites': 'Add to favorites',
+      'removeFromFavorites': 'Remove from favorites',
+      'emptyFrequentItems': 'No tracked items yet.',
       'editItem': 'Edit item',
       'itemName': 'Item name',
       'quantity': 'Quantity',
@@ -92,6 +97,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Name cannot be empty.',
       'selectCategoryFirst': 'Select category first.',
       'maxCategoriesReached': 'Maximum categories limit reached ({max}).',
+      'favoriteLimitReached': 'Maximum favorites limit reached ({max}).',
       'selectListAndMarket': 'Create at least one grocery list and one market layout.',
       'deleteItem': 'Delete item',
       'editCategory': 'Edit category',
@@ -140,6 +146,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Taka kategoria już istnieje.',
       'category': 'Kategoria',
       'categoriesTab': 'Kategorie',
+      'configurationTab': 'Konfiguracja',
+      'topArticles': 'Top 10 artykułów',
       'chooseCategory': 'Wybierz kategorię',
       'noCategoriesInLayout': 'Brak kategorii w tym układzie sklepu.',
       'emptyCategories': 'Brak kategorii.',
@@ -152,9 +160,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Załaduj najczęstsze artykuły',
       'frequentItemsDialogTitle': '10 najczęściej występujących artykułów:',
       'frequentItemsDialogExplanation':
-          'Pokazujemy artykuły dodane co najmniej 3 razy w ciągu ostatnich 2 tygodni. Lista jest sortowana po liczbie dodań, a starsze wpisy są automatycznie usuwane.',
+          'Ulubione artykuły są zawsze pokazywane jako pierwsze. Pozostałe pojawiają się po dodaniu co najmniej 3 razy w ciągu ostatnich 2 tygodni. Starsze wpisy są automatycznie usuwane.',
       'frequentItemsDialogEmpty': 'Brak artykułów spełniających te zasady.',
       'load': 'Załaduj',
+      'addToFavorites': 'Dodaj do ulubionych',
+      'removeFromFavorites': 'Usuń z ulubionych',
+      'emptyFrequentItems': 'Brak zapisanych artykułów.',
       'editItem': 'Edytuj produkt',
       'itemName': 'Nazwa produktu',
       'quantity': 'Ilość',
@@ -181,6 +192,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Nazwa nie może być pusta.',
       'selectCategoryFirst': 'Najpierw wybierz kategorię.',
       'maxCategoriesReached': 'Osiągnięto limit kategorii ({max}).',
+      'favoriteLimitReached': 'Osiągnięto limit ulubionych ({max}).',
       'selectListAndMarket': 'Utwórz przynajmniej jedną listę i jeden układ sklepu.',
       'deleteItem': 'Usuń produkt',
       'editCategory': 'Edytuj kategorię',
@@ -229,6 +241,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Diese Kategorie existiert bereits.',
       'category': 'Kategorie',
       'categoriesTab': 'Kategorien',
+      'configurationTab': 'Konfiguration',
+      'topArticles': 'Top-10-Artikel',
       'chooseCategory': 'Kategorie wählen',
       'noCategoriesInLayout': 'Noch keine Kategorien in diesem Marktlayout.',
       'emptyCategories': 'Noch keine Kategorien.',
@@ -241,9 +255,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Häufige Artikel laden',
       'frequentItemsDialogTitle': '10 häufigste Artikel:',
       'frequentItemsDialogExplanation':
-          'Wir zeigen Artikel, die in den letzten 2 Wochen mindestens 3 Mal hinzugefügt wurden. Die Liste ist nach der Anzahl der Hinzufügungen sortiert, und ältere Einträge werden automatisch entfernt.',
+          'Favoriten werden immer zuerst angezeigt. Andere Artikel erscheinen, nachdem sie in den letzten 2 Wochen mindestens 3 Mal hinzugefügt wurden. Ältere Einträge werden automatisch entfernt.',
       'frequentItemsDialogEmpty': 'Noch keine Artikel, die diese Regeln erfüllen.',
       'load': 'Laden',
+      'addToFavorites': 'Zu Favoriten hinzufügen',
+      'removeFromFavorites': 'Aus Favoriten entfernen',
+      'emptyFrequentItems': 'Noch keine gespeicherten Artikel.',
       'editItem': 'Artikel bearbeiten',
       'itemName': 'Artikelname',
       'quantity': 'Menge',
@@ -270,6 +287,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Name darf nicht leer sein.',
       'selectCategoryFirst': 'Wähle zuerst eine Kategorie aus.',
       'maxCategoriesReached': 'Maximale Anzahl an Kategorien erreicht ({max}).',
+      'favoriteLimitReached': 'Maximale Anzahl an Favoriten erreicht ({max}).',
       'selectListAndMarket':
           'Erstelle mindestens eine Einkaufsliste und ein Marktlayout.',
       'deleteItem': 'Artikel löschen',
@@ -319,6 +337,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Deze categorie bestaat al.',
       'category': 'Categorie',
       'categoriesTab': 'Categorieën',
+      'configurationTab': 'Configuratie',
+      'topArticles': 'Top 10-items',
       'chooseCategory': 'Kies categorie',
       'noCategoriesInLayout': 'Nog geen categorieën in deze winkelindeling.',
       'emptyCategories': 'Nog geen categorieën.',
@@ -331,9 +351,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Vaak gebruikte items laden',
       'frequentItemsDialogTitle': '10 meest voorkomende items:',
       'frequentItemsDialogExplanation':
-          'We tonen items die in de afgelopen 2 weken minstens 3 keer zijn toegevoegd. De lijst is gesorteerd op aantal toevoegingen en oudere vermeldingen worden automatisch verwijderd.',
+          'Favorieten worden altijd eerst getoond. Andere items verschijnen nadat ze in de afgelopen 2 weken minstens 3 keer zijn toegevoegd. Oudere vermeldingen worden automatisch verwijderd.',
       'frequentItemsDialogEmpty': 'Er zijn nog geen items die aan deze regels voldoen.',
       'load': 'Laden',
+      'addToFavorites': 'Aan favorieten toevoegen',
+      'removeFromFavorites': 'Uit favorieten verwijderen',
+      'emptyFrequentItems': 'Nog geen opgeslagen items.',
       'editItem': 'Item bewerken',
       'itemName': 'Itemnaam',
       'quantity': 'Aantal',
@@ -360,6 +383,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Naam mag niet leeg zijn.',
       'selectCategoryFirst': 'Selecteer eerst een categorie.',
       'maxCategoriesReached': 'Maximaal aantal categorieën bereikt ({max}).',
+      'favoriteLimitReached': 'Maximaal aantal favorieten bereikt ({max}).',
       'selectListAndMarket':
           'Maak minimaal één boodschappenlijst en één winkelindeling aan.',
       'deleteItem': 'Item verwijderen',
@@ -409,6 +433,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Esta categoría ya existe.',
       'category': 'Categoría',
       'categoriesTab': 'Categorías',
+      'configurationTab': 'Configuración',
+      'topArticles': 'Top 10 artículos',
       'chooseCategory': 'Elegir categoría',
       'noCategoriesInLayout': 'Aún no hay categorías en este diseño de tienda.',
       'emptyCategories': 'Aún no hay categorías.',
@@ -421,9 +447,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Cargar artículos frecuentes',
       'frequentItemsDialogTitle': '10 artículos más frecuentes:',
       'frequentItemsDialogExplanation':
-          'Mostramos los artículos que se añadieron al menos 3 veces en las últimas 2 semanas. La lista se ordena por número de adiciones y las entradas de más de 2 semanas se eliminan automáticamente.',
+          'Los favoritos siempre se muestran primero. Los demás artículos aparecen después de haberse añadido al menos 3 veces en las últimas 2 semanas. Las entradas más antiguas se eliminan automáticamente.',
       'frequentItemsDialogEmpty': 'Todavía no hay artículos que cumplan estas reglas.',
       'load': 'Cargar',
+      'addToFavorites': 'Añadir a favoritos',
+      'removeFromFavorites': 'Quitar de favoritos',
+      'emptyFrequentItems': 'Aún no hay artículos guardados.',
       'editItem': 'Editar producto',
       'itemName': 'Nombre del producto',
       'quantity': 'Cantidad',
@@ -450,6 +479,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'El nombre no puede estar vacío.',
       'selectCategoryFirst': 'Selecciona una categoría primero.',
       'maxCategoriesReached': 'Se alcanzó el límite máximo de categorías ({max}).',
+      'favoriteLimitReached': 'Se alcanzó el límite de favoritos ({max}).',
       'selectListAndMarket':
           'Crea al menos una lista de compras y un diseño de tienda.',
       'deleteItem': 'Eliminar producto',
@@ -499,6 +529,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Cette catégorie existe déjà.',
       'category': 'Catégorie',
       'categoriesTab': 'Catégories',
+      'configurationTab': 'Configuration',
+      'topArticles': 'Top 10 articles',
       'chooseCategory': 'Choisir une catégorie',
       'noCategoriesInLayout': "Aucune catégorie dans ce plan de magasin.",
       'emptyCategories': 'Aucune catégorie pour le moment.',
@@ -511,9 +543,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Charger les articles fréquents',
       'frequentItemsDialogTitle': '10 articles les plus fréquents :',
       'frequentItemsDialogExplanation':
-          'Nous affichons les articles ajoutés au moins 3 fois au cours des 2 dernières semaines. La liste est triée par nombre d’ajouts et les entrées de plus de 2 semaines sont supprimées automatiquement.',
+          'Les favoris sont toujours affichés en premier. Les autres articles apparaissent après avoir été ajoutés au moins 3 fois au cours des 2 dernières semaines. Les entrées plus anciennes sont supprimées automatiquement.',
       'frequentItemsDialogEmpty': 'Aucun article ne respecte encore ces règles.',
       'load': 'Charger',
+      'addToFavorites': 'Ajouter aux favoris',
+      'removeFromFavorites': 'Retirer des favoris',
+      'emptyFrequentItems': 'Aucun article enregistré pour le moment.',
       'editItem': "Modifier l'article",
       'itemName': "Nom de l'article",
       'quantity': 'Quantité',
@@ -540,6 +575,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Le nom ne peut pas être vide.',
       'selectCategoryFirst': 'Sélectionnez d’abord une catégorie.',
       'maxCategoriesReached': 'Limite maximale de catégories atteinte ({max}).',
+      'favoriteLimitReached': 'Limite maximale de favoris atteinte ({max}).',
       'selectListAndMarket':
           'Créez au moins une liste de courses et un plan de magasin.',
       'deleteItem': "Supprimer l'article",
@@ -589,6 +625,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Така категорія вже існує.',
       'category': 'Категорія',
       'categoriesTab': 'Категорії',
+      'configurationTab': 'Налаштування',
+      'topArticles': 'Топ 10 товарів',
       'chooseCategory': 'Вибрати категорію',
       'noCategoriesInLayout': 'У цьому плані магазину ще немає категорій.',
       'emptyCategories': 'Категорій ще немає.',
@@ -601,9 +639,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Завантажити часті товари',
       'frequentItemsDialogTitle': '10 найчастіших товарів:',
       'frequentItemsDialogExplanation':
-          'Ми показуємо товари, які додавали щонайменше 3 рази за останні 2 тижні. Список відсортовано за кількістю додавань, а старіші записи автоматично видаляються.',
+          'Улюблені товари завжди показуються першими. Інші з’являються після щонайменше 3 додавань за останні 2 тижні. Старіші записи видаляються автоматично.',
       'frequentItemsDialogEmpty': 'Поки немає товарів, які відповідають цим правилам.',
       'load': 'Завантажити',
+      'addToFavorites': 'Додати в обране',
+      'removeFromFavorites': 'Видалити з обраного',
+      'emptyFrequentItems': 'Поки немає збережених товарів.',
       'editItem': 'Редагувати товар',
       'itemName': 'Назва товару',
       'quantity': 'Кількість',
@@ -630,6 +671,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Назва не може бути порожньою.',
       'selectCategoryFirst': 'Спочатку виберіть категорію.',
       'maxCategoriesReached': 'Досягнуто максимального ліміту категорій ({max}).',
+      'favoriteLimitReached': 'Досягнуто ліміту обраного ({max}).',
       'selectListAndMarket':
           'Створіть принаймні один список покупок і один план магазину.',
       'deleteItem': 'Видалити товар',
@@ -679,6 +721,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Questa categoria esiste già.',
       'category': 'Categoria',
       'categoriesTab': 'Categorie',
+      'configurationTab': 'Configurazione',
+      'topArticles': 'Top 10 articoli',
       'chooseCategory': 'Scegli categoria',
       'noCategoriesInLayout': 'Nessuna categoria in questo layout negozio.',
       'emptyCategories': 'Nessuna categoria ancora.',
@@ -691,9 +735,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Carica articoli frequenti',
       'frequentItemsDialogTitle': '10 articoli più frequenti:',
       'frequentItemsDialogExplanation':
-          'Mostriamo gli articoli aggiunti almeno 3 volte nelle ultime 2 settimane. La lista è ordinata per numero di aggiunte e le voci più vecchie di 2 settimane vengono rimosse automaticamente.',
+          'I preferiti vengono sempre mostrati per primi. Gli altri articoli appaiono dopo essere stati aggiunti almeno 3 volte nelle ultime 2 settimane. Le voci più vecchie vengono rimosse automaticamente.',
       'frequentItemsDialogEmpty': 'Non ci sono ancora articoli che rispettano queste regole.',
       'load': 'Carica',
+      'addToFavorites': 'Aggiungi ai preferiti',
+      'removeFromFavorites': 'Rimuovi dai preferiti',
+      'emptyFrequentItems': 'Nessun articolo salvato per ora.',
       'editItem': 'Modifica articolo',
       'itemName': 'Nome articolo',
       'quantity': 'Quantità',
@@ -720,6 +767,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'Il nome non può essere vuoto.',
       'selectCategoryFirst': 'Seleziona prima una categoria.',
       'maxCategoriesReached': 'Raggiunto il limite massimo di categorie ({max}).',
+      'favoriteLimitReached': 'Raggiunto il limite massimo di preferiti ({max}).',
       'selectListAndMarket':
           'Crea almeno una lista della spesa e un layout del negozio.',
       'deleteItem': 'Elimina articolo',
@@ -769,6 +817,8 @@ class AppLocalizations {
       'categoryAlreadyExists': 'Esta categoria já existe.',
       'category': 'Categoria',
       'categoriesTab': 'Categorias',
+      'configurationTab': 'Configuração',
+      'topArticles': 'Top 10 itens',
       'chooseCategory': 'Escolher categoria',
       'noCategoriesInLayout': 'Ainda não há categorias neste layout de loja.',
       'emptyCategories': 'Ainda não há categorias.',
@@ -781,9 +831,12 @@ class AppLocalizations {
       'loadFrequentItems': 'Carregar itens frequentes',
       'frequentItemsDialogTitle': '10 itens mais frequentes:',
       'frequentItemsDialogExplanation':
-          'Mostramos os itens adicionados pelo menos 3 vezes nas últimas 2 semanas. A lista é ordenada pelo número de adições e os registros com mais de 2 semanas são removidos automaticamente.',
+          'Os favoritos são sempre mostrados primeiro. Os outros itens aparecem depois de serem adicionados pelo menos 3 vezes nas últimas 2 semanas. Registros mais antigos são removidos automaticamente.',
       'frequentItemsDialogEmpty': 'Ainda não há itens que atendam a essas regras.',
       'load': 'Carregar',
+      'addToFavorites': 'Adicionar aos favoritos',
+      'removeFromFavorites': 'Remover dos favoritos',
+      'emptyFrequentItems': 'Ainda não há itens salvos.',
       'editItem': 'Editar item',
       'itemName': 'Nome do item',
       'quantity': 'Quantidade',
@@ -810,6 +863,7 @@ class AppLocalizations {
       'nameCannotBeEmpty': 'O nome não pode estar vazio.',
       'selectCategoryFirst': 'Selecione uma categoria primeiro.',
       'maxCategoriesReached': 'Limite máximo de categorias atingido ({max}).',
+      'favoriteLimitReached': 'Limite máximo de favoritos atingido ({max}).',
       'selectListAndMarket':
           'Crie pelo menos uma lista de compras e um layout de loja.',
       'deleteItem': 'Excluir item',
@@ -891,6 +945,8 @@ class AppLocalizations {
   String get categoryAlreadyExists => _t('categoryAlreadyExists');
   String get category => _t('category');
   String get categoriesTab => _t('categoriesTab');
+  String get configurationTab => _t('configurationTab');
+  String get topArticles => _t('topArticles');
   String get chooseCategory => _t('chooseCategory');
   String get noCategoriesInLayout => _t('noCategoriesInLayout');
   String get emptyCategories => _t('emptyCategories');
@@ -905,6 +961,9 @@ class AppLocalizations {
   String get frequentItemsDialogExplanation => _t('frequentItemsDialogExplanation');
   String get frequentItemsDialogEmpty => _t('frequentItemsDialogEmpty');
   String get load => _t('load');
+  String get addToFavorites => _t('addToFavorites');
+  String get removeFromFavorites => _t('removeFromFavorites');
+  String get emptyFrequentItems => _t('emptyFrequentItems');
   String get editItem => _t('editItem');
   String get itemName => _t('itemName');
   String get quantity => _t('quantity');
@@ -931,6 +990,7 @@ class AppLocalizations {
   String get nameCannotBeEmpty => _t('nameCannotBeEmpty');
   String get selectCategoryFirst => _t('selectCategoryFirst');
   String maxCategoriesReached(int max) => _t('maxCategoriesReached').replaceAll('{max}', '$max');
+  String favoriteLimitReached(int max) => _t('favoriteLimitReached').replaceAll('{max}', '$max');
   String get selectListAndMarket => _t('selectListAndMarket');
   String get deleteItem => _t('deleteItem');
   String get editCategory => _t('editCategory');

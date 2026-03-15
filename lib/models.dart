@@ -324,6 +324,7 @@ class FrequentItemStat {
     required this.category,
     required this.occurrenceCount,
     required this.lastAddedAt,
+    required this.isFavorite,
   });
 
   factory FrequentItemStat.fromJson(Map<String, dynamic> json) {
@@ -332,6 +333,7 @@ class FrequentItemStat {
       category: (json['category'] ?? '').toString().trim(),
       occurrenceCount: _toPositiveInt(json['occurrenceCount']),
       lastAddedAt: _toDateTime(json['lastAddedAt']),
+      isFavorite: json['isFavorite'] == true,
     );
   }
 
@@ -339,6 +341,7 @@ class FrequentItemStat {
   final String category;
   final int occurrenceCount;
   final DateTime lastAddedAt;
+  final bool isFavorite;
 
   Map<String, dynamic> toJson() {
     return {
@@ -346,6 +349,7 @@ class FrequentItemStat {
       'category': category,
       'occurrenceCount': occurrenceCount,
       'lastAddedAt': lastAddedAt.toUtc().toIso8601String(),
+      'isFavorite': isFavorite,
     };
   }
 }
@@ -492,6 +496,7 @@ List<FrequentItemStat> _mergeFrequentItemStats(List<FrequentItemStat> source) {
       category: existingIsNewer ? existing.category : entry.category,
       occurrenceCount: existing.occurrenceCount + entry.occurrenceCount,
       lastAddedAt: existingIsNewer ? existing.lastAddedAt : entry.lastAddedAt,
+      isFavorite: existing.isFavorite || entry.isFavorite,
     );
   }
 

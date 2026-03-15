@@ -59,6 +59,7 @@ class AppController extends ChangeNotifier {
   AppController(this._store);
 
   static const Duration _frequentItemRetention = Duration(days: 14);
+  static const int _maxFavoriteFrequentItems = 10;
   static const int _minimumFrequentItemOccurrences = 3;
   static const int _maxFrequentItemsToSuggest = 10;
 
@@ -72,6 +73,10 @@ class AppController extends ChangeNotifier {
   List<MarketLayout> get marketLayouts => _data.marketLayouts;
   List<GroceryListModel> get groceryLists => _data.groceryLists;
   bool get hasReachedCategoryLimit => _data.categories.length >= maxCategoryCount;
+  int get maxFavoriteFrequentItems => _maxFavoriteFrequentItems;
+  int get favoriteFrequentItemCount => _pruneExpiredFrequentItemStats(
+        _data.frequentItemStats,
+      ).where((entry) => entry.isFavorite).length;
 
   Future<void> load() async {
     _isLoading = true;
@@ -109,29 +114,79 @@ class AppController extends ChangeNotifier {
   }
 
   List<FrequentItemStat> getTopFrequentItems() {
+    final favorites = <FrequentItemStat>[];
     final suggestions = <FrequentItemStat>[];
 
     for (final entry in _pruneExpiredFrequentItemStats(_data.frequentItemStats)) {
-      if (entry.occurrenceCount < _minimumFrequentItemOccurrences) {
-        continue;
-      }
-
       final canonicalCategory = _resolveCategory(entry.category);
       if (canonicalCategory == null) {
         continue;
       }
 
-      suggestions.add(
-        FrequentItemStat(
-          itemName: entry.itemName,
-          category: canonicalCategory,
-          occurrenceCount: entry.occurrenceCount,
-          lastAddedAt: entry.lastAddedAt,
-        ),
+      final normalizedEntry = FrequentItemStat(
+        itemName: entry.itemName,
+        category: canonicalCategory,
+        occurrenceCount: entry.occurrenceCount,
+        lastAddedAt: entry.lastAddedAt,
+        isFavorite: entry.isFavorite,
       );
+
+      if (entry.isFavorite) {
+        favorites.add(normalizedEntry);
+        continue;
+      }
+
+      if (entry.occurrenceCount >= _minimumFrequentItemOccurrences) {
+        suggestions.add(normalizedEntry);
+      }
     }
 
-    suggestions.sort((left, right) {
+    void sortEntries(List<FrequentItemStat> entries) {
+      entries.sort((left, right) {
+        final countComparison = right.occurrenceCount.compareTo(left.occurrenceCount);
+        if (countComparison != 0) {
+          return countComparison;
+        }
+
+        final lastAddedComparison = right.lastAddedAt.compareTo(left.lastAddedAt);
+        if (lastAddedComparison != 0) {
+          return lastAddedComparison;
+        }
+
+        return normalizeLatinText(left.itemName).compareTo(
+          normalizeLatinText(right.itemName),
+        );
+      });
+    }
+
+    sortEntries(favorites);
+    sortEntries(suggestions);
+
+    return [...favorites, ...suggestions].take(_maxFrequentItemsToSuggest).toList();
+  }
+
+  List<FrequentItemStat> getFrequentItemsForConfiguration() {
+    final entries = _pruneExpiredFrequentItemStats(_data.frequentItemStats)
+        .map((entry) {
+          final canonicalCategory = _resolveCategory(entry.category) ?? entry.category;
+          return FrequentItemStat(
+            itemName: entry.itemName,
+            category: canonicalCategory,
+            occurrenceCount: entry.occurrenceCount,
+            lastAddedAt: entry.lastAddedAt,
+            isFavorite: entry.isFavorite,
+          );
+        })
+        .toList();
+
+    entries.sort((left, right) {
+      final favoriteComparison = (right.isFavorite ? 1 : 0).compareTo(
+        left.isFavorite ? 1 : 0,
+      );
+      if (favoriteComparison != 0) {
+        return favoriteComparison;
+      }
+
       final countComparison = right.occurrenceCount.compareTo(left.occurrenceCount);
       if (countComparison != 0) {
         return countComparison;
@@ -147,7 +202,7 @@ class AppController extends ChangeNotifier {
       );
     });
 
-    return suggestions.take(_maxFrequentItemsToSuggest).toList();
+    return entries;
   }
 
   Future<int> loadTopFrequentItemsIntoList(
@@ -253,6 +308,58 @@ class AppController extends ChangeNotifier {
     await _persist();
 
     return cleaned;
+  }
+
+  Future<bool> setFrequentItemFavorite({
+    required String itemName,
+    required bool isFavorite,
+  }) async {
+    final next = _pruneExpiredFrequentItemStats(_data.frequentItemStats);
+    final index = next.indexWhere(
+      (entry) => sameNormalizedText(entry.itemName, itemName),
+    );
+    if (index == -1) {
+      return false;
+    }
+
+    if (isFavorite &&
+        !next[index].isFavorite &&
+        next.where((entry) => entry.isFavorite).length >= _maxFavoriteFrequentItems) {
+      return false;
+    }
+
+    next[index] = FrequentItemStat(
+      itemName: next[index].itemName,
+      category: next[index].category,
+      occurrenceCount: next[index].occurrenceCount,
+      lastAddedAt: next[index].lastAddedAt,
+      isFavorite: isFavorite,
+    );
+
+    _data = _data.copyWith(frequentItemStats: next);
+    notifyListeners();
+    await _persist();
+
+    return true;
+  }
+
+  Future<bool> deleteFrequentItem(String itemName) async {
+    final activeEntries = _pruneExpiredFrequentItemStats(_data.frequentItemStats);
+    final hadMatch = activeEntries.any(
+      (entry) => sameNormalizedText(entry.itemName, itemName),
+    );
+    if (!hadMatch) {
+      return false;
+    }
+
+    final next = activeEntries
+        .where((entry) => !sameNormalizedText(entry.itemName, itemName))
+        .toList();
+    _data = _data.copyWith(frequentItemStats: next);
+    notifyListeners();
+    await _persist();
+
+    return true;
   }
 
   bool isCategoryUsed(String category) {
@@ -386,6 +493,7 @@ class AppController extends ChangeNotifier {
         category: targetCategory,
         occurrenceCount: entry.occurrenceCount,
         lastAddedAt: entry.lastAddedAt,
+        isFavorite: entry.isFavorite,
       );
     }).toList();
 
@@ -984,6 +1092,7 @@ class AppController extends ChangeNotifier {
       category: canonicalCategory,
       occurrenceCount: currentCount + 1,
       lastAddedAt: timestamp,
+      isFavorite: index == -1 ? false : next[index].isFavorite,
     );
 
     if (index == -1) {
@@ -1004,7 +1113,10 @@ class AppController extends ChangeNotifier {
     );
 
     return source
-        .where((entry) => !entry.lastAddedAt.toUtc().isBefore(cutoff))
+        .where(
+          (entry) =>
+              entry.isFavorite || !entry.lastAddedAt.toUtc().isBefore(cutoff),
+        )
         .toList();
   }
 
