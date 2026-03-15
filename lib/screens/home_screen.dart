@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
-import '../widgets/category_name_prompt.dart';
-import '../widgets/delete_category_prompt.dart';
+import 'categories_configuration_screen.dart';
+import 'frequent_items_configuration_screen.dart';
 import 'go_shopping_screen.dart';
 import 'grocery_list_editor_screen.dart';
 import 'market_layout_editor_screen.dart';
@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final homePages = [
           _MarketLayoutsTab(controller: widget.controller),
           _GroceryListsTab(controller: widget.controller),
-          _CategoriesTab(controller: widget.controller),
+          _ConfigurationTab(controller: widget.controller),
         ];
         final homeTabs = [
           _HomeTabItem(
@@ -190,9 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
             unselectedIcon: Icons.playlist_add_check_outlined,
           ),
           _HomeTabItem(
-            label: l10n.categoriesTab,
-            selectedIcon: Icons.category,
-            unselectedIcon: Icons.category_outlined,
+            label: l10n.configurationTab,
+            selectedIcon: Icons.settings,
+            unselectedIcon: Icons.settings_outlined,
           ),
         ];
 
@@ -779,152 +779,57 @@ class _GroceryListsTab extends StatelessWidget {
   }
 }
 
-class _CategoriesTab extends StatelessWidget {
-  const _CategoriesTab({required this.controller});
+class _ConfigurationTab extends StatelessWidget {
+  const _ConfigurationTab({required this.controller});
 
   final AppController controller;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final categories = List<String>.of(controller.categories);
-    categories.sort(
-      (a, b) => normalizeLatinText(
-        l10n.categoryLabel(a),
-      ).compareTo(normalizeLatinText(l10n.categoryLabel(b))),
-    );
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.categoriesTab,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              FilledButton.icon(
-                onPressed: controller.hasReachedCategoryLimit
-                    ? null
-                    : () async {
-                        final name = await showCategoryNamePrompt(
-                          context: context,
-                          title: l10n.addCategory,
-                          existingCategories: categories,
-                        );
-                        if (name == null) {
-                          return;
-                        }
-
-                        final addedCategory = await controller.addCategory(name);
-                        if (addedCategory != null || !context.mounted) {
-                          return;
-                        }
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              l10n.maxCategoriesReached(maxCategoryCount),
-                            ),
-                          ),
-                        );
-                      },
-                icon: const Icon(Icons.add),
-                label: Text(l10n.add),
-              ),
-            ],
+          Text(
+            l10n.configurationTab,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: categories.isEmpty
-                ? Center(child: Text(l10n.emptyCategories))
-                : ListView.separated(
-                    padding: const EdgeInsets.only(bottom: 170),
-                    itemCount: categories.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final localizedLabel = l10n.categoryLabel(category);
-
-                      return Card(
-                        key: ValueKey(category),
-                        child: ListTile(
-                          title: Text(category),
-                          subtitle: localizedLabel == category
-                              ? null
-                              : Text(localizedLabel),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) async {
-                              if (value == 'edit') {
-                                final renamedCategory = await showCategoryNamePrompt(
-                                  context: context,
-                                  title: l10n.editCategory,
-                                  existingCategories: categories,
-                                  initialValue: category,
-                                  excludedCategory: category,
-                                );
-                                if (renamedCategory != null) {
-                                  await controller.renameCategory(
-                                    currentName: category,
-                                    newName: renamedCategory,
-                                  );
-                                }
-                                return;
-                              }
-
-                              final usage = controller.getCategoryUsage(category);
-                              if (usage == null) {
-                                return;
-                              }
-
-                              final shouldDelete = await showDeleteCategoryPrompt(
-                                context: context,
-                                categoryLabel: localizedLabel,
-                                rawCategoryName: category,
-                                usage: usage,
-                              );
-
-                              if (!shouldDelete) {
-                                return;
-                              }
-
-                              await controller.deleteCategoryAndUsages(category);
-                            },
-                            itemBuilder: (menuContext) => [
-                              PopupMenuItem<String>(
-                                value: 'edit',
-                                child: Text(l10n.edit),
-                              ),
-                              PopupMenuItem<String>(
-                                value: 'delete',
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: Theme.of(menuContext).colorScheme.error,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      l10n.delete,
-                                      style: TextStyle(
-                                        color: Theme.of(menuContext).colorScheme.error,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: Text(l10n.categoriesTab),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CategoriesConfigurationScreen(
+                      controller: controller,
+                    ),
                   ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.local_fire_department_outlined),
+              title: Text(l10n.topArticles),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => FrequentItemsConfigurationScreen(
+                      controller: controller,
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

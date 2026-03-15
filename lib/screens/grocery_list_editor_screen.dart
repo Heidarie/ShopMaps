@@ -465,6 +465,13 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                             subtitle: Text(
                               l10n.categoryLabel(suggestions[index].category),
                             ),
+                            trailing: suggestions[index].isFavorite
+                                ? Icon(
+                                    Icons.favorite_rounded,
+                                    color: Theme.of(context).colorScheme.error,
+                                    size: 18,
+                                  )
+                                : null,
                           ),
                           if (index < suggestions.length - 1)
                             const Divider(height: 1),
