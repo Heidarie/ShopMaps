@@ -179,6 +179,53 @@ void main() {
     expect(controller.favoriteFrequentItemCount, 10);
   });
 
+  test('deleteFrequentItem removes the entry and updates favorites state', () async {
+    final now = DateTime.now().toUtc();
+    final storedData = jsonEncode({
+      'categories': ['Fruits', 'Dairy'],
+      'marketLayouts': [],
+      'groceryLists': [],
+      'itemCategoryMemory': [],
+      'frequentItemStats': [
+        {
+          'itemName': 'Pinned apple',
+          'category': 'Fruits',
+          'occurrenceCount': 4,
+          'lastAddedAt': now.subtract(const Duration(days: 1)).toIso8601String(),
+          'isFavorite': true,
+        },
+        {
+          'itemName': 'Milk',
+          'category': 'Dairy',
+          'occurrenceCount': 5,
+          'lastAddedAt': now.subtract(const Duration(days: 2)).toIso8601String(),
+          'isFavorite': false,
+        },
+      ],
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load();
+
+    expect(controller.favoriteFrequentItemCount, 1);
+
+    final deleted = await controller.deleteFrequentItem('Pinned apple');
+
+    expect(deleted, isTrue);
+    expect(controller.favoriteFrequentItemCount, 0);
+    expect(
+      controller.getFrequentItemsForConfiguration().map((entry) => entry.itemName).toList(),
+      ['Milk'],
+    );
+    expect(controller.getFrequentItemsForConfiguration().single.isFavorite, isFalse);
+    expect(controller.getTopFrequentItems().single.itemName, 'Milk');
+    expect(controller.getTopFrequentItems().single.occurrenceCount, 5);
+  });
+
   test('loading frequent items skips articles already on the list', () async {
     final controller = AppController(LocalStore());
     await controller.load();
