@@ -113,9 +113,11 @@ class AppData {
     required this.frequentItemStats,
   });
 
-  factory AppData.empty() {
+  factory AppData.empty({
+    List<String>? categories,
+  }) {
     return AppData(
-      categories: [...defaultCategories],
+      categories: [...(categories ?? defaultCategories)],
       marketLayouts: const [],
       groceryLists: const [],
       itemCategoryMemory: const [],
@@ -123,7 +125,10 @@ class AppData {
     );
   }
 
-  factory AppData.fromJson(Map<String, dynamic> json) {
+  factory AppData.fromJson(
+    Map<String, dynamic> json, {
+    List<String>? fallbackCategories,
+  }) {
     final loadedCategories = _uniqueCaseInsensitive(_toStringList(json['categories']));
     final marketLayouts = _toDynamicList(json['marketLayouts'])
         .map(MarketLayout.fromJson)
@@ -146,7 +151,7 @@ class AppData {
 
     return AppData(
       categories: loadedCategories.isEmpty
-          ? [...defaultCategories]
+          ? [...(fallbackCategories ?? defaultCategories)]
           : loadedCategories,
       marketLayouts: marketLayouts,
       groceryLists: groceryLists,

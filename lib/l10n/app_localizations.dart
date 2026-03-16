@@ -25,6 +25,18 @@ class AppLocalizations {
   ];
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const List<String> _defaultCategoryKeys = [
+    'categoryDrinks',
+    'categorySweets',
+    'categoryFruits',
+    'categoryVegetables',
+    'categoryAlcohol',
+    'categoryDairy',
+    'categoryBakery',
+    'categoryMeat',
+    'categoryFrozen',
+    'categoryHousehold',
+  ];
 
   static const Map<String, Map<String, String>> _localizedValues = {
     'en': {
@@ -891,35 +903,13 @@ class AppLocalizations {
     },
   };
 
-  static const Map<String, String> _defaultCategoryKeyByValue = {
-    'drinks': 'categoryDrinks',
-    'napoje': 'categoryDrinks',
-    'sweets': 'categorySweets',
-    'slodycze': 'categorySweets',
-    'słodycze': 'categorySweets',
-    'fruits': 'categoryFruits',
-    'owoce': 'categoryFruits',
-    'vegetables': 'categoryVegetables',
-    'warzywa': 'categoryVegetables',
-    'alcohol': 'categoryAlcohol',
-    'alkohol': 'categoryAlcohol',
-    'dairy': 'categoryDairy',
-    'nabiał': 'categoryDairy',
-    'nabial': 'categoryDairy',
-    'bakery': 'categoryBakery',
-    'piekarnia': 'categoryBakery',
-    'meat': 'categoryMeat',
-    'mięso': 'categoryMeat',
-    'mieso': 'categoryMeat',
-    'frozen': 'categoryFrozen',
-    'mrożonki': 'categoryFrozen',
-    'mrozonki': 'categoryFrozen',
-    'household': 'categoryHousehold',
-    'chemia domowa': 'categoryHousehold',
-  };
-
   String _t(String key) {
     return _localizedValues[locale.languageCode]?[key] ?? _localizedValues['en']![key]!;
+  }
+
+  static List<String> defaultCategoriesForLanguageCode(String languageCode) {
+    final values = _localizedValues[languageCode] ?? _localizedValues['en']!;
+    return _defaultCategoryKeys.map((key) => values[key]!).toList();
   }
 
   String get appTitle => _t('appTitle');
@@ -1008,11 +998,7 @@ class AppLocalizations {
   }
 
   String categoryLabel(String category) {
-    final key = _defaultCategoryKeyByValue[category.trim().toLowerCase()];
-    if (key == null) {
-      return category;
-    }
-    return _t(key);
+    return category;
   }
 
   String hintLabel(String itemName, String category) {

@@ -268,7 +268,7 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
     final name = await showCategoryNamePrompt(
       context: context,
       title: l10n.addNewCategory,
-      existingCategories: _allCategories,
+      existingCategories: _allCategories.map(l10n.categoryLabel).toList(),
     );
 
     if (name == null || name.trim().isEmpty) {
@@ -302,7 +302,6 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
     final shouldDelete = await showDeleteCategoryPrompt(
       context: context,
       categoryLabel: l10n.categoryLabel(category),
-      rawCategoryName: category,
       usage: usage,
     );
     if (!mounted || !shouldDelete) {

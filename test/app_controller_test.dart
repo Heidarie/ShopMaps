@@ -95,6 +95,248 @@ void main() {
     expect(suggestions.single.occurrenceCount, 3);
   });
 
+  test('first load seeds default categories in the requested locale', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(
+      controller.categories,
+      [
+        'Napoje',
+        'Słodycze',
+        'Owoce',
+        'Warzywa',
+        'Alkohol',
+        'Nabiał',
+        'Piekarnia',
+        'Mięso',
+        'Mrożonki',
+        'Chemia domowa',
+      ],
+    );
+  });
+
+  test('first seeded categories stay fixed after later loads with a different locale', () async {
+    final firstController = AppController(LocalStore());
+    await firstController.load(localeLanguageCode: 'pl');
+
+    final secondController = AppController(LocalStore());
+    await secondController.load(localeLanguageCode: 'en');
+
+    expect(
+      secondController.categories,
+      [
+        'Napoje',
+        'Słodycze',
+        'Owoce',
+        'Warzywa',
+        'Alkohol',
+        'Nabiał',
+        'Piekarnia',
+        'Mięso',
+        'Mrożonki',
+        'Chemia domowa',
+      ],
+    );
+  });
+
+  test('invalid stored json is backed up before resetting to localized defaults', () async {
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': '{broken json',
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString('shopmaps_data_backup_v1'),
+      '{broken json',
+    );
+    expect(controller.categories.first, 'Napoje');
+  });
+
+  test('non-map stored json is backed up before resetting to localized defaults', () async {
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': jsonEncode(['unexpected', 'payload']),
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString('shopmaps_data_backup_v1'),
+      jsonEncode(['unexpected', 'payload']),
+    );
+    expect(controller.categories.first, 'Napoje');
+  });
+
+  test('legacy english default categories migrate to localized defaults with references', () async {
+    final now = DateTime.now().toUtc();
+    final storedData = jsonEncode({
+      'categories': [
+        'Drinks',
+        'Sweets',
+        'Fruits',
+        'Vegetables',
+        'Alcohol',
+        'Dairy',
+        'Bakery',
+        'Meat',
+        'Frozen',
+        'Household',
+      ],
+      'marketLayouts': [
+        {
+          'id': 'layout-1',
+          'name': 'Test market',
+          'categoryOrder': ['Drinks', 'Fruits', 'Vegetables'],
+        },
+      ],
+      'groceryLists': [
+        {
+          'id': 'list-1',
+          'name': 'Test list',
+          'items': [
+            {
+              'id': 'item-1',
+              'name': 'Water',
+              'category': 'Drinks',
+              'quantity': 1,
+            },
+          ],
+        },
+      ],
+      'itemCategoryMemory': [
+        {
+          'itemName': 'Water',
+          'category': 'Drinks',
+        },
+      ],
+      'frequentItemStats': [
+        {
+          'itemName': 'Water',
+          'category': 'Drinks',
+          'occurrenceCount': 4,
+          'lastAddedAt': now.toIso8601String(),
+          'isFavorite': false,
+        },
+      ],
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(controller.categories.first, 'Napoje');
+    expect(controller.marketLayouts.single.categoryOrder.first, 'Napoje');
+    expect(controller.groceryLists.single.items.single.category, 'Napoje');
+    expect(controller.findCategoryForExactItem('Water'), 'Napoje');
+    expect(controller.getTopFrequentItems().single.category, 'Napoje');
+  });
+
+  test('legacy default categories migrate even when stored values differ in case', () async {
+    final now = DateTime.now().toUtc();
+    final storedData = jsonEncode({
+      'categories': [
+        'drinks',
+        'sweets',
+        'fruits',
+        'vegetables',
+        'alcohol',
+        'dairy',
+        'bakery',
+        'meat',
+        'frozen',
+        'household',
+      ],
+      'marketLayouts': [
+        {
+          'id': 'layout-1',
+          'name': 'Test market',
+          'categoryOrder': ['drinks', 'fruits'],
+        },
+      ],
+      'groceryLists': [
+        {
+          'id': 'list-1',
+          'name': 'Test list',
+          'items': [
+            {
+              'id': 'item-1',
+              'name': 'Water',
+              'category': 'drinks',
+              'quantity': 1,
+            },
+          ],
+        },
+      ],
+      'itemCategoryMemory': [
+        {
+          'itemName': 'Water',
+          'category': 'drinks',
+        },
+      ],
+      'frequentItemStats': [
+        {
+          'itemName': 'Water',
+          'category': 'drinks',
+          'occurrenceCount': 4,
+          'lastAddedAt': now.toIso8601String(),
+          'isFavorite': false,
+        },
+      ],
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(controller.categories.first, 'Napoje');
+    expect(controller.marketLayouts.single.categoryOrder.first, 'Napoje');
+    expect(controller.groceryLists.single.items.single.category, 'Napoje');
+    expect(controller.findCategoryForExactItem('Water'), 'Napoje');
+    expect(controller.getTopFrequentItems().single.category, 'Napoje');
+  });
+
+  test('legacy categories are not migrated after user changes the default set', () async {
+    final storedData = jsonEncode({
+      'categories': [
+        'My Drinks',
+        'Sweets',
+        'Fruits',
+        'Vegetables',
+        'Alcohol',
+        'Dairy',
+        'Bakery',
+        'Meat',
+        'Frozen',
+        'Household',
+      ],
+      'marketLayouts': [],
+      'groceryLists': [],
+      'itemCategoryMemory': [],
+      'frequentItemStats': [],
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(controller.categories.first, 'My Drinks');
+    expect(controller.categories[1], 'Sweets');
+  });
+
   test('favorite frequent items are kept and shown before regular suggestions', () async {
     final now = DateTime.now().toUtc();
     final storedData = jsonEncode({

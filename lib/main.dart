@@ -31,7 +31,9 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
   void initState() {
     super.initState();
     _controller = AppController(LocalStore());
-    _controller.load();
+    _controller.load(
+      localeLanguageCode: WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+    );
   }
 
   @override

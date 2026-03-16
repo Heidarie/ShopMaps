@@ -78,11 +78,13 @@ class AppController extends ChangeNotifier {
         _data.frequentItemStats,
       ).where((entry) => entry.isFavorite).length;
 
-  Future<void> load() async {
+  Future<void> load({
+    String localeLanguageCode = 'en',
+  }) async {
     _isLoading = true;
     notifyListeners();
 
-    _data = await _store.load();
+    _data = await _store.load(localeLanguageCode: localeLanguageCode);
     final prunedFrequentItems = _pruneExpiredFrequentItemStats(
       _data.frequentItemStats,
     );

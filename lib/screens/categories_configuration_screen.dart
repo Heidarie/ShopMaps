@@ -26,6 +26,7 @@ class CategoriesConfigurationScreen extends StatelessWidget {
               l10n.categoryLabel(a),
             ).compareTo(normalizeLatinText(l10n.categoryLabel(b))),
           );
+        final displayCategories = categories.map(l10n.categoryLabel).toList();
 
         return Scaffold(
           appBar: AppBar(
@@ -39,7 +40,7 @@ class CategoriesConfigurationScreen extends StatelessWidget {
                         final name = await showCategoryNamePrompt(
                           context: context,
                           title: l10n.addCategory,
-                          existingCategories: categories,
+                          existingCategories: displayCategories,
                         );
                         if (name == null || !context.mounted) {
                           return;
@@ -75,19 +76,16 @@ class CategoriesConfigurationScreen extends StatelessWidget {
                     return Card(
                       key: ValueKey(category),
                       child: ListTile(
-                        title: Text(category),
-                        subtitle: localizedLabel == category
-                            ? null
-                            : Text(localizedLabel),
+                        title: Text(localizedLabel),
                         trailing: PopupMenuButton<String>(
                           onSelected: (value) async {
                             if (value == 'edit') {
                               final renamedCategory = await showCategoryNamePrompt(
                                 context: context,
                                 title: l10n.editCategory,
-                                existingCategories: categories,
-                                initialValue: category,
-                                excludedCategory: category,
+                                existingCategories: displayCategories,
+                                initialValue: localizedLabel,
+                                excludedCategory: localizedLabel,
                               );
                               if (renamedCategory != null) {
                                 await controller.renameCategory(
@@ -106,7 +104,6 @@ class CategoriesConfigurationScreen extends StatelessWidget {
                             final shouldDelete = await showDeleteCategoryPrompt(
                               context: context,
                               categoryLabel: localizedLabel,
-                              rawCategoryName: category,
                               usage: usage,
                             );
                             if (!shouldDelete) {
