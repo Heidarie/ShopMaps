@@ -140,6 +140,38 @@ void main() {
     );
   });
 
+  test('invalid stored json is backed up before resetting to localized defaults', () async {
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': '{broken json',
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString('shopmaps_data_backup_v1'),
+      '{broken json',
+    );
+    expect(controller.categories.first, 'Napoje');
+  });
+
+  test('non-map stored json is backed up before resetting to localized defaults', () async {
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': jsonEncode(['unexpected', 'payload']),
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(
+      preferences.getString('shopmaps_data_backup_v1'),
+      jsonEncode(['unexpected', 'payload']),
+    );
+    expect(controller.categories.first, 'Napoje');
+  });
+
   test('legacy english default categories migrate to localized defaults with references', () async {
     final now = DateTime.now().toUtc();
     final storedData = jsonEncode({

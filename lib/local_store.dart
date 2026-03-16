@@ -8,6 +8,7 @@ import 'models.dart';
 class LocalStore {
   static const String _storageKey = 'shopmaps_data_v1';
   static const String _legacyStorageKey = 'shopping_guide_data_v1';
+  static const String _backupStorageKey = 'shopmaps_data_backup_v1';
 
   Future<AppData> load({
     String localeLanguageCode = 'en',
@@ -40,15 +41,19 @@ class LocalStore {
         }
         return migratedData;
       }
-    } catch (_) {
-      final initialData = AppData.empty(categories: localizedDefaultCategories);
-      await save(initialData);
-      return initialData;
-    }
 
-    final initialData = AppData.empty(categories: localizedDefaultCategories);
-    await save(initialData);
-    return initialData;
+      return _resetToDefaultData(
+        preferences,
+        raw: raw,
+        localizedDefaultCategories: localizedDefaultCategories,
+      );
+    } catch (_) {
+      return _resetToDefaultData(
+        preferences,
+        raw: raw,
+        localizedDefaultCategories: localizedDefaultCategories,
+      );
+    }
   }
 
   Future<void> save(AppData data) async {
@@ -60,10 +65,38 @@ class LocalStore {
     }
   }
 
+  Future<AppData> _resetToDefaultData(
+    SharedPreferences preferences, {
+    required String raw,
+    required List<String> localizedDefaultCategories,
+  }) async {
+    await _backupRawPayload(preferences, raw);
+    final initialData = AppData.empty(categories: localizedDefaultCategories);
+    await save(initialData);
+    return initialData;
+  }
+
+  Future<void> _backupRawPayload(
+    SharedPreferences preferences,
+    String raw,
+  ) async {
+    if (raw.isEmpty) {
+      return;
+    }
+    await preferences.setString(_backupStorageKey, raw);
+  }
+
   AppData _migrateLegacyDefaultCategories(
     AppData data, {
     required List<String> localizedDefaultCategories,
   }) {
+    assert(
+      localizedDefaultCategories.length == defaultCategories.length,
+      'Localized default categories must match the default category count.',
+    );
+    if (localizedDefaultCategories.length != defaultCategories.length) {
+      return data;
+    }
     if (_sameCategories(localizedDefaultCategories, defaultCategories)) {
       return data;
     }
