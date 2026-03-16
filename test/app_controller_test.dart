@@ -239,6 +239,73 @@ void main() {
     expect(controller.getTopFrequentItems().single.category, 'Napoje');
   });
 
+  test('legacy default categories migrate even when stored values differ in case', () async {
+    final now = DateTime.now().toUtc();
+    final storedData = jsonEncode({
+      'categories': [
+        'drinks',
+        'sweets',
+        'fruits',
+        'vegetables',
+        'alcohol',
+        'dairy',
+        'bakery',
+        'meat',
+        'frozen',
+        'household',
+      ],
+      'marketLayouts': [
+        {
+          'id': 'layout-1',
+          'name': 'Test market',
+          'categoryOrder': ['drinks', 'fruits'],
+        },
+      ],
+      'groceryLists': [
+        {
+          'id': 'list-1',
+          'name': 'Test list',
+          'items': [
+            {
+              'id': 'item-1',
+              'name': 'Water',
+              'category': 'drinks',
+              'quantity': 1,
+            },
+          ],
+        },
+      ],
+      'itemCategoryMemory': [
+        {
+          'itemName': 'Water',
+          'category': 'drinks',
+        },
+      ],
+      'frequentItemStats': [
+        {
+          'itemName': 'Water',
+          'category': 'drinks',
+          'occurrenceCount': 4,
+          'lastAddedAt': now.toIso8601String(),
+          'isFavorite': false,
+        },
+      ],
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(controller.categories.first, 'Napoje');
+    expect(controller.marketLayouts.single.categoryOrder.first, 'Napoje');
+    expect(controller.groceryLists.single.items.single.category, 'Napoje');
+    expect(controller.findCategoryForExactItem('Water'), 'Napoje');
+    expect(controller.getTopFrequentItems().single.category, 'Napoje');
+  });
+
   test('legacy categories are not migrated after user changes the default set', () async {
     final storedData = jsonEncode({
       'categories': [

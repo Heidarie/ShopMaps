@@ -106,10 +106,12 @@ class LocalStore {
 
     final categoryMap = <String, String>{
       for (var index = 0; index < defaultCategories.length; index++)
-        defaultCategories[index]: localizedDefaultCategories[index],
+        normalizeLatinText(defaultCategories[index]): localizedDefaultCategories[index],
     };
 
-    String mapCategory(String category) => categoryMap[category] ?? category;
+    String mapCategory(String category) {
+      return categoryMap[normalizeLatinText(category)] ?? category;
+    }
 
     return data.copyWith(
       categories: localizedDefaultCategories,
