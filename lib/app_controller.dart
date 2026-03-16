@@ -1125,16 +1125,16 @@ class AppController extends ChangeNotifier {
     String candidate, {
     String? excludingCategory,
   }) {
-    final normalized = normalizeLatinText(candidate);
+    final normalized = _normalizeCategoryKey(candidate);
     final excludedNormalized = excludingCategory == null
         ? null
-        : normalizeLatinText(excludingCategory);
+        : _normalizeCategoryKey(excludingCategory);
     if (normalized.isEmpty) {
       return null;
     }
 
     for (final existing in list) {
-      final existingNormalized = normalizeLatinText(existing);
+      final existingNormalized = _normalizeCategoryKey(existing);
       if (excludedNormalized != null && existingNormalized == excludedNormalized) {
         continue;
       }
@@ -1144,6 +1144,11 @@ class AppController extends ChangeNotifier {
     }
 
     return null;
+  }
+
+  String _normalizeCategoryKey(String value) {
+    final canonicalDefault = canonicalDefaultCategory(value);
+    return normalizeLatinText(canonicalDefault ?? value.trim());
   }
 
   Future<void> _persist() async {

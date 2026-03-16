@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../models.dart';
+
 class AppLocalizations {
   AppLocalizations(this.locale);
 
@@ -891,33 +893,6 @@ class AppLocalizations {
     },
   };
 
-  static const Map<String, String> _defaultCategoryKeyByValue = {
-    'drinks': 'categoryDrinks',
-    'napoje': 'categoryDrinks',
-    'sweets': 'categorySweets',
-    'slodycze': 'categorySweets',
-    'słodycze': 'categorySweets',
-    'fruits': 'categoryFruits',
-    'owoce': 'categoryFruits',
-    'vegetables': 'categoryVegetables',
-    'warzywa': 'categoryVegetables',
-    'alcohol': 'categoryAlcohol',
-    'alkohol': 'categoryAlcohol',
-    'dairy': 'categoryDairy',
-    'nabiał': 'categoryDairy',
-    'nabial': 'categoryDairy',
-    'bakery': 'categoryBakery',
-    'piekarnia': 'categoryBakery',
-    'meat': 'categoryMeat',
-    'mięso': 'categoryMeat',
-    'mieso': 'categoryMeat',
-    'frozen': 'categoryFrozen',
-    'mrożonki': 'categoryFrozen',
-    'mrozonki': 'categoryFrozen',
-    'household': 'categoryHousehold',
-    'chemia domowa': 'categoryHousehold',
-  };
-
   String _t(String key) {
     return _localizedValues[locale.languageCode]?[key] ?? _localizedValues['en']![key]!;
   }
@@ -1008,11 +983,35 @@ class AppLocalizations {
   }
 
   String categoryLabel(String category) {
-    final key = _defaultCategoryKeyByValue[category.trim().toLowerCase()];
-    if (key == null) {
+    final canonicalCategory = canonicalDefaultCategory(category);
+    if (canonicalCategory == null) {
       return category;
     }
-    return _t(key);
+
+    switch (canonicalCategory) {
+      case 'Drinks':
+        return _t('categoryDrinks');
+      case 'Sweets':
+        return _t('categorySweets');
+      case 'Fruits':
+        return _t('categoryFruits');
+      case 'Vegetables':
+        return _t('categoryVegetables');
+      case 'Alcohol':
+        return _t('categoryAlcohol');
+      case 'Dairy':
+        return _t('categoryDairy');
+      case 'Bakery':
+        return _t('categoryBakery');
+      case 'Meat':
+        return _t('categoryMeat');
+      case 'Frozen':
+        return _t('categoryFrozen');
+      case 'Household':
+        return _t('categoryHousehold');
+    }
+
+    return category;
   }
 
   String hintLabel(String itemName, String category) {

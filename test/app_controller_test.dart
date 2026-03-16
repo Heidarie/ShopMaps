@@ -95,6 +95,29 @@ void main() {
     expect(suggestions.single.occurrenceCount, 3);
   });
 
+  test('localized default category names resolve to existing default categories', () async {
+    final controller = AppController(LocalStore());
+    await controller.load();
+
+    expect(controller.findCategoryConflict('Napoje'), 'Drinks');
+
+    final listId = await controller.createGroceryList('Lista testowa');
+    expect(listId, isNotNull);
+
+    final added = await controller.addItemToList(
+      listId: listId!,
+      itemName: 'Woda',
+      category: 'Napoje',
+      quantity: 1,
+    );
+
+    expect(added, isTrue);
+    expect(
+      controller.getGroceryListById(listId)!.items.single.category,
+      'Drinks',
+    );
+  });
+
   test('favorite frequent items are kept and shown before regular suggestions', () async {
     final now = DateTime.now().toUtc();
     final storedData = jsonEncode({

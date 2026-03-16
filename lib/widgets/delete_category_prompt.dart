@@ -6,7 +6,6 @@ import '../l10n/app_localizations.dart';
 Future<bool> showDeleteCategoryPrompt({
   required BuildContext context,
   required String categoryLabel,
-  required String rawCategoryName,
   required CategoryUsageSummary usage,
 }) async {
   final l10n = AppLocalizations.of(context);
@@ -22,13 +21,6 @@ Future<bool> showDeleteCategoryPrompt({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(categoryLabel),
-              if (categoryLabel != rawCategoryName) ...[
-                const SizedBox(height: 4),
-                Text(
-                  rawCategoryName,
-                  style: Theme.of(dialogContext).textTheme.bodySmall,
-                ),
-              ],
               const SizedBox(height: 12),
               Text(l10n.deleteCategoryConfirmMessage),
               if (usage.groceryLists.isNotEmpty) ...[
