@@ -78,11 +78,13 @@ class AppController extends ChangeNotifier {
         _data.frequentItemStats,
       ).where((entry) => entry.isFavorite).length;
 
-  Future<void> load() async {
+  Future<void> load({
+    String localeLanguageCode = 'en',
+  }) async {
     _isLoading = true;
     notifyListeners();
 
-    _data = await _store.load();
+    _data = await _store.load(localeLanguageCode: localeLanguageCode);
     final prunedFrequentItems = _pruneExpiredFrequentItemStats(
       _data.frequentItemStats,
     );
@@ -1125,16 +1127,16 @@ class AppController extends ChangeNotifier {
     String candidate, {
     String? excludingCategory,
   }) {
-    final normalized = _normalizeCategoryKey(candidate);
+    final normalized = normalizeLatinText(candidate);
     final excludedNormalized = excludingCategory == null
         ? null
-        : _normalizeCategoryKey(excludingCategory);
+        : normalizeLatinText(excludingCategory);
     if (normalized.isEmpty) {
       return null;
     }
 
     for (final existing in list) {
-      final existingNormalized = _normalizeCategoryKey(existing);
+      final existingNormalized = normalizeLatinText(existing);
       if (excludedNormalized != null && existingNormalized == excludedNormalized) {
         continue;
       }
@@ -1144,11 +1146,6 @@ class AppController extends ChangeNotifier {
     }
 
     return null;
-  }
-
-  String _normalizeCategoryKey(String value) {
-    final canonicalDefault = canonicalDefaultCategory(value);
-    return normalizeLatinText(canonicalDefault ?? value.trim());
   }
 
   Future<void> _persist() async {

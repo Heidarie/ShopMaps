@@ -84,113 +84,6 @@ const List<String> defaultCategories = [
   'Household',
 ];
 
-const Map<String, List<String>> defaultCategoryAliases = {
-  'Drinks': [
-    'Drinks',
-    'Napoje',
-    'Getränke',
-    'Dranken',
-    'Bebidas',
-    'Boissons',
-    'Напої',
-    'Bevande',
-  ],
-  'Sweets': [
-    'Sweets',
-    'Słodycze',
-    'Süßigkeiten',
-    'Snoep',
-    'Dulces',
-    'Confiseries',
-    'Солодощі',
-    'Dolci',
-    'Doces',
-  ],
-  'Fruits': [
-    'Fruits',
-    'Owoce',
-    'Obst',
-    'Fruit',
-    'Frutas',
-    'Фрукти',
-    'Frutta',
-  ],
-  'Vegetables': [
-    'Vegetables',
-    'Warzywa',
-    'Gemüse',
-    'Groenten',
-    'Verduras',
-    'Légumes',
-    'Овочі',
-    'Verdure',
-    'Vegetais',
-  ],
-  'Alcohol': [
-    'Alcohol',
-    'Alkohol',
-    'Alcohol',
-    'Alcool',
-    'Алкоголь',
-    'Alcolici',
-    'Álcool',
-  ],
-  'Dairy': [
-    'Dairy',
-    'Nabiał',
-    'Nabial',
-    'Molkereiprodukte',
-    'Zuivel',
-    'Lácteos',
-    'Produits laitiers',
-    'Молочні продукти',
-    'Latticini',
-    'Laticínios',
-  ],
-  'Bakery': [
-    'Bakery',
-    'Piekarnia',
-    'Bäckerei',
-    'Bakkerij',
-    'Panadería',
-    'Boulangerie',
-    'Випічка',
-    'Panetteria',
-    'Padaria',
-  ],
-  'Meat': [
-    'Meat',
-    'Mięso',
-    'Mieso',
-    'Fleisch',
-    'Vlees',
-    'Carne',
-    'Viande',
-    'М\'ясо',
-  ],
-  'Frozen': [
-    'Frozen',
-    'Mrożonki',
-    'Mrozonki',
-    'Tiefkühlkost',
-    'Diepvries',
-    'Congelados',
-    'Surgelés',
-    'Заморожені продукти',
-    'Surgelati',
-  ],
-  'Household': [
-    'Household',
-    'Chemia domowa',
-    'Haushalt',
-    'Huishouden',
-    'Hogar',
-    'Maison',
-    'Побутова хімія',
-    'Casa',
-  ],
-};
-
 String normalizeLatinText(String value) {
   final buffer = StringBuffer();
 
@@ -204,23 +97,6 @@ String normalizeLatinText(String value) {
 
 bool sameNormalizedText(String left, String right) {
   return normalizeLatinText(left) == normalizeLatinText(right);
-}
-
-String? canonicalDefaultCategory(String value) {
-  final trimmed = value.trim();
-  if (trimmed.isEmpty) {
-    return null;
-  }
-
-  for (final entry in defaultCategoryAliases.entries) {
-    for (final alias in entry.value) {
-      if (sameNormalizedText(trimmed, alias)) {
-        return entry.key;
-      }
-    }
-  }
-
-  return null;
 }
 
 String createId() {
@@ -237,9 +113,11 @@ class AppData {
     required this.frequentItemStats,
   });
 
-  factory AppData.empty() {
+  factory AppData.empty({
+    List<String>? categories,
+  }) {
     return AppData(
-      categories: [...defaultCategories],
+      categories: [...(categories ?? defaultCategories)],
       marketLayouts: const [],
       groceryLists: const [],
       itemCategoryMemory: const [],
@@ -247,7 +125,10 @@ class AppData {
     );
   }
 
-  factory AppData.fromJson(Map<String, dynamic> json) {
+  factory AppData.fromJson(
+    Map<String, dynamic> json, {
+    List<String>? fallbackCategories,
+  }) {
     final loadedCategories = _uniqueCaseInsensitive(_toStringList(json['categories']));
     final marketLayouts = _toDynamicList(json['marketLayouts'])
         .map(MarketLayout.fromJson)
@@ -270,7 +151,7 @@ class AppData {
 
     return AppData(
       categories: loadedCategories.isEmpty
-          ? [...defaultCategories]
+          ? [...(fallbackCategories ?? defaultCategories)]
           : loadedCategories,
       marketLayouts: marketLayouts,
       groceryLists: groceryLists,

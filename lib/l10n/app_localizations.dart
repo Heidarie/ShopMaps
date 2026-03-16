@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import '../models.dart';
-
 class AppLocalizations {
   AppLocalizations(this.locale);
 
@@ -27,6 +25,18 @@ class AppLocalizations {
   ];
 
   static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const List<String> _defaultCategoryKeys = [
+    'categoryDrinks',
+    'categorySweets',
+    'categoryFruits',
+    'categoryVegetables',
+    'categoryAlcohol',
+    'categoryDairy',
+    'categoryBakery',
+    'categoryMeat',
+    'categoryFrozen',
+    'categoryHousehold',
+  ];
 
   static const Map<String, Map<String, String>> _localizedValues = {
     'en': {
@@ -897,6 +907,11 @@ class AppLocalizations {
     return _localizedValues[locale.languageCode]?[key] ?? _localizedValues['en']![key]!;
   }
 
+  static List<String> defaultCategoriesForLanguageCode(String languageCode) {
+    final values = _localizedValues[languageCode] ?? _localizedValues['en']!;
+    return _defaultCategoryKeys.map((key) => values[key]!).toList();
+  }
+
   String get appTitle => _t('appTitle');
   String get market => _t('market');
   String get groceryList => _t('groceryList');
@@ -983,34 +998,6 @@ class AppLocalizations {
   }
 
   String categoryLabel(String category) {
-    final canonicalCategory = canonicalDefaultCategory(category);
-    if (canonicalCategory == null) {
-      return category;
-    }
-
-    switch (canonicalCategory) {
-      case 'Drinks':
-        return _t('categoryDrinks');
-      case 'Sweets':
-        return _t('categorySweets');
-      case 'Fruits':
-        return _t('categoryFruits');
-      case 'Vegetables':
-        return _t('categoryVegetables');
-      case 'Alcohol':
-        return _t('categoryAlcohol');
-      case 'Dairy':
-        return _t('categoryDairy');
-      case 'Bakery':
-        return _t('categoryBakery');
-      case 'Meat':
-        return _t('categoryMeat');
-      case 'Frozen':
-        return _t('categoryFrozen');
-      case 'Household':
-        return _t('categoryHousehold');
-    }
-
     return category;
   }
 
