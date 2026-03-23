@@ -111,17 +111,23 @@ class AppData {
     required this.groceryLists,
     required this.itemCategoryMemory,
     required this.frequentItemStats,
+    required this.removeCheckedShoppingItems,
+    required this.predefinedItemsSeedVersion,
   });
 
   factory AppData.empty({
     List<String>? categories,
+    List<RememberedItemCategory>? itemCategoryMemory,
+    int predefinedItemsSeedVersion = 0,
   }) {
     return AppData(
       categories: [...(categories ?? defaultCategories)],
       marketLayouts: const [],
       groceryLists: const [],
-      itemCategoryMemory: const [],
+      itemCategoryMemory: itemCategoryMemory ?? const [],
       frequentItemStats: const [],
+      removeCheckedShoppingItems: true,
+      predefinedItemsSeedVersion: predefinedItemsSeedVersion,
     );
   }
 
@@ -157,6 +163,8 @@ class AppData {
       groceryLists: groceryLists,
       itemCategoryMemory: mergedMemory,
       frequentItemStats: _mergeFrequentItemStats(frequentItemStats),
+      removeCheckedShoppingItems: json['removeCheckedShoppingItems'] as bool? ?? true,
+      predefinedItemsSeedVersion: _toNonNegativeInt(json['predefinedItemsSeedVersion']),
     );
   }
 
@@ -165,6 +173,8 @@ class AppData {
   final List<GroceryListModel> groceryLists;
   final List<RememberedItemCategory> itemCategoryMemory;
   final List<FrequentItemStat> frequentItemStats;
+  final bool removeCheckedShoppingItems;
+  final int predefinedItemsSeedVersion;
 
   AppData copyWith({
     List<String>? categories,
@@ -172,6 +182,8 @@ class AppData {
     List<GroceryListModel>? groceryLists,
     List<RememberedItemCategory>? itemCategoryMemory,
     List<FrequentItemStat>? frequentItemStats,
+    bool? removeCheckedShoppingItems,
+    int? predefinedItemsSeedVersion,
   }) {
     return AppData(
       categories: categories ?? this.categories,
@@ -179,6 +191,10 @@ class AppData {
       groceryLists: groceryLists ?? this.groceryLists,
       itemCategoryMemory: itemCategoryMemory ?? this.itemCategoryMemory,
       frequentItemStats: frequentItemStats ?? this.frequentItemStats,
+      removeCheckedShoppingItems:
+          removeCheckedShoppingItems ?? this.removeCheckedShoppingItems,
+      predefinedItemsSeedVersion:
+          predefinedItemsSeedVersion ?? this.predefinedItemsSeedVersion,
     );
   }
 
@@ -191,6 +207,8 @@ class AppData {
           itemCategoryMemory.map((entry) => entry.toJson()).toList(),
       'frequentItemStats':
           frequentItemStats.map((entry) => entry.toJson()).toList(),
+      'removeCheckedShoppingItems': removeCheckedShoppingItems,
+      'predefinedItemsSeedVersion': predefinedItemsSeedVersion,
     };
   }
 }
@@ -408,6 +426,16 @@ int _toPositiveInt(dynamic source, {int fallback = 1}) {
   };
 
   return parsed < 1 ? fallback : parsed;
+}
+
+int _toNonNegativeInt(dynamic source, {int fallback = 0}) {
+  final parsed = switch (source) {
+    int value => value,
+    String value => int.tryParse(value) ?? fallback,
+    _ => fallback,
+  };
+
+  return parsed < 0 ? fallback : parsed;
 }
 
 DateTime _toDateTime(dynamic source) {

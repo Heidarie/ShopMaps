@@ -72,6 +72,7 @@ class AppController extends ChangeNotifier {
   List<String> get categories => _data.categories;
   List<MarketLayout> get marketLayouts => _data.marketLayouts;
   List<GroceryListModel> get groceryLists => _data.groceryLists;
+  bool get removeCheckedShoppingItems => _data.removeCheckedShoppingItems;
   bool get hasReachedCategoryLimit => _data.categories.length >= maxCategoryCount;
   int get maxFavoriteFrequentItems => _maxFavoriteFrequentItems;
   int get favoriteFrequentItemCount => _pruneExpiredFrequentItemStats(
@@ -113,6 +114,16 @@ class AppController extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  Future<void> setRemoveCheckedShoppingItems(bool value) async {
+    if (_data.removeCheckedShoppingItems == value) {
+      return;
+    }
+
+    _data = _data.copyWith(removeCheckedShoppingItems: value);
+    notifyListeners();
+    await _persist();
   }
 
   List<FrequentItemStat> getTopFrequentItems() {
@@ -806,6 +817,38 @@ class AppController extends ChangeNotifier {
     _data = _data.copyWith(groceryLists: next);
     notifyListeners();
     await _persist();
+  }
+
+  Future<int> removeItemsFromList({
+    required String listId,
+    required Iterable<String> itemIds,
+  }) async {
+    final idsToRemove = itemIds.toSet();
+    if (idsToRemove.isEmpty) {
+      return 0;
+    }
+
+    final next = [..._data.groceryLists];
+    final index = next.indexWhere((list) => list.id == listId);
+    if (index == -1) {
+      return 0;
+    }
+
+    final list = next[index];
+    final updatedItems = list.items
+        .where((item) => !idsToRemove.contains(item.id))
+        .toList();
+    final removedCount = list.items.length - updatedItems.length;
+    if (removedCount == 0) {
+      return 0;
+    }
+
+    next[index] = list.copyWith(items: updatedItems);
+    _data = _data.copyWith(groceryLists: next);
+    notifyListeners();
+    await _persist();
+
+    return removedCount;
   }
 
   Future<CompletedShoppingItemRemoval?> completeShoppingItem({
