@@ -15,12 +15,13 @@ List<RememberedItemCategory> predefinedItemMemoryForLanguageCode(
   String languageCode, {
   List<String>? availableCategories,
 }) {
+  final effectiveLanguageCode = _effectiveSeedLanguageCode(languageCode);
   final resolvedCategories = <int, String>{};
 
   for (var index = 0; index < defaultCategories.length; index++) {
     if (availableCategories == null) {
       resolvedCategories[index] =
-          AppLocalizations.defaultCategoriesForLanguageCode(languageCode)[index];
+          AppLocalizations.defaultCategoriesForLanguageCode(effectiveLanguageCode)[index];
       continue;
     }
 
@@ -43,7 +44,7 @@ List<RememberedItemCategory> predefinedItemMemoryForLanguageCode(
     }
 
     final itemName =
-        seed.names[languageCode] ?? seed.names['pl'] ?? seed.names['en'];
+        seed.names[effectiveLanguageCode] ?? seed.names['en'] ?? seed.names['pl'];
     if (itemName == null || itemName.trim().isEmpty) {
       continue;
     }
@@ -62,6 +63,15 @@ List<RememberedItemCategory> predefinedItemMemoryForLanguageCode(
   }
 
   return seededItems;
+}
+
+String _effectiveSeedLanguageCode(String languageCode) {
+  for (final locale in AppLocalizations.supportedLocales) {
+    if (locale.languageCode == languageCode) {
+      return languageCode;
+    }
+  }
+  return 'en';
 }
 
 String? _resolveAvailableCategoryForIndex(

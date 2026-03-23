@@ -146,6 +146,17 @@ void main() {
     expect(controller.findCategoryForExactItem('Woda smakowa'), isNull);
   });
 
+  test('unsupported locale falls back to english predefined items', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'ru');
+
+    expect(controller.categories.first, 'Drinks');
+    expect(controller.findCategoryForExactItem('Still water'), 'Drinks');
+    expect(controller.findCategoryForExactItem('Chili pepper'), 'Vegetables');
+    expect(controller.findCategoryForExactItem('Woda niegazowana'), isNull);
+    expect(controller.findCategoryForExactItem('Papryczka chili'), isNull);
+  });
+
   test('remove checked shopping items setting defaults to true and persists', () async {
     final controller = AppController(LocalStore());
     await controller.load(localeLanguageCode: 'pl');
