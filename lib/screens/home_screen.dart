@@ -9,6 +9,7 @@ import 'frequent_items_configuration_screen.dart';
 import 'go_shopping_screen.dart';
 import 'grocery_list_editor_screen.dart';
 import 'market_layout_editor_screen.dart';
+import 'settings_screen.dart';
 
 const int _maxInputChars = 100;
 
@@ -824,6 +825,23 @@ class _ConfigurationTab extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => FrequentItemsConfigurationScreen(
+                      controller: controller,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.tune_rounded),
+              title: Text(l10n.settings),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => SettingsScreen(
                       controller: controller,
                     ),
                   ),

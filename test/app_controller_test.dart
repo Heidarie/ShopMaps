@@ -116,6 +116,167 @@ void main() {
     );
   });
 
+  test('first load seeds predefined items in the requested locale', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(controller.findCategoryForExactItem('Woda niegazowana'), 'Napoje');
+    expect(controller.findCategoryForExactItem('Czekolada mleczna'), 'Słodycze');
+    expect(controller.findCategoryForExactItem('Papryczka chili'), 'Warzywa');
+    expect(controller.findCategoryForExactItem('Still water'), isNull);
+  });
+
+  test('first load seeds english predefined items for english locale', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'en');
+
+    expect(controller.findCategoryForExactItem('Still water'), 'Drinks');
+    expect(controller.findCategoryForExactItem('Milk chocolate'), 'Sweets');
+    expect(controller.findCategoryForExactItem('Chili pepper'), 'Vegetables');
+    expect(controller.findCategoryForExactItem('Woda niegazowana'), isNull);
+    expect(controller.findCategoryForExactItem('Papryczka chili'), isNull);
+  });
+
+  test('first load seeds translated extra predefined items for german locale', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'de');
+
+    expect(controller.findCategoryForExactItem('Aromatisiertes Wasser'), 'Getränke');
+    expect(controller.findCategoryForExactItem('Chilischote'), 'Gemüse');
+    expect(controller.findCategoryForExactItem('Woda smakowa'), isNull);
+  });
+
+  test('remove checked shopping items setting defaults to true and persists', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(controller.removeCheckedShoppingItems, isTrue);
+
+    await controller.setRemoveCheckedShoppingItems(false);
+
+    final reloadedController = AppController(LocalStore());
+    await reloadedController.load(localeLanguageCode: 'pl');
+
+    expect(reloadedController.removeCheckedShoppingItems, isFalse);
+  });
+
+  test('removeItemsFromList removes selected items and keeps the grocery list', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    final listId = await controller.createGroceryList('Weekend');
+    expect(listId, isNotNull);
+
+    await controller.addItemToList(
+      listId: listId!,
+      itemName: 'Jabłko',
+      category: 'Owoce',
+      quantity: 1,
+    );
+    await controller.addItemToList(
+      listId: listId,
+      itemName: 'Pomidor',
+      category: 'Warzywa',
+      quantity: 2,
+    );
+
+    final initialList = controller.getGroceryListById(listId)!;
+    final removedCount = await controller.removeItemsFromList(
+      listId: listId,
+      itemIds: [initialList.items.first.id],
+    );
+
+    expect(removedCount, 1);
+    expect(controller.getGroceryListById(listId), isNotNull);
+    expect(
+      controller.getGroceryListById(listId)!.items.map((item) => item.name).toList(),
+      ['Pomidor'],
+    );
+
+    final removedAll = await controller.removeItemsFromList(
+      listId: listId,
+      itemIds: controller.getGroceryListById(listId)!.items.map((item) => item.id),
+    );
+
+    expect(removedAll, 1);
+    expect(controller.getGroceryListById(listId), isNotNull);
+    expect(controller.getGroceryListById(listId)!.items, isEmpty);
+  });
+
+  test('predefined item migration keeps existing remembered category overrides', () async {
+    final storedData = jsonEncode({
+      'categories': [
+        'Napoje',
+        'Słodycze',
+        'Owoce',
+        'Warzywa',
+        'Alkohol',
+        'Nabiał',
+        'Piekarnia',
+        'Mięso',
+        'Mrożonki',
+        'Chemia domowa',
+        'Specjalna kategoria',
+      ],
+      'marketLayouts': [],
+      'groceryLists': [],
+      'itemCategoryMemory': [
+        {
+          'itemName': 'Woda niegazowana',
+          'category': 'Specjalna kategoria',
+        },
+      ],
+      'frequentItemStats': [],
+      'removeCheckedShoppingItems': true,
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(
+      controller.findCategoryForExactItem('Woda niegazowana'),
+      'Specjalna kategoria',
+    );
+    expect(controller.findCategoryForExactItem('Papryczka chili'), 'Warzywa');
+  });
+
+  test('predefined items are repaired for existing installs even at the same seed version', () async {
+    final storedData = jsonEncode({
+      'categories': [
+        'Napoje',
+        'Słodycze',
+        'Owoce',
+        'Warzywa',
+        'Alkohol',
+        'Nabiał',
+        'Piekarnia',
+        'Mięso',
+        'Mrożonki',
+        'Chemia domowa',
+      ],
+      'marketLayouts': [],
+      'groceryLists': [],
+      'itemCategoryMemory': [],
+      'frequentItemStats': [],
+      'predefinedItemsSeedVersion': 2,
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'en');
+
+    expect(controller.findCategoryForExactItem('Still water'), 'Napoje');
+    expect(controller.findCategoryForExactItem('Chili pepper'), 'Warzywa');
+    expect(controller.findCategoryForExactItem('Papryczka chili'), isNull);
+  });
+
   test('first seeded categories stay fixed after later loads with a different locale', () async {
     final firstController = AppController(LocalStore());
     await firstController.load(localeLanguageCode: 'pl');

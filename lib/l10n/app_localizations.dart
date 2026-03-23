@@ -65,6 +65,7 @@ class AppLocalizations {
       'categoriesTab': 'Categories',
       'configurationTab': 'Configuration',
       'topArticles': 'Top 10 items',
+      'settings': 'Settings',
       'chooseCategory': 'Choose category',
       'noCategoriesInLayout': 'No categories in this market layout yet.',
       'emptyCategories': 'No categories yet.',
@@ -93,6 +94,10 @@ class AppLocalizations {
       'pickCategory': 'Pick category',
       'goShoppingFlow': 'Shopping route',
       'finishShopping': 'Finish shopping',
+      'cartSection': 'In cart',
+      'removeCheckedItemsSetting': 'Hide checked items during shopping',
+      'removeCheckedItemsSettingDescription':
+          'When enabled, checked items disappear from the shopping route immediately. When disabled, they move to the bottom In cart section. They are removed from the grocery list when shopping ends.',
       'shoppingDoneIn': "Nice! You've done your shopping in:",
       'undo': 'Undo',
       'step1': '1. Choose grocery list',
@@ -160,6 +165,7 @@ class AppLocalizations {
       'categoriesTab': 'Kategorie',
       'configurationTab': 'Konfiguracja',
       'topArticles': 'Top 10 artykułów',
+      'settings': 'Ustawienia',
       'chooseCategory': 'Wybierz kategorię',
       'noCategoriesInLayout': 'Brak kategorii w tym układzie sklepu.',
       'emptyCategories': 'Brak kategorii.',
@@ -188,6 +194,10 @@ class AppLocalizations {
       'pickCategory': 'Wybierz kategorię',
       'goShoppingFlow': 'Trasa zakupów',
       'finishShopping': 'Zakończ zakupy',
+      'cartSection': 'W koszyku',
+      'removeCheckedItemsSetting': 'Ukrywaj odhaczone artykuły podczas zakupów',
+      'removeCheckedItemsSettingDescription':
+          'Gdy opcja jest włączona, odhaczone artykuły od razu znikają z trasy zakupów. Gdy jest wyłączona, trafiają na dół do sekcji W koszyku. Z listy zakupów są usuwane dopiero po zakończeniu zakupów.',
       'shoppingDoneIn': 'Super! Zrobiono zakupy w:',
       'undo': 'Cofnij',
       'step1': '1. Wybierz listę zakupów',
@@ -255,6 +265,7 @@ class AppLocalizations {
       'categoriesTab': 'Kategorien',
       'configurationTab': 'Konfiguration',
       'topArticles': 'Top-10-Artikel',
+      'settings': 'Einstellungen',
       'chooseCategory': 'Kategorie wählen',
       'noCategoriesInLayout': 'Noch keine Kategorien in diesem Marktlayout.',
       'emptyCategories': 'Noch keine Kategorien.',
@@ -283,6 +294,10 @@ class AppLocalizations {
       'pickCategory': 'Kategorie auswählen',
       'goShoppingFlow': 'Einkaufsroute',
       'finishShopping': 'Einkauf beenden',
+      'cartSection': 'Im Wagen',
+      'removeCheckedItemsSetting': 'Abgehakte Artikel beim Einkaufen ausblenden',
+      'removeCheckedItemsSettingDescription':
+          'Wenn diese Option aktiviert ist, verschwinden abgehakte Artikel sofort aus der Einkaufsroute. Wenn sie deaktiviert ist, werden sie unten im Bereich Im Wagen angezeigt. Aus der Einkaufsliste werden sie erst am Ende entfernt.',
       'shoppingDoneIn': 'Super! Du hast deinen Einkauf geschafft in:',
       'undo': 'Rückgängig',
       'step1': '1. Einkaufsliste wählen',
@@ -351,6 +366,7 @@ class AppLocalizations {
       'categoriesTab': 'Categorieën',
       'configurationTab': 'Configuratie',
       'topArticles': 'Top 10-items',
+      'settings': 'Instellingen',
       'chooseCategory': 'Kies categorie',
       'noCategoriesInLayout': 'Nog geen categorieën in deze winkelindeling.',
       'emptyCategories': 'Nog geen categorieën.',
@@ -379,6 +395,10 @@ class AppLocalizations {
       'pickCategory': 'Categorie kiezen',
       'goShoppingFlow': 'Winkelroute',
       'finishShopping': 'Boodschappen afronden',
+      'cartSection': 'In winkelwagen',
+      'removeCheckedItemsSetting': 'Aangevinkte items verbergen tijdens het winkelen',
+      'removeCheckedItemsSettingDescription':
+          'Als deze optie is ingeschakeld, verdwijnen aangevinkte items meteen uit de winkelroute. Als ze uitstaat, verplaatsen ze naar de onderste sectie In winkelwagen. Ze worden pas aan het einde uit de boodschappenlijst verwijderd.',
       'shoppingDoneIn': 'Mooi! Je bent klaar met winkelen in:',
       'undo': 'Ongedaan maken',
       'step1': '1. Kies boodschappenlijst',
@@ -447,6 +467,7 @@ class AppLocalizations {
       'categoriesTab': 'Categorías',
       'configurationTab': 'Configuración',
       'topArticles': 'Top 10 artículos',
+      'settings': 'Ajustes',
       'chooseCategory': 'Elegir categoría',
       'noCategoriesInLayout': 'Aún no hay categorías en este diseño de tienda.',
       'emptyCategories': 'Aún no hay categorías.',
@@ -475,6 +496,10 @@ class AppLocalizations {
       'pickCategory': 'Elegir categoría',
       'goShoppingFlow': 'Ruta de compras',
       'finishShopping': 'Terminar compra',
+      'cartSection': 'En el carrito',
+      'removeCheckedItemsSetting': 'Ocultar los artículos marcados durante la compra',
+      'removeCheckedItemsSettingDescription':
+          'Cuando esta opción está activada, los artículos marcados desaparecen enseguida de la ruta de compra. Cuando está desactivada, pasan al final en la sección En el carrito. Solo se eliminan de la lista al terminar la compra.',
       'shoppingDoneIn': '¡Bien! Has terminado tus compras en:',
       'undo': 'Deshacer',
       'step1': '1. Elige la lista de compras',
@@ -543,6 +568,7 @@ class AppLocalizations {
       'categoriesTab': 'Catégories',
       'configurationTab': 'Configuration',
       'topArticles': 'Top 10 articles',
+      'settings': 'Réglages',
       'chooseCategory': 'Choisir une catégorie',
       'noCategoriesInLayout': "Aucune catégorie dans ce plan de magasin.",
       'emptyCategories': 'Aucune catégorie pour le moment.',
@@ -571,6 +597,10 @@ class AppLocalizations {
       'pickCategory': 'Choisir une catégorie',
       'goShoppingFlow': 'Parcours des courses',
       'finishShopping': 'Terminer les courses',
+      'cartSection': 'Dans le panier',
+      'removeCheckedItemsSetting': 'Masquer les articles cochés pendant les courses',
+      'removeCheckedItemsSettingDescription':
+          'Lorsque cette option est activée, les articles cochés disparaissent aussitôt du parcours des courses. Lorsqu’elle est désactivée, ils descendent dans la section du bas Dans le panier. Ils ne sont retirés de la liste qu’à la fin.',
       'shoppingDoneIn': 'Bravo ! Vous avez terminé vos courses en :',
       'undo': 'Annuler',
       'step1': '1. Choisissez la liste de courses',
@@ -639,6 +669,7 @@ class AppLocalizations {
       'categoriesTab': 'Категорії',
       'configurationTab': 'Налаштування',
       'topArticles': 'Топ 10 товарів',
+      'settings': 'Параметри',
       'chooseCategory': 'Вибрати категорію',
       'noCategoriesInLayout': 'У цьому плані магазину ще немає категорій.',
       'emptyCategories': 'Категорій ще немає.',
@@ -667,6 +698,10 @@ class AppLocalizations {
       'pickCategory': 'Вибрати категорію',
       'goShoppingFlow': 'Маршрут покупок',
       'finishShopping': 'Завершити покупки',
+      'cartSection': 'У кошику',
+      'removeCheckedItemsSetting': 'Приховувати позначені товари під час покупок',
+      'removeCheckedItemsSettingDescription':
+          'Коли цю опцію ввімкнено, позначені товари одразу зникають із маршруту покупок. Коли вимкнено, вони переходять униз у секцію У кошику. Із самого списку покупок вони видаляються лише наприкінці.',
       'shoppingDoneIn': 'Чудово! Ви зробили покупки за:',
       'undo': 'Скасувати',
       'step1': '1. Виберіть список покупок',
@@ -735,6 +770,7 @@ class AppLocalizations {
       'categoriesTab': 'Categorie',
       'configurationTab': 'Configurazione',
       'topArticles': 'Top 10 articoli',
+      'settings': 'Impostazioni',
       'chooseCategory': 'Scegli categoria',
       'noCategoriesInLayout': 'Nessuna categoria in questo layout negozio.',
       'emptyCategories': 'Nessuna categoria ancora.',
@@ -763,6 +799,10 @@ class AppLocalizations {
       'pickCategory': 'Scegli categoria',
       'goShoppingFlow': 'Percorso spesa',
       'finishShopping': 'Termina spesa',
+      'cartSection': 'Nel carrello',
+      'removeCheckedItemsSetting': 'Nascondi gli articoli spuntati durante la spesa',
+      'removeCheckedItemsSettingDescription':
+          'Quando questa opzione è attiva, gli articoli spuntati spariscono subito dal percorso della spesa. Quando è disattiva, vengono spostati in fondo nella sezione Nel carrello. Dalla lista della spesa vengono rimossi solo alla fine.',
       'shoppingDoneIn': 'Ottimo! Hai finito la spesa in:',
       'undo': 'Annulla',
       'step1': '1. Scegli la lista della spesa',
@@ -831,6 +871,7 @@ class AppLocalizations {
       'categoriesTab': 'Categorias',
       'configurationTab': 'Configuração',
       'topArticles': 'Top 10 itens',
+      'settings': 'Definições',
       'chooseCategory': 'Escolher categoria',
       'noCategoriesInLayout': 'Ainda não há categorias neste layout de loja.',
       'emptyCategories': 'Ainda não há categorias.',
@@ -859,6 +900,10 @@ class AppLocalizations {
       'pickCategory': 'Escolher categoria',
       'goShoppingFlow': 'Rota de compras',
       'finishShopping': 'Finalizar compras',
+      'cartSection': 'No carrinho',
+      'removeCheckedItemsSetting': 'Ocultar itens marcados durante as compras',
+      'removeCheckedItemsSettingDescription':
+          'Quando esta opção está ativada, os itens marcados desaparecem logo da rota de compras. Quando está desativada, passam para a secção inferior No carrinho. Só são removidos da lista de compras no fim.',
       'shoppingDoneIn': 'Ótimo! Você terminou suas compras em:',
       'undo': 'Desfazer',
       'step1': '1. Escolha a lista de compras',
@@ -937,6 +982,7 @@ class AppLocalizations {
   String get categoriesTab => _t('categoriesTab');
   String get configurationTab => _t('configurationTab');
   String get topArticles => _t('topArticles');
+  String get settings => _t('settings');
   String get chooseCategory => _t('chooseCategory');
   String get noCategoriesInLayout => _t('noCategoriesInLayout');
   String get emptyCategories => _t('emptyCategories');
@@ -964,6 +1010,10 @@ class AppLocalizations {
   String get pickCategory => _t('pickCategory');
   String get goShoppingFlow => _t('goShoppingFlow');
   String get finishShopping => _t('finishShopping');
+  String get cartSection => _t('cartSection');
+  String get removeCheckedItemsSetting => _t('removeCheckedItemsSetting');
+  String get removeCheckedItemsSettingDescription =>
+      _t('removeCheckedItemsSettingDescription');
   String get shoppingDoneIn => _t('shoppingDoneIn');
   String get undo => _t('undo');
   String get step1 => _t('step1');

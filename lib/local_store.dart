@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
 import 'models.dart';
+import 'predefined_items.dart';
 
 class LocalStore {
   static const String _storageKey = 'shopmaps_data_v1';
@@ -20,7 +21,11 @@ class LocalStore {
     );
 
     if (raw == null || raw.isEmpty) {
-      final initialData = AppData.empty(categories: localizedDefaultCategories);
+      final initialData = AppData.empty(
+        categories: localizedDefaultCategories,
+        itemCategoryMemory: predefinedItemMemoryForLanguageCode(localeLanguageCode),
+        predefinedItemsSeedVersion: predefinedItemSeedVersion,
+      );
       await save(initialData);
       return initialData;
     }
@@ -32,11 +37,15 @@ class LocalStore {
           Map<String, dynamic>.from(parsed),
           fallbackCategories: localizedDefaultCategories,
         );
-        final migratedData = _migrateLegacyDefaultCategories(
+        final migratedCategoryData = _migrateLegacyDefaultCategories(
           loadedData,
           localizedDefaultCategories: localizedDefaultCategories,
         );
-        if (!_sameCategories(loadedData.categories, migratedData.categories)) {
+        final migratedData = _migratePredefinedItems(
+          migratedCategoryData,
+          localeLanguageCode: localeLanguageCode,
+        );
+        if (jsonEncode(loadedData.toJson()) != jsonEncode(migratedData.toJson())) {
           await save(migratedData);
         }
         return migratedData;
@@ -45,12 +54,14 @@ class LocalStore {
       return _resetToDefaultData(
         preferences,
         raw: raw,
+        localeLanguageCode: localeLanguageCode,
         localizedDefaultCategories: localizedDefaultCategories,
       );
     } catch (_) {
       return _resetToDefaultData(
         preferences,
         raw: raw,
+        localeLanguageCode: localeLanguageCode,
         localizedDefaultCategories: localizedDefaultCategories,
       );
     }
@@ -68,10 +79,15 @@ class LocalStore {
   Future<AppData> _resetToDefaultData(
     SharedPreferences preferences, {
     required String raw,
+    required String localeLanguageCode,
     required List<String> localizedDefaultCategories,
   }) async {
     await _backupRawPayload(preferences, raw);
-    final initialData = AppData.empty(categories: localizedDefaultCategories);
+    final initialData = AppData.empty(
+      categories: localizedDefaultCategories,
+      itemCategoryMemory: predefinedItemMemoryForLanguageCode(localeLanguageCode),
+      predefinedItemsSeedVersion: predefinedItemSeedVersion,
+    );
     await save(initialData);
     return initialData;
   }
@@ -158,6 +174,61 @@ class LocalStore {
           )
           .toList(),
     );
+  }
+
+  AppData _migratePredefinedItems(
+    AppData data, {
+    required String localeLanguageCode,
+  }) {
+    final seededMemory = predefinedItemMemoryForLanguageCode(
+      localeLanguageCode,
+      availableCategories: data.categories,
+    );
+    if (seededMemory.isEmpty) {
+      return data;
+    }
+
+    final mergedMemory = _mergeRememberedItemCategories(
+      seeded: seededMemory,
+      existing: data.itemCategoryMemory,
+    );
+    final didInstallMissingItems = mergedMemory.length != data.itemCategoryMemory.length;
+    final needsVersionBump =
+        data.predefinedItemsSeedVersion < predefinedItemSeedVersion;
+
+    if (!didInstallMissingItems && !needsVersionBump) {
+      return data;
+    }
+
+    return data.copyWith(
+      itemCategoryMemory: mergedMemory,
+      predefinedItemsSeedVersion: predefinedItemSeedVersion,
+    );
+  }
+
+  List<RememberedItemCategory> _mergeRememberedItemCategories({
+    required List<RememberedItemCategory> seeded,
+    required List<RememberedItemCategory> existing,
+  }) {
+    final byItem = <String, RememberedItemCategory>{};
+
+    for (final entry in seeded) {
+      final key = normalizeLatinText(entry.itemName);
+      if (key.isEmpty) {
+        continue;
+      }
+      byItem[key] = entry;
+    }
+
+    for (final entry in existing) {
+      final key = normalizeLatinText(entry.itemName);
+      if (key.isEmpty) {
+        continue;
+      }
+      byItem[key] = entry;
+    }
+
+    return byItem.values.toList();
   }
 
   bool _sameCategories(List<String> left, List<String> right) {
