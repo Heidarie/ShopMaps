@@ -5,6 +5,7 @@ import '../app_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
 import 'categories_configuration_screen.dart';
+import 'deposit_vouchers_screen.dart';
 import 'frequent_items_configuration_screen.dart';
 import 'go_shopping_screen.dart';
 import 'grocery_list_editor_screen.dart';
@@ -177,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final homePages = [
           _MarketLayoutsTab(controller: widget.controller),
           _GroceryListsTab(controller: widget.controller),
+          DepositVouchersTab(controller: widget.controller),
           _ConfigurationTab(controller: widget.controller),
         ];
         final homeTabs = [
@@ -189,6 +191,11 @@ class _HomeScreenState extends State<HomeScreen> {
             label: l10n.groceryList,
             selectedIcon: Icons.playlist_add_check,
             unselectedIcon: Icons.playlist_add_check_outlined,
+          ),
+          _HomeTabItem(
+            label: l10n.depositTab,
+            selectedIcon: Icons.qr_code_2_rounded,
+            unselectedIcon: Icons.qr_code_2_outlined,
           ),
           _HomeTabItem(
             label: l10n.configurationTab,

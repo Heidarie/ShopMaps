@@ -66,6 +66,25 @@ class AppLocalizations {
       'configurationTab': 'Configuration',
       'topArticles': 'Top 10 items',
       'settings': 'Settings',
+      'depositTab': 'Deposits',
+      'addDepositVoucher': 'Add deposit code',
+      'scanCode': 'Scan code',
+      'emptyDepositVouchers': 'No deposit codes yet.',
+      'scanDepositCodeHint': 'Scan the QR code or barcode from your bottle or can deposit receipt.',
+      'scanDepositCodeInstruction':
+          'Point the camera at the QR code or barcode from your deposit receipt.',
+      'scannedCodeLabel': 'Scanned code',
+      'scannedAtLabel': 'Scanned at',
+      'codeFormatLabel': 'Code format',
+      'depositAmountLabel': 'Amount',
+      'storeLabel': 'Store',
+      'storeNameLabel': 'Store name',
+      'addStoreName': 'Add store',
+      'validUntilLabel': 'Valid until',
+      'cameraPermissionRequired': 'Camera access is needed to scan deposit codes.',
+      'depositVoucherSaved': 'Deposit code saved.',
+      'deleteDepositVoucher': 'Delete deposit code',
+      'depositCodePreview': 'Deposit code',
       'chooseCategory': 'Choose category',
       'noCategoriesInLayout': 'No categories in this market layout yet.',
       'emptyCategories': 'No categories yet.',
@@ -166,6 +185,26 @@ class AppLocalizations {
       'configurationTab': 'Konfiguracja',
       'topArticles': 'Top 10 artykułów',
       'settings': 'Ustawienia',
+      'depositTab': 'Kaucje',
+      'addDepositVoucher': 'Dodaj kod kaucji',
+      'scanCode': 'Skanuj kod',
+      'emptyDepositVouchers': 'Brak zapisanych kaucji.',
+      'scanDepositCodeHint':
+          'Zeskanuj kod QR lub kod kreskowy z paragonu za oddane butelki albo puszki.',
+      'scanDepositCodeInstruction':
+          'Skieruj aparat na kod QR lub kod kreskowy z paragonu kaucji.',
+      'scannedCodeLabel': 'Zeskanowany kod',
+      'scannedAtLabel': 'Zeskanowano',
+      'codeFormatLabel': 'Format kodu',
+      'depositAmountLabel': 'Kwota',
+      'storeLabel': 'Sklep',
+      'storeNameLabel': 'Nazwa sklepu',
+      'addStoreName': 'Dodaj sklep',
+      'validUntilLabel': 'Ważny do',
+      'cameraPermissionRequired': 'Do skanowania kodów kaucji potrzebny jest dostęp do aparatu.',
+      'depositVoucherSaved': 'Kod kaucji zapisany.',
+      'deleteDepositVoucher': 'Usuń kod kaucji',
+      'depositCodePreview': 'Kod kaucji',
       'chooseCategory': 'Wybierz kategorię',
       'noCategoriesInLayout': 'Brak kategorii w tym układzie sklepu.',
       'emptyCategories': 'Brak kategorii.',
@@ -266,6 +305,26 @@ class AppLocalizations {
       'configurationTab': 'Konfiguration',
       'topArticles': 'Top-10-Artikel',
       'settings': 'Einstellungen',
+      'depositTab': 'Pfand',
+      'addDepositVoucher': 'Pfandcode hinzufügen',
+      'scanCode': 'Code scannen',
+      'emptyDepositVouchers': 'Noch keine Pfandcodes.',
+      'scanDepositCodeHint':
+          'Scanne den QR-Code oder Barcode vom Pfandbeleg für Flaschen oder Dosen.',
+      'scanDepositCodeInstruction':
+          'Richte die Kamera auf den QR-Code oder Barcode deines Pfandbelegs.',
+      'scannedCodeLabel': 'Gescannter Code',
+      'scannedAtLabel': 'Gescannt um',
+      'codeFormatLabel': 'Codeformat',
+      'depositAmountLabel': 'Betrag',
+      'storeLabel': 'Geschäft',
+      'storeNameLabel': 'Geschäftsname',
+      'addStoreName': 'Geschäft hinzufügen',
+      'validUntilLabel': 'Gültig bis',
+      'cameraPermissionRequired': 'Kamerazugriff ist zum Scannen von Pfandcodes erforderlich.',
+      'depositVoucherSaved': 'Pfandcode gespeichert.',
+      'deleteDepositVoucher': 'Pfandcode löschen',
+      'depositCodePreview': 'Pfandcode',
       'chooseCategory': 'Kategorie wählen',
       'noCategoriesInLayout': 'Noch keine Kategorien in diesem Marktlayout.',
       'emptyCategories': 'Noch keine Kategorien.',
@@ -367,6 +426,26 @@ class AppLocalizations {
       'configurationTab': 'Configuratie',
       'topArticles': 'Top 10-items',
       'settings': 'Instellingen',
+      'depositTab': 'Statiegeld',
+      'addDepositVoucher': 'Statiegeldcode toevoegen',
+      'scanCode': 'Code scannen',
+      'emptyDepositVouchers': 'Nog geen statiegeldcodes.',
+      'scanDepositCodeHint':
+          'Scan de QR-code of barcode van je statiegeldbon voor flessen of blikjes.',
+      'scanDepositCodeInstruction':
+          'Richt de camera op de QR-code of barcode van je statiegeldbon.',
+      'scannedCodeLabel': 'Gescande code',
+      'scannedAtLabel': 'Gescand om',
+      'codeFormatLabel': 'Codeformaat',
+      'depositAmountLabel': 'Bedrag',
+      'storeLabel': 'Winkel',
+      'storeNameLabel': 'Winkelnaam',
+      'addStoreName': 'Winkel toevoegen',
+      'validUntilLabel': 'Geldig tot',
+      'cameraPermissionRequired': 'Cameratoegang is nodig om statiegeldcodes te scannen.',
+      'depositVoucherSaved': 'Statiegeldcode opgeslagen.',
+      'deleteDepositVoucher': 'Statiegeldcode verwijderen',
+      'depositCodePreview': 'Statiegeldcode',
       'chooseCategory': 'Kies categorie',
       'noCategoriesInLayout': 'Nog geen categorieën in deze winkelindeling.',
       'emptyCategories': 'Nog geen categorieën.',
@@ -468,6 +547,27 @@ class AppLocalizations {
       'configurationTab': 'Configuración',
       'topArticles': 'Top 10 artículos',
       'settings': 'Ajustes',
+      'depositTab': 'Depósitos',
+      'addDepositVoucher': 'Añadir código de depósito',
+      'scanCode': 'Escanear código',
+      'emptyDepositVouchers': 'Aún no hay códigos de depósito.',
+      'scanDepositCodeHint':
+          'Escanea el código QR o de barras del recibo de depósito de botellas o latas.',
+      'scanDepositCodeInstruction':
+          'Apunta la cámara al código QR o de barras del recibo de depósito.',
+      'scannedCodeLabel': 'Código escaneado',
+      'scannedAtLabel': 'Escaneado a las',
+      'codeFormatLabel': 'Formato del código',
+      'depositAmountLabel': 'Importe',
+      'storeLabel': 'Tienda',
+      'storeNameLabel': 'Nombre de la tienda',
+      'addStoreName': 'Añadir tienda',
+      'validUntilLabel': 'Válido hasta',
+      'cameraPermissionRequired':
+          'Se necesita acceso a la cámara para escanear códigos de depósito.',
+      'depositVoucherSaved': 'Código de depósito guardado.',
+      'deleteDepositVoucher': 'Eliminar código de depósito',
+      'depositCodePreview': 'Código de depósito',
       'chooseCategory': 'Elegir categoría',
       'noCategoriesInLayout': 'Aún no hay categorías en este diseño de tienda.',
       'emptyCategories': 'Aún no hay categorías.',
@@ -569,6 +669,27 @@ class AppLocalizations {
       'configurationTab': 'Configuration',
       'topArticles': 'Top 10 articles',
       'settings': 'Réglages',
+      'depositTab': 'Consignes',
+      'addDepositVoucher': 'Ajouter un code de consigne',
+      'scanCode': 'Scanner le code',
+      'emptyDepositVouchers': 'Aucun code de consigne pour l’instant.',
+      'scanDepositCodeHint':
+          'Scannez le QR code ou le code-barres du reçu de consigne des bouteilles ou canettes.',
+      'scanDepositCodeInstruction':
+          'Pointez la caméra vers le QR code ou le code-barres du reçu de consigne.',
+      'scannedCodeLabel': 'Code scanné',
+      'scannedAtLabel': 'Scanné à',
+      'codeFormatLabel': 'Format du code',
+      'depositAmountLabel': 'Montant',
+      'storeLabel': 'Magasin',
+      'storeNameLabel': 'Nom du magasin',
+      'addStoreName': 'Ajouter un magasin',
+      'validUntilLabel': 'Valable jusqu’au',
+      'cameraPermissionRequired':
+          'L’accès à la caméra est nécessaire pour scanner les codes de consigne.',
+      'depositVoucherSaved': 'Code de consigne enregistré.',
+      'deleteDepositVoucher': 'Supprimer le code de consigne',
+      'depositCodePreview': 'Code de consigne',
       'chooseCategory': 'Choisir une catégorie',
       'noCategoriesInLayout': "Aucune catégorie dans ce plan de magasin.",
       'emptyCategories': 'Aucune catégorie pour le moment.',
@@ -670,6 +791,26 @@ class AppLocalizations {
       'configurationTab': 'Налаштування',
       'topArticles': 'Топ 10 товарів',
       'settings': 'Параметри',
+      'depositTab': 'Застави',
+      'addDepositVoucher': 'Додати код застави',
+      'scanCode': 'Сканувати код',
+      'emptyDepositVouchers': 'Ще немає збережених кодів застави.',
+      'scanDepositCodeHint':
+          'Відскануйте QR-код або штрихкод із чека застави за пляшки чи банки.',
+      'scanDepositCodeInstruction':
+          'Наведіть камеру на QR-код або штрихкод із чека застави.',
+      'scannedCodeLabel': 'Відсканований код',
+      'scannedAtLabel': 'Відскановано о',
+      'codeFormatLabel': 'Формат коду',
+      'depositAmountLabel': 'Сума',
+      'storeLabel': 'Магазин',
+      'storeNameLabel': 'Назва магазину',
+      'addStoreName': 'Додати магазин',
+      'validUntilLabel': 'Дійсний до',
+      'cameraPermissionRequired': 'Для сканування кодів застави потрібен доступ до камери.',
+      'depositVoucherSaved': 'Код застави збережено.',
+      'deleteDepositVoucher': 'Видалити код застави',
+      'depositCodePreview': 'Код застави',
       'chooseCategory': 'Вибрати категорію',
       'noCategoriesInLayout': 'У цьому плані магазину ще немає категорій.',
       'emptyCategories': 'Категорій ще немає.',
@@ -771,6 +912,26 @@ class AppLocalizations {
       'configurationTab': 'Configurazione',
       'topArticles': 'Top 10 articoli',
       'settings': 'Impostazioni',
+      'depositTab': 'Cauzioni',
+      'addDepositVoucher': 'Aggiungi codice cauzione',
+      'scanCode': 'Scansiona codice',
+      'emptyDepositVouchers': 'Nessun codice cauzione salvato.',
+      'scanDepositCodeHint':
+          'Scansiona il QR code o il codice a barre dello scontrino cauzione per bottiglie o lattine.',
+      'scanDepositCodeInstruction':
+          'Punta la fotocamera sul QR code o sul codice a barre dello scontrino cauzione.',
+      'scannedCodeLabel': 'Codice scansionato',
+      'scannedAtLabel': 'Scansionato alle',
+      'codeFormatLabel': 'Formato codice',
+      'depositAmountLabel': 'Importo',
+      'storeLabel': 'Negozio',
+      'storeNameLabel': 'Nome negozio',
+      'addStoreName': 'Aggiungi negozio',
+      'validUntilLabel': 'Valido fino al',
+      'cameraPermissionRequired': 'È necessario l’accesso alla fotocamera per scansionare i codici cauzione.',
+      'depositVoucherSaved': 'Codice cauzione salvato.',
+      'deleteDepositVoucher': 'Elimina codice cauzione',
+      'depositCodePreview': 'Codice cauzione',
       'chooseCategory': 'Scegli categoria',
       'noCategoriesInLayout': 'Nessuna categoria in questo layout negozio.',
       'emptyCategories': 'Nessuna categoria ancora.',
@@ -872,6 +1033,26 @@ class AppLocalizations {
       'configurationTab': 'Configuração',
       'topArticles': 'Top 10 itens',
       'settings': 'Definições',
+      'depositTab': 'Cauções',
+      'addDepositVoucher': 'Adicionar código de caução',
+      'scanCode': 'Ler código',
+      'emptyDepositVouchers': 'Ainda não há códigos de caução.',
+      'scanDepositCodeHint':
+          'Leia o código QR ou de barras do recibo de caução de garrafas ou latas.',
+      'scanDepositCodeInstruction':
+          'Aponte a câmara para o código QR ou de barras do recibo de caução.',
+      'scannedCodeLabel': 'Código lido',
+      'scannedAtLabel': 'Lido às',
+      'codeFormatLabel': 'Formato do código',
+      'depositAmountLabel': 'Valor',
+      'storeLabel': 'Loja',
+      'storeNameLabel': 'Nome da loja',
+      'addStoreName': 'Adicionar loja',
+      'validUntilLabel': 'Válido até',
+      'cameraPermissionRequired': 'É necessário acesso à câmara para ler códigos de caução.',
+      'depositVoucherSaved': 'Código de caução salvo.',
+      'deleteDepositVoucher': 'Excluir código de caução',
+      'depositCodePreview': 'Código de caução',
       'chooseCategory': 'Escolher categoria',
       'noCategoriesInLayout': 'Ainda não há categorias neste layout de loja.',
       'emptyCategories': 'Ainda não há categorias.',
@@ -983,6 +1164,24 @@ class AppLocalizations {
   String get configurationTab => _t('configurationTab');
   String get topArticles => _t('topArticles');
   String get settings => _t('settings');
+  String get depositTab => _t('depositTab');
+  String get addDepositVoucher => _t('addDepositVoucher');
+  String get scanCode => _t('scanCode');
+  String get emptyDepositVouchers => _t('emptyDepositVouchers');
+  String get scanDepositCodeHint => _t('scanDepositCodeHint');
+  String get scanDepositCodeInstruction => _t('scanDepositCodeInstruction');
+  String get scannedCodeLabel => _t('scannedCodeLabel');
+  String get scannedAtLabel => _t('scannedAtLabel');
+  String get codeFormatLabel => _t('codeFormatLabel');
+  String get depositAmountLabel => _t('depositAmountLabel');
+  String get storeLabel => _t('storeLabel');
+  String get storeNameLabel => _t('storeNameLabel');
+  String get addStoreName => _t('addStoreName');
+  String get validUntilLabel => _t('validUntilLabel');
+  String get cameraPermissionRequired => _t('cameraPermissionRequired');
+  String get depositVoucherSaved => _t('depositVoucherSaved');
+  String get deleteDepositVoucher => _t('deleteDepositVoucher');
+  String get depositCodePreview => _t('depositCodePreview');
   String get chooseCategory => _t('chooseCategory');
   String get noCategoriesInLayout => _t('noCategoriesInLayout');
   String get emptyCategories => _t('emptyCategories');

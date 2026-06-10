@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:shopmaps/app_controller.dart';
 import 'package:shopmaps/local_store.dart';
+import 'package:shopmaps/models.dart';
 
 void main() {
   setUp(() {
@@ -169,6 +170,57 @@ void main() {
     await reloadedController.load(localeLanguageCode: 'pl');
 
     expect(reloadedController.removeCheckedShoppingItems, isFalse);
+  });
+
+  test('deposit voucher is saved locally with scanned code and timestamp', () async {
+    final scannedAt = DateTime.utc(2026, 6, 3, 10, 15);
+    final validUntil = DateTime.utc(2026, 7, 3);
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    await controller.addDepositVoucher(
+      code: '  5901234123457  ',
+      format: 'ean13',
+      amount: 12.5,
+      storeName: 'Lidl',
+      validUntil: validUntil,
+      scannedAt: scannedAt,
+    );
+
+    expect(controller.depositVouchers, hasLength(1));
+    expect(controller.depositVouchers.single.code, '5901234123457');
+    expect(controller.depositVouchers.single.format, 'ean13');
+    expect(controller.depositVouchers.single.scannedAt, scannedAt);
+    expect(controller.depositVouchers.single.amount, 12.5);
+    expect(controller.depositVouchers.single.storeName, 'Lidl');
+    expect(controller.depositVouchers.single.validUntil, validUntil);
+
+    final reloadedController = AppController(LocalStore());
+    await reloadedController.load(localeLanguageCode: 'pl');
+
+    expect(reloadedController.depositVouchers, hasLength(1));
+    expect(reloadedController.depositVouchers.single.code, '5901234123457');
+    expect(reloadedController.depositVouchers.single.format, 'ean13');
+    expect(reloadedController.depositVouchers.single.scannedAt, scannedAt);
+    expect(reloadedController.depositVouchers.single.amount, 12.5);
+    expect(reloadedController.depositVouchers.single.storeName, 'Lidl');
+    expect(reloadedController.depositVouchers.single.validUntil, validUntil);
+  });
+
+  test('deposit store can be stored as a regular market layout', () async {
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    await controller.upsertMarketLayout(
+      MarketLayout(
+        id: createId(),
+        name: 'Lidl',
+        categoryOrder: const [],
+      ),
+    );
+
+    expect(controller.marketLayouts.single.name, 'Lidl');
+    expect(controller.marketLayouts.single.categoryOrder, isEmpty);
   });
 
   test('removeItemsFromList removes selected items and keeps the grocery list', () async {
@@ -478,7 +530,7 @@ void main() {
     expect(controller.getTopFrequentItems().single.category, 'Napoje');
   });
 
-  test('legacy categories are not migrated after user changes the default set', () async {
+  test('legacy english default categories still migrate with custom categories present', () async {
     final storedData = jsonEncode({
       'categories': [
         'My Drinks',
@@ -506,7 +558,89 @@ void main() {
     await controller.load(localeLanguageCode: 'pl');
 
     expect(controller.categories.first, 'My Drinks');
-    expect(controller.categories[1], 'Sweets');
+    expect(controller.categories[1], 'Słodycze');
+    expect(controller.categories[2], 'Owoce');
+  });
+
+  test('mixed english default categories migrate to locale and keep custom entries', () async {
+    final now = DateTime.now().toUtc();
+    final storedData = jsonEncode({
+      'categories': [
+        'My Drinks',
+        'Sweets',
+        'Warzywa',
+        'Bakery',
+      ],
+      'marketLayouts': [
+        {
+          'id': 'layout-1',
+          'name': 'Test market',
+          'categoryOrder': ['Sweets', 'Bakery', 'Warzywa'],
+        },
+      ],
+      'groceryLists': [
+        {
+          'id': 'list-1',
+          'name': 'Test list',
+          'items': [
+            {
+              'id': 'item-1',
+              'name': 'Bread',
+              'category': 'Bakery',
+              'quantity': 1,
+            },
+            {
+              'id': 'item-2',
+              'name': 'Chocolate',
+              'category': 'Sweets',
+              'quantity': 1,
+            },
+          ],
+        },
+      ],
+      'itemCategoryMemory': [
+        {
+          'itemName': 'Bread',
+          'category': 'Bakery',
+        },
+        {
+          'itemName': 'Chocolate',
+          'category': 'Sweets',
+        },
+      ],
+      'frequentItemStats': [
+        {
+          'itemName': 'Bread',
+          'category': 'Bakery',
+          'occurrenceCount': 4,
+          'lastAddedAt': now.toIso8601String(),
+          'isFavorite': false,
+        },
+      ],
+    });
+
+    SharedPreferences.setMockInitialValues({
+      'shopmaps_data_v1': storedData,
+    });
+
+    final controller = AppController(LocalStore());
+    await controller.load(localeLanguageCode: 'pl');
+
+    expect(
+      controller.categories,
+      ['My Drinks', 'Słodycze', 'Warzywa', 'Piekarnia'],
+    );
+    expect(
+      controller.marketLayouts.single.categoryOrder,
+      ['Słodycze', 'Piekarnia', 'Warzywa'],
+    );
+    expect(
+      controller.groceryLists.single.items.map((item) => item.category).toList(),
+      ['Piekarnia', 'Słodycze'],
+    );
+    expect(controller.findCategoryForExactItem('Bread'), 'Piekarnia');
+    expect(controller.findCategoryForExactItem('Chocolate'), 'Słodycze');
+    expect(controller.getTopFrequentItems().single.category, 'Piekarnia');
   });
 
   test('favorite frequent items are kept and shown before regular suggestions', () async {

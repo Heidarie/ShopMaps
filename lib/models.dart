@@ -109,6 +109,7 @@ class AppData {
     required this.categories,
     required this.marketLayouts,
     required this.groceryLists,
+    required this.depositVouchers,
     required this.itemCategoryMemory,
     required this.frequentItemStats,
     required this.removeCheckedShoppingItems,
@@ -124,6 +125,7 @@ class AppData {
       categories: [...(categories ?? defaultCategories)],
       marketLayouts: const [],
       groceryLists: const [],
+      depositVouchers: const [],
       itemCategoryMemory: itemCategoryMemory ?? const [],
       frequentItemStats: const [],
       removeCheckedShoppingItems: true,
@@ -141,6 +143,10 @@ class AppData {
         .toList();
     final groceryLists = _toDynamicList(json['groceryLists'])
         .map(GroceryListModel.fromJson)
+        .toList();
+    final depositVouchers = _toDynamicList(json['depositVouchers'])
+        .map(DepositVoucher.fromJson)
+        .where((entry) => entry.code.isNotEmpty)
         .toList();
     final memoryFromStorage = _toDynamicList(json['itemCategoryMemory'])
         .map(RememberedItemCategory.fromJson)
@@ -161,6 +167,7 @@ class AppData {
           : loadedCategories,
       marketLayouts: marketLayouts,
       groceryLists: groceryLists,
+      depositVouchers: depositVouchers,
       itemCategoryMemory: mergedMemory,
       frequentItemStats: _mergeFrequentItemStats(frequentItemStats),
       removeCheckedShoppingItems: json['removeCheckedShoppingItems'] as bool? ?? true,
@@ -171,6 +178,7 @@ class AppData {
   final List<String> categories;
   final List<MarketLayout> marketLayouts;
   final List<GroceryListModel> groceryLists;
+  final List<DepositVoucher> depositVouchers;
   final List<RememberedItemCategory> itemCategoryMemory;
   final List<FrequentItemStat> frequentItemStats;
   final bool removeCheckedShoppingItems;
@@ -180,6 +188,7 @@ class AppData {
     List<String>? categories,
     List<MarketLayout>? marketLayouts,
     List<GroceryListModel>? groceryLists,
+    List<DepositVoucher>? depositVouchers,
     List<RememberedItemCategory>? itemCategoryMemory,
     List<FrequentItemStat>? frequentItemStats,
     bool? removeCheckedShoppingItems,
@@ -189,6 +198,7 @@ class AppData {
       categories: categories ?? this.categories,
       marketLayouts: marketLayouts ?? this.marketLayouts,
       groceryLists: groceryLists ?? this.groceryLists,
+      depositVouchers: depositVouchers ?? this.depositVouchers,
       itemCategoryMemory: itemCategoryMemory ?? this.itemCategoryMemory,
       frequentItemStats: frequentItemStats ?? this.frequentItemStats,
       removeCheckedShoppingItems:
@@ -203,12 +213,58 @@ class AppData {
       'categories': categories,
       'marketLayouts': marketLayouts.map((layout) => layout.toJson()).toList(),
       'groceryLists': groceryLists.map((list) => list.toJson()).toList(),
+      'depositVouchers':
+          depositVouchers.map((voucher) => voucher.toJson()).toList(),
       'itemCategoryMemory':
           itemCategoryMemory.map((entry) => entry.toJson()).toList(),
       'frequentItemStats':
           frequentItemStats.map((entry) => entry.toJson()).toList(),
       'removeCheckedShoppingItems': removeCheckedShoppingItems,
       'predefinedItemsSeedVersion': predefinedItemsSeedVersion,
+    };
+  }
+}
+
+class DepositVoucher {
+  const DepositVoucher({
+    required this.id,
+    required this.code,
+    required this.format,
+    required this.scannedAt,
+    required this.amount,
+    required this.storeName,
+    required this.validUntil,
+  });
+
+  factory DepositVoucher.fromJson(Map<String, dynamic> json) {
+    return DepositVoucher(
+      id: (json['id'] ?? '').toString(),
+      code: (json['code'] ?? '').toString().trim(),
+      format: (json['format'] ?? '').toString().trim(),
+      scannedAt: _toDateTime(json['scannedAt']),
+      amount: _toNonNegativeDouble(json['amount']),
+      storeName: (json['storeName'] ?? '').toString().trim(),
+      validUntil: _toNullableDateTime(json['validUntil']),
+    );
+  }
+
+  final String id;
+  final String code;
+  final String format;
+  final DateTime scannedAt;
+  final double amount;
+  final String storeName;
+  final DateTime? validUntil;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'format': format,
+      'scannedAt': scannedAt.toUtc().toIso8601String(),
+      'amount': amount,
+      'storeName': storeName,
+      'validUntil': validUntil?.toUtc().toIso8601String(),
     };
   }
 }
@@ -438,6 +494,16 @@ int _toNonNegativeInt(dynamic source, {int fallback = 0}) {
   return parsed < 0 ? fallback : parsed;
 }
 
+double _toNonNegativeDouble(dynamic source, {double fallback = 0}) {
+  final parsed = switch (source) {
+    num value => value.toDouble(),
+    String value => double.tryParse(value.replaceAll(',', '.')) ?? fallback,
+    _ => fallback,
+  };
+
+  return parsed < 0 ? fallback : parsed;
+}
+
 DateTime _toDateTime(dynamic source) {
   if (source is String) {
     final parsed = DateTime.tryParse(source);
@@ -447,6 +513,14 @@ DateTime _toDateTime(dynamic source) {
   }
 
   return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+}
+
+DateTime? _toNullableDateTime(dynamic source) {
+  if (source is String) {
+    return DateTime.tryParse(source);
+  }
+
+  return null;
 }
 
 List<String> _uniqueCaseInsensitive(List<String> source) {

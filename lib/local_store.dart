@@ -116,9 +116,6 @@ class LocalStore {
     if (_sameCategories(localizedDefaultCategories, defaultCategories)) {
       return data;
     }
-    if (!_sameCategories(data.categories, defaultCategories)) {
-      return data;
-    }
 
     final categoryMap = <String, String>{
       for (var index = 0; index < defaultCategories.length; index++)
@@ -130,11 +127,14 @@ class LocalStore {
     }
 
     return data.copyWith(
-      categories: localizedDefaultCategories,
+      categories: _mapAndDeduplicateCategories(data.categories, mapCategory),
       marketLayouts: data.marketLayouts
           .map(
             (layout) => layout.copyWith(
-              categoryOrder: layout.categoryOrder.map(mapCategory).toList(),
+              categoryOrder: _mapAndDeduplicateCategories(
+                layout.categoryOrder,
+                mapCategory,
+              ),
             ),
           )
           .toList(),
@@ -174,6 +174,25 @@ class LocalStore {
           )
           .toList(),
     );
+  }
+
+  List<String> _mapAndDeduplicateCategories(
+    List<String> categories,
+    String Function(String category) mapCategory,
+  ) {
+    final mappedCategories = <String>[];
+    final seenKeys = <String>{};
+
+    for (final category in categories) {
+      final mappedCategory = mapCategory(category);
+      final normalizedKey = normalizeLatinText(mappedCategory);
+      if (normalizedKey.isEmpty || !seenKeys.add(normalizedKey)) {
+        continue;
+      }
+      mappedCategories.add(mappedCategory);
+    }
+
+    return mappedCategories;
   }
 
   AppData _migratePredefinedItems(

@@ -72,6 +72,7 @@ class AppController extends ChangeNotifier {
   List<String> get categories => _data.categories;
   List<MarketLayout> get marketLayouts => _data.marketLayouts;
   List<GroceryListModel> get groceryLists => _data.groceryLists;
+  List<DepositVoucher> get depositVouchers => _data.depositVouchers;
   bool get removeCheckedShoppingItems => _data.removeCheckedShoppingItems;
   bool get hasReachedCategoryLimit => _data.categories.length >= maxCategoryCount;
   int get maxFavoriteFrequentItems => _maxFavoriteFrequentItems;
@@ -674,6 +675,44 @@ class AppController extends ChangeNotifier {
   Future<void> deleteGroceryList(String listId) async {
     final next = _data.groceryLists.where((list) => list.id != listId).toList();
     _data = _data.copyWith(groceryLists: next);
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> addDepositVoucher({
+    required String code,
+    required String format,
+    required double amount,
+    required String storeName,
+    required DateTime? validUntil,
+    DateTime? scannedAt,
+  }) async {
+    final cleanedCode = code.trim();
+    final cleanedStoreName = storeName.trim();
+    if (cleanedCode.isEmpty || amount < 0 || cleanedStoreName.isEmpty) {
+      return;
+    }
+
+    final voucher = DepositVoucher(
+      id: createId(),
+      code: cleanedCode,
+      format: format.trim().isEmpty ? 'unknown' : format.trim(),
+      scannedAt: (scannedAt ?? DateTime.now()).toUtc(),
+      amount: amount,
+      storeName: cleanedStoreName,
+      validUntil: validUntil?.toUtc(),
+    );
+    final next = [voucher, ..._data.depositVouchers];
+    _data = _data.copyWith(depositVouchers: next);
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> deleteDepositVoucher(String voucherId) async {
+    final next = _data.depositVouchers
+        .where((voucher) => voucher.id != voucherId)
+        .toList();
+    _data = _data.copyWith(depositVouchers: next);
     notifyListeners();
     await _persist();
   }
