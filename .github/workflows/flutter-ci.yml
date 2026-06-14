@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Validate production configuration schema
+        run: dart run tool/validate_production_config.dart config/supabase.prod.example.json --example
+
       - name: Analyze
         run: flutter analyze
 

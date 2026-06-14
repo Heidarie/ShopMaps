@@ -7,7 +7,10 @@ class AppLocalizations {
   final Locale locale;
 
   static AppLocalizations of(BuildContext context) {
-    final localizations = Localizations.of<AppLocalizations>(context, AppLocalizations);
+    final localizations = Localizations.of<AppLocalizations>(
+      context,
+      AppLocalizations,
+    );
     assert(localizations != null, 'AppLocalizations not found in context');
     return localizations!;
   }
@@ -24,7 +27,8 @@ class AppLocalizations {
     Locale('pt'),
   ];
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
   static const List<String> _defaultCategoryKeys = [
     'categoryDrinks',
     'categorySweets',
@@ -43,6 +47,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Market',
       'groceryList': 'Grocery list',
+      'groceryListsTab': 'Lists',
       'goShopping': 'Go shopping',
       'add': 'Add',
       'addCategory': 'Add category',
@@ -70,7 +75,8 @@ class AppLocalizations {
       'addDepositVoucher': 'Add deposit code',
       'scanCode': 'Scan code',
       'emptyDepositVouchers': 'No deposit codes yet.',
-      'scanDepositCodeHint': 'Scan the QR code or barcode from your bottle or can deposit receipt.',
+      'scanDepositCodeHint':
+          'Scan the QR code or barcode from your bottle or can deposit receipt.',
       'scanDepositCodeInstruction':
           'Point the camera at the QR code or barcode from your deposit receipt.',
       'scannedCodeLabel': 'Scanned code',
@@ -81,9 +87,13 @@ class AppLocalizations {
       'storeNameLabel': 'Store name',
       'addStoreName': 'Add store',
       'validUntilLabel': 'Valid until',
-      'cameraPermissionRequired': 'Camera access is needed to scan deposit codes.',
+      'cameraPermissionRequired':
+          'Camera access is needed to scan deposit codes.',
       'depositVoucherSaved': 'Deposit code saved.',
       'deleteDepositVoucher': 'Delete deposit code',
+      'used': 'Used',
+      'useSharedDepositVoucherDescription':
+          'This will remove the shared deposit code for everyone in the group.',
       'depositCodePreview': 'Deposit code',
       'chooseCategory': 'Choose category',
       'noCategoriesInLayout': 'No categories in this market layout yet.',
@@ -134,7 +144,8 @@ class AppLocalizations {
       'selectCategoryFirst': 'Select category first.',
       'maxCategoriesReached': 'Maximum categories limit reached ({max}).',
       'favoriteLimitReached': 'Maximum favorites limit reached ({max}).',
-      'selectListAndMarket': 'Create at least one grocery list and one market layout.',
+      'selectListAndMarket':
+          'Create at least one grocery list and one market layout.',
       'deleteItem': 'Delete item',
       'editCategory': 'Edit category',
       'deleteCategory': 'Delete category',
@@ -162,6 +173,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Sklep',
       'groceryList': 'Lista zakupów',
+      'groceryListsTab': 'Listy',
       'goShopping': 'Idź na zakupy',
       'add': 'Dodaj',
       'addCategory': 'Dodaj kategorię',
@@ -201,9 +213,13 @@ class AppLocalizations {
       'storeNameLabel': 'Nazwa sklepu',
       'addStoreName': 'Dodaj sklep',
       'validUntilLabel': 'Ważny do',
-      'cameraPermissionRequired': 'Do skanowania kodów kaucji potrzebny jest dostęp do aparatu.',
+      'cameraPermissionRequired':
+          'Do skanowania kodów kaucji potrzebny jest dostęp do aparatu.',
       'depositVoucherSaved': 'Kod kaucji zapisany.',
       'deleteDepositVoucher': 'Usuń kod kaucji',
+      'used': 'Wykorzystany',
+      'useSharedDepositVoucherDescription':
+          'Współdzielony kod kaucji zostanie usunięty u wszystkich członków grupy.',
       'depositCodePreview': 'Kod kaucji',
       'chooseCategory': 'Wybierz kategorię',
       'noCategoriesInLayout': 'Brak kategorii w tym układzie sklepu.',
@@ -254,7 +270,8 @@ class AppLocalizations {
       'selectCategoryFirst': 'Najpierw wybierz kategorię.',
       'maxCategoriesReached': 'Osiągnięto limit kategorii ({max}).',
       'favoriteLimitReached': 'Osiągnięto limit ulubionych ({max}).',
-      'selectListAndMarket': 'Utwórz przynajmniej jedną listę i jeden układ sklepu.',
+      'selectListAndMarket':
+          'Utwórz przynajmniej jedną listę i jeden układ sklepu.',
       'deleteItem': 'Usuń produkt',
       'editCategory': 'Edytuj kategorię',
       'deleteCategory': 'Usuń kategorię',
@@ -282,6 +299,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Markt',
       'groceryList': 'Einkaufsliste',
+      'groceryListsTab': 'Listen',
       'goShopping': 'Einkaufen gehen',
       'add': 'Hinzufügen',
       'addCategory': 'Kategorie hinzufügen',
@@ -321,7 +339,8 @@ class AppLocalizations {
       'storeNameLabel': 'Geschäftsname',
       'addStoreName': 'Geschäft hinzufügen',
       'validUntilLabel': 'Gültig bis',
-      'cameraPermissionRequired': 'Kamerazugriff ist zum Scannen von Pfandcodes erforderlich.',
+      'cameraPermissionRequired':
+          'Kamerazugriff ist zum Scannen von Pfandcodes erforderlich.',
       'depositVoucherSaved': 'Pfandcode gespeichert.',
       'deleteDepositVoucher': 'Pfandcode löschen',
       'depositCodePreview': 'Pfandcode',
@@ -338,7 +357,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 häufigste Artikel:',
       'frequentItemsDialogExplanation':
           'Favoriten werden immer zuerst angezeigt. Andere Artikel erscheinen, nachdem sie in den letzten 2 Wochen mindestens 3 Mal hinzugefügt wurden. Ältere Einträge werden automatisch entfernt.',
-      'frequentItemsDialogEmpty': 'Noch keine Artikel, die diese Regeln erfüllen.',
+      'frequentItemsDialogEmpty':
+          'Noch keine Artikel, die diese Regeln erfüllen.',
       'load': 'Laden',
       'addToFavorites': 'Zu Favoriten hinzufügen',
       'removeFromFavorites': 'Aus Favoriten entfernen',
@@ -354,7 +374,8 @@ class AppLocalizations {
       'goShoppingFlow': 'Einkaufsroute',
       'finishShopping': 'Einkauf beenden',
       'cartSection': 'Im Wagen',
-      'removeCheckedItemsSetting': 'Abgehakte Artikel beim Einkaufen ausblenden',
+      'removeCheckedItemsSetting':
+          'Abgehakte Artikel beim Einkaufen ausblenden',
       'removeCheckedItemsSettingDescription':
           'Wenn diese Option aktiviert ist, verschwinden abgehakte Artikel sofort aus der Einkaufsroute. Wenn sie deaktiviert ist, werden sie unten im Bereich Im Wagen angezeigt. Aus der Einkaufsliste werden sie erst am Ende entfernt.',
       'shoppingDoneIn': 'Super! Du hast deinen Einkauf geschafft in:',
@@ -363,7 +384,8 @@ class AppLocalizations {
       'step2': '2. Marktlayout wählen',
       'shoppingResult': 'Einkaufsliste in Markt-Reihenfolge',
       'emptyShoppingList': 'Die Liste ist leer!',
-      'missingInLayout': 'Kategorie ist im ausgewählten Marktlayout nicht vorhanden',
+      'missingInLayout':
+          'Kategorie ist im ausgewählten Marktlayout nicht vorhanden',
       'nothingToShow': 'Noch nichts anzuzeigen.',
       'language': 'Sprache',
       'systemLanguage': 'Systemstandard',
@@ -403,6 +425,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Winkel',
       'groceryList': 'Boodschappenlijst',
+      'groceryListsTab': 'Lijsten',
       'goShopping': 'Boodschappen doen',
       'add': 'Toevoegen',
       'addCategory': 'Categorie toevoegen',
@@ -442,7 +465,8 @@ class AppLocalizations {
       'storeNameLabel': 'Winkelnaam',
       'addStoreName': 'Winkel toevoegen',
       'validUntilLabel': 'Geldig tot',
-      'cameraPermissionRequired': 'Cameratoegang is nodig om statiegeldcodes te scannen.',
+      'cameraPermissionRequired':
+          'Cameratoegang is nodig om statiegeldcodes te scannen.',
       'depositVoucherSaved': 'Statiegeldcode opgeslagen.',
       'deleteDepositVoucher': 'Statiegeldcode verwijderen',
       'depositCodePreview': 'Statiegeldcode',
@@ -459,7 +483,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 meest voorkomende items:',
       'frequentItemsDialogExplanation':
           'Favorieten worden altijd eerst getoond. Andere items verschijnen nadat ze in de afgelopen 2 weken minstens 3 keer zijn toegevoegd. Oudere vermeldingen worden automatisch verwijderd.',
-      'frequentItemsDialogEmpty': 'Er zijn nog geen items die aan deze regels voldoen.',
+      'frequentItemsDialogEmpty':
+          'Er zijn nog geen items die aan deze regels voldoen.',
       'load': 'Laden',
       'addToFavorites': 'Aan favorieten toevoegen',
       'removeFromFavorites': 'Uit favorieten verwijderen',
@@ -475,7 +500,8 @@ class AppLocalizations {
       'goShoppingFlow': 'Winkelroute',
       'finishShopping': 'Boodschappen afronden',
       'cartSection': 'In winkelwagen',
-      'removeCheckedItemsSetting': 'Aangevinkte items verbergen tijdens het winkelen',
+      'removeCheckedItemsSetting':
+          'Aangevinkte items verbergen tijdens het winkelen',
       'removeCheckedItemsSettingDescription':
           'Als deze optie is ingeschakeld, verdwijnen aangevinkte items meteen uit de winkelroute. Als ze uitstaat, verplaatsen ze naar de onderste sectie In winkelwagen. Ze worden pas aan het einde uit de boodschappenlijst verwijderd.',
       'shoppingDoneIn': 'Mooi! Je bent klaar met winkelen in:',
@@ -524,6 +550,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Tienda',
       'groceryList': 'Lista de compras',
+      'groceryListsTab': 'Listas',
       'goShopping': 'Ir de compras',
       'add': 'Añadir',
       'addCategory': 'Añadir categoría',
@@ -581,7 +608,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 artículos más frecuentes:',
       'frequentItemsDialogExplanation':
           'Los favoritos siempre se muestran primero. Los demás artículos aparecen después de haberse añadido al menos 3 veces en las últimas 2 semanas. Las entradas más antiguas se eliminan automáticamente.',
-      'frequentItemsDialogEmpty': 'Todavía no hay artículos que cumplan estas reglas.',
+      'frequentItemsDialogEmpty':
+          'Todavía no hay artículos que cumplan estas reglas.',
       'load': 'Cargar',
       'addToFavorites': 'Añadir a favoritos',
       'removeFromFavorites': 'Quitar de favoritos',
@@ -597,7 +625,8 @@ class AppLocalizations {
       'goShoppingFlow': 'Ruta de compras',
       'finishShopping': 'Terminar compra',
       'cartSection': 'En el carrito',
-      'removeCheckedItemsSetting': 'Ocultar los artículos marcados durante la compra',
+      'removeCheckedItemsSetting':
+          'Ocultar los artículos marcados durante la compra',
       'removeCheckedItemsSettingDescription':
           'Cuando esta opción está activada, los artículos marcados desaparecen enseguida de la ruta de compra. Cuando está desactivada, pasan al final en la sección En el carrito. Solo se eliminan de la lista al terminar la compra.',
       'shoppingDoneIn': '¡Bien! Has terminado tus compras en:',
@@ -606,7 +635,8 @@ class AppLocalizations {
       'step2': '2. Elige el diseño de tienda',
       'shoppingResult': 'Lista de compras en orden de tienda',
       'emptyShoppingList': '¡La lista está vacía!',
-      'missingInLayout': 'La categoría no está en el diseño de tienda seleccionado',
+      'missingInLayout':
+          'La categoría no está en el diseño de tienda seleccionado',
       'nothingToShow': 'Nada que mostrar todavía.',
       'language': 'Idioma',
       'systemLanguage': 'Predeterminado del sistema',
@@ -615,7 +645,8 @@ class AppLocalizations {
       'createCategoryFirst': 'Aún no hay categorías. Añade una primero.',
       'nameCannotBeEmpty': 'El nombre no puede estar vacío.',
       'selectCategoryFirst': 'Selecciona una categoría primero.',
-      'maxCategoriesReached': 'Se alcanzó el límite máximo de categorías ({max}).',
+      'maxCategoriesReached':
+          'Se alcanzó el límite máximo de categorías ({max}).',
       'favoriteLimitReached': 'Se alcanzó el límite de favoritos ({max}).',
       'selectListAndMarket':
           'Crea al menos una lista de compras y un diseño de tienda.',
@@ -646,6 +677,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Magasin',
       'groceryList': 'Liste de courses',
+      'groceryListsTab': 'Listes',
       'goShopping': 'Faire les courses',
       'add': 'Ajouter',
       'addCategory': 'Ajouter une catégorie',
@@ -703,7 +735,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 articles les plus fréquents :',
       'frequentItemsDialogExplanation':
           'Les favoris sont toujours affichés en premier. Les autres articles apparaissent après avoir été ajoutés au moins 3 fois au cours des 2 dernières semaines. Les entrées plus anciennes sont supprimées automatiquement.',
-      'frequentItemsDialogEmpty': 'Aucun article ne respecte encore ces règles.',
+      'frequentItemsDialogEmpty':
+          'Aucun article ne respecte encore ces règles.',
       'load': 'Charger',
       'addToFavorites': 'Ajouter aux favoris',
       'removeFromFavorites': 'Retirer des favoris',
@@ -719,7 +752,8 @@ class AppLocalizations {
       'goShoppingFlow': 'Parcours des courses',
       'finishShopping': 'Terminer les courses',
       'cartSection': 'Dans le panier',
-      'removeCheckedItemsSetting': 'Masquer les articles cochés pendant les courses',
+      'removeCheckedItemsSetting':
+          'Masquer les articles cochés pendant les courses',
       'removeCheckedItemsSettingDescription':
           'Lorsque cette option est activée, les articles cochés disparaissent aussitôt du parcours des courses. Lorsqu’elle est désactivée, ils descendent dans la section du bas Dans le panier. Ils ne sont retirés de la liste qu’à la fin.',
       'shoppingDoneIn': 'Bravo ! Vous avez terminé vos courses en :',
@@ -768,6 +802,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Магазин',
       'groceryList': 'Список покупок',
+      'groceryListsTab': 'Списки',
       'goShopping': 'Йти за покупками',
       'add': 'Додати',
       'addCategory': 'Додати категорію',
@@ -807,7 +842,8 @@ class AppLocalizations {
       'storeNameLabel': 'Назва магазину',
       'addStoreName': 'Додати магазин',
       'validUntilLabel': 'Дійсний до',
-      'cameraPermissionRequired': 'Для сканування кодів застави потрібен доступ до камери.',
+      'cameraPermissionRequired':
+          'Для сканування кодів застави потрібен доступ до камери.',
       'depositVoucherSaved': 'Код застави збережено.',
       'deleteDepositVoucher': 'Видалити код застави',
       'depositCodePreview': 'Код застави',
@@ -824,7 +860,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 найчастіших товарів:',
       'frequentItemsDialogExplanation':
           'Улюблені товари завжди показуються першими. Інші з’являються після щонайменше 3 додавань за останні 2 тижні. Старіші записи видаляються автоматично.',
-      'frequentItemsDialogEmpty': 'Поки немає товарів, які відповідають цим правилам.',
+      'frequentItemsDialogEmpty':
+          'Поки немає товарів, які відповідають цим правилам.',
       'load': 'Завантажити',
       'addToFavorites': 'Додати в обране',
       'removeFromFavorites': 'Видалити з обраного',
@@ -840,7 +877,8 @@ class AppLocalizations {
       'goShoppingFlow': 'Маршрут покупок',
       'finishShopping': 'Завершити покупки',
       'cartSection': 'У кошику',
-      'removeCheckedItemsSetting': 'Приховувати позначені товари під час покупок',
+      'removeCheckedItemsSetting':
+          'Приховувати позначені товари під час покупок',
       'removeCheckedItemsSettingDescription':
           'Коли цю опцію ввімкнено, позначені товари одразу зникають із маршруту покупок. Коли вимкнено, вони переходять униз у секцію У кошику. Із самого списку покупок вони видаляються лише наприкінці.',
       'shoppingDoneIn': 'Чудово! Ви зробили покупки за:',
@@ -858,7 +896,8 @@ class AppLocalizations {
       'createCategoryFirst': 'Ще немає категорій. Спочатку додайте одну.',
       'nameCannotBeEmpty': 'Назва не може бути порожньою.',
       'selectCategoryFirst': 'Спочатку виберіть категорію.',
-      'maxCategoriesReached': 'Досягнуто максимального ліміту категорій ({max}).',
+      'maxCategoriesReached':
+          'Досягнуто максимального ліміту категорій ({max}).',
       'favoriteLimitReached': 'Досягнуто ліміту обраного ({max}).',
       'selectListAndMarket':
           'Створіть принаймні один список покупок і один план магазину.',
@@ -889,6 +928,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Negozio',
       'groceryList': 'Lista della spesa',
+      'groceryListsTab': 'Liste',
       'goShopping': 'Vai a fare la spesa',
       'add': 'Aggiungi',
       'addCategory': 'Aggiungi categoria',
@@ -928,7 +968,8 @@ class AppLocalizations {
       'storeNameLabel': 'Nome negozio',
       'addStoreName': 'Aggiungi negozio',
       'validUntilLabel': 'Valido fino al',
-      'cameraPermissionRequired': 'È necessario l’accesso alla fotocamera per scansionare i codici cauzione.',
+      'cameraPermissionRequired':
+          'È necessario l’accesso alla fotocamera per scansionare i codici cauzione.',
       'depositVoucherSaved': 'Codice cauzione salvato.',
       'deleteDepositVoucher': 'Elimina codice cauzione',
       'depositCodePreview': 'Codice cauzione',
@@ -945,7 +986,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 articoli più frequenti:',
       'frequentItemsDialogExplanation':
           'I preferiti vengono sempre mostrati per primi. Gli altri articoli appaiono dopo essere stati aggiunti almeno 3 volte nelle ultime 2 settimane. Le voci più vecchie vengono rimosse automaticamente.',
-      'frequentItemsDialogEmpty': 'Non ci sono ancora articoli che rispettano queste regole.',
+      'frequentItemsDialogEmpty':
+          'Non ci sono ancora articoli che rispettano queste regole.',
       'load': 'Carica',
       'addToFavorites': 'Aggiungi ai preferiti',
       'removeFromFavorites': 'Rimuovi dai preferiti',
@@ -961,7 +1003,8 @@ class AppLocalizations {
       'goShoppingFlow': 'Percorso spesa',
       'finishShopping': 'Termina spesa',
       'cartSection': 'Nel carrello',
-      'removeCheckedItemsSetting': 'Nascondi gli articoli spuntati durante la spesa',
+      'removeCheckedItemsSetting':
+          'Nascondi gli articoli spuntati durante la spesa',
       'removeCheckedItemsSettingDescription':
           'Quando questa opzione è attiva, gli articoli spuntati spariscono subito dal percorso della spesa. Quando è disattiva, vengono spostati in fondo nella sezione Nel carrello. Dalla lista della spesa vengono rimossi solo alla fine.',
       'shoppingDoneIn': 'Ottimo! Hai finito la spesa in:',
@@ -970,7 +1013,8 @@ class AppLocalizations {
       'step2': '2. Scegli il layout del negozio',
       'shoppingResult': 'Lista della spesa in ordine del negozio',
       'emptyShoppingList': 'La lista è vuota!',
-      'missingInLayout': 'Categoria non presente nel layout negozio selezionato',
+      'missingInLayout':
+          'Categoria non presente nel layout negozio selezionato',
       'nothingToShow': 'Niente da mostrare per ora.',
       'language': 'Lingua',
       'systemLanguage': 'Predefinita di sistema',
@@ -979,8 +1023,10 @@ class AppLocalizations {
       'createCategoryFirst': 'Nessuna categoria ancora. Aggiungine prima una.',
       'nameCannotBeEmpty': 'Il nome non può essere vuoto.',
       'selectCategoryFirst': 'Seleziona prima una categoria.',
-      'maxCategoriesReached': 'Raggiunto il limite massimo di categorie ({max}).',
-      'favoriteLimitReached': 'Raggiunto il limite massimo di preferiti ({max}).',
+      'maxCategoriesReached':
+          'Raggiunto il limite massimo di categorie ({max}).',
+      'favoriteLimitReached':
+          'Raggiunto il limite massimo di preferiti ({max}).',
       'selectListAndMarket':
           'Crea almeno una lista della spesa e un layout del negozio.',
       'deleteItem': 'Elimina articolo',
@@ -1010,6 +1056,7 @@ class AppLocalizations {
       'appTitle': 'ShopMaps',
       'market': 'Loja',
       'groceryList': 'Lista de compras',
+      'groceryListsTab': 'Listas',
       'goShopping': 'Ir às compras',
       'add': 'Adicionar',
       'addCategory': 'Adicionar categoria',
@@ -1049,7 +1096,8 @@ class AppLocalizations {
       'storeNameLabel': 'Nome da loja',
       'addStoreName': 'Adicionar loja',
       'validUntilLabel': 'Válido até',
-      'cameraPermissionRequired': 'É necessário acesso à câmara para ler códigos de caução.',
+      'cameraPermissionRequired':
+          'É necessário acesso à câmara para ler códigos de caução.',
       'depositVoucherSaved': 'Código de caução salvo.',
       'deleteDepositVoucher': 'Excluir código de caução',
       'depositCodePreview': 'Código de caução',
@@ -1066,7 +1114,8 @@ class AppLocalizations {
       'frequentItemsDialogTitle': '10 itens mais frequentes:',
       'frequentItemsDialogExplanation':
           'Os favoritos são sempre mostrados primeiro. Os outros itens aparecem depois de serem adicionados pelo menos 3 vezes nas últimas 2 semanas. Registros mais antigos são removidos automaticamente.',
-      'frequentItemsDialogEmpty': 'Ainda não há itens que atendam a essas regras.',
+      'frequentItemsDialogEmpty':
+          'Ainda não há itens que atendam a essas regras.',
       'load': 'Carregar',
       'addToFavorites': 'Adicionar aos favoritos',
       'removeFromFavorites': 'Remover dos favoritos',
@@ -1130,7 +1179,8 @@ class AppLocalizations {
   };
 
   String _t(String key) {
-    return _localizedValues[locale.languageCode]?[key] ?? _localizedValues['en']![key]!;
+    return _localizedValues[locale.languageCode]?[key] ??
+        _localizedValues['en']![key]!;
   }
 
   static List<String> defaultCategoriesForLanguageCode(String languageCode) {
@@ -1141,6 +1191,7 @@ class AppLocalizations {
   String get appTitle => _t('appTitle');
   String get market => _t('market');
   String get groceryList => _t('groceryList');
+  String get groceryListsTab => _t('groceryListsTab');
   String get goShopping => _t('goShopping');
   String get add => _t('add');
   String get addCategory => _t('addCategory');
@@ -1181,6 +1232,9 @@ class AppLocalizations {
   String get cameraPermissionRequired => _t('cameraPermissionRequired');
   String get depositVoucherSaved => _t('depositVoucherSaved');
   String get deleteDepositVoucher => _t('deleteDepositVoucher');
+  String get used => _t('used');
+  String get useSharedDepositVoucherDescription =>
+      _t('useSharedDepositVoucherDescription');
   String get depositCodePreview => _t('depositCodePreview');
   String get chooseCategory => _t('chooseCategory');
   String get noCategoriesInLayout => _t('noCategoriesInLayout');
@@ -1193,7 +1247,8 @@ class AppLocalizations {
   String get addItem => _t('addItem');
   String get loadFrequentItems => _t('loadFrequentItems');
   String get frequentItemsDialogTitle => _t('frequentItemsDialogTitle');
-  String get frequentItemsDialogExplanation => _t('frequentItemsDialogExplanation');
+  String get frequentItemsDialogExplanation =>
+      _t('frequentItemsDialogExplanation');
   String get frequentItemsDialogEmpty => _t('frequentItemsDialogEmpty');
   String get load => _t('load');
   String get addToFavorites => _t('addToFavorites');
@@ -1228,8 +1283,10 @@ class AppLocalizations {
   String get createCategoryFirst => _t('createCategoryFirst');
   String get nameCannotBeEmpty => _t('nameCannotBeEmpty');
   String get selectCategoryFirst => _t('selectCategoryFirst');
-  String maxCategoriesReached(int max) => _t('maxCategoriesReached').replaceAll('{max}', '$max');
-  String favoriteLimitReached(int max) => _t('favoriteLimitReached').replaceAll('{max}', '$max');
+  String maxCategoriesReached(int max) =>
+      _t('maxCategoriesReached').replaceAll('{max}', '$max');
+  String favoriteLimitReached(int max) =>
+      _t('favoriteLimitReached').replaceAll('{max}', '$max');
   String get selectListAndMarket => _t('selectListAndMarket');
   String get deleteItem => _t('deleteItem');
   String get editCategory => _t('editCategory');
@@ -1351,13 +1408,15 @@ class AppLocalizations {
   }
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
   bool isSupported(Locale locale) {
-    return AppLocalizations.supportedLocales
-        .any((supported) => supported.languageCode == locale.languageCode);
+    return AppLocalizations.supportedLocales.any(
+      (supported) => supported.languageCode == locale.languageCode,
+    );
   }
 
   @override

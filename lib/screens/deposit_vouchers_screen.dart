@@ -4,19 +4,29 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart' as scanner;
 
 import '../app_controller.dart';
+import '../cloud/cloud_controller.dart';
+import '../cloud/cloud_models.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
 import 'home_screen.dart';
 
 class DepositVouchersTab extends StatelessWidget {
-  const DepositVouchersTab({super.key, required this.controller});
+  const DepositVouchersTab({
+    super.key,
+    required this.controller,
+    required this.cloudController,
+  });
 
   final AppController controller;
+  final CloudController cloudController;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final vouchers = List<DepositVoucher>.of(controller.depositVouchers);
+    final vouchers = [
+      ...controller.depositVouchers.map(_DepositVoucherEntry.local),
+      ...cloudController.sharedVouchers.map(_DepositVoucherEntry.shared),
+    ];
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -47,10 +57,14 @@ class DepositVouchersTab extends StatelessWidget {
                     itemCount: vouchers.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
-                      final voucher = vouchers[index];
+                      final entry = vouchers[index];
+                      final voucher = entry.voucher;
 
                       return Card(
                         child: ListTile(
+                          leading: entry.sharedVoucher == null
+                              ? null
+                              : const Icon(Icons.groups_2_outlined),
                           title: Text(
                             voucher.code,
                             maxLines: 1,
@@ -60,6 +74,8 @@ class DepositVouchersTab extends StatelessWidget {
                             [
                               _formatAmount(voucher.amount),
                               voucher.storeName,
+                              if (entry.sharedVoucher != null)
+                                entry.sharedVoucher!.groupName,
                               if (voucher.validUntil != null)
                                 '${l10n.validUntilLabel}: ${_formatDate(voucher.validUntil!)}',
                             ].join(' • '),
@@ -67,44 +83,38 @@ class DepositVouchersTab extends StatelessWidget {
                           onTap: () {
                             showDialog<void>(
                               context: context,
-                              builder: (_) => _DepositPreviewDialog(voucher: voucher),
+                              builder: (_) => _DepositPreviewDialog(
+                                voucher: voucher,
+                                onUsed: () => _useVoucher(context, entry),
+                              ),
                             );
                           },
                           trailing: PopupMenuButton<String>(
                             onSelected: (value) async {
-                              if (value != 'delete') {
-                                return;
-                              }
-
-                              final shouldDelete = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(l10n.deleteDepositVoucher),
-                                      content: Text(voucher.code),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context, false),
-                                          child: Text(l10n.cancel),
-                                        ),
-                                        TextButton.icon(
-                                          style: TextButton.styleFrom(
-                                            foregroundColor:
-                                                Theme.of(context).colorScheme.error,
-                                          ),
-                                          onPressed: () => Navigator.pop(context, true),
-                                          icon: const Icon(Icons.delete_outline),
-                                          label: Text(l10n.delete),
-                                        ),
-                                      ],
-                                    ),
-                                  ) ??
-                                  false;
-
-                              if (shouldDelete) {
-                                await controller.deleteDepositVoucher(voucher.id);
+                              switch (value) {
+                                case 'used':
+                                  await _useVoucher(context, entry);
+                                  break;
+                                case 'delete':
+                                  await _deleteVoucher(context, entry);
+                                  break;
                               }
                             },
                             itemBuilder: (menuContext) => [
+                              PopupMenuItem<String>(
+                                value: 'used',
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_outline_rounded,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(l10n.used),
+                                  ],
+                                ),
+                              ),
                               PopupMenuItem<String>(
                                 value: 'delete',
                                 child: Row(
@@ -113,13 +123,17 @@ class DepositVouchersTab extends StatelessWidget {
                                     Icon(
                                       Icons.delete_outline,
                                       size: 18,
-                                      color: Theme.of(menuContext).colorScheme.error,
+                                      color: Theme.of(
+                                        menuContext,
+                                      ).colorScheme.error,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       l10n.delete,
                                       style: TextStyle(
-                                        color: Theme.of(menuContext).colorScheme.error,
+                                        color: Theme.of(
+                                          menuContext,
+                                        ).colorScheme.error,
                                       ),
                                     ),
                                   ],
@@ -137,6 +151,87 @@ class DepositVouchersTab extends StatelessWidget {
     );
   }
 
+  Future<void> _deleteVoucher(
+    BuildContext context,
+    _DepositVoucherEntry entry,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final shouldDelete =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.deleteDepositVoucher),
+            content: Text(entry.voucher.code),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel),
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                icon: const Icon(Icons.delete_outline),
+                label: Text(l10n.delete),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    if (entry.sharedVoucher != null) {
+      await cloudController.hideSharedVoucher(entry.voucher.id);
+    } else {
+      await controller.deleteDepositVoucher(entry.voucher.id);
+    }
+  }
+
+  Future<bool> _useVoucher(
+    BuildContext context,
+    _DepositVoucherEntry entry,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final shouldUse =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.used),
+            content: Text(
+              entry.sharedVoucher == null
+                  ? entry.voucher.code
+                  : l10n.useSharedDepositVoucherDescription,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton.icon(
+                onPressed: () => Navigator.pop(context, true),
+                icon: const Icon(Icons.check_circle_outline_rounded),
+                label: Text(l10n.used),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!shouldUse) {
+      return false;
+    }
+
+    if (entry.sharedVoucher != null) {
+      return cloudController.useSharedVoucher(entry.voucher.id);
+    }
+    await controller.deleteDepositVoucher(entry.voucher.id);
+    return true;
+  }
+
   Future<void> _openDepositEditor(BuildContext context) async {
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
@@ -146,18 +241,36 @@ class DepositVouchersTab extends StatelessWidget {
 
     if (saved == true && context.mounted) {
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.depositVoucherSaved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.depositVoucherSaved)));
     }
   }
 }
 
-class DepositVoucherEditorScreen extends StatefulWidget {
-  const DepositVoucherEditorScreen({
-    super.key,
-    required this.controller,
+class _DepositVoucherEntry {
+  const _DepositVoucherEntry._({
+    required this.voucher,
+    required this.sharedVoucher,
   });
+
+  factory _DepositVoucherEntry.local(DepositVoucher voucher) {
+    return _DepositVoucherEntry._(voucher: voucher, sharedVoucher: null);
+  }
+
+  factory _DepositVoucherEntry.shared(SharedDepositVoucher voucher) {
+    return _DepositVoucherEntry._(
+      voucher: voucher.toDepositVoucher(),
+      sharedVoucher: voucher,
+    );
+  }
+
+  final DepositVoucher voucher;
+  final SharedDepositVoucher? sharedVoucher;
+}
+
+class DepositVoucherEditorScreen extends StatefulWidget {
+  const DepositVoucherEditorScreen({super.key, required this.controller});
 
   final AppController controller;
 
@@ -166,7 +279,8 @@ class DepositVoucherEditorScreen extends StatefulWidget {
       _DepositVoucherEditorScreenState();
 }
 
-class _DepositVoucherEditorScreenState extends State<DepositVoucherEditorScreen> {
+class _DepositVoucherEditorScreenState
+    extends State<DepositVoucherEditorScreen> {
   final TextEditingController _amountController = TextEditingController();
   ScannedDepositCode? _scannedCode;
   DateTime? _scannedAt;
@@ -183,7 +297,8 @@ class _DepositVoucherEditorScreenState extends State<DepositVoucherEditorScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scannedCode = _scannedCode;
-    final canSave = scannedCode != null &&
+    final canSave =
+        scannedCode != null &&
         _parseAmount() != null &&
         (_selectedStoreName?.trim().isNotEmpty ?? false) &&
         _validUntil != null;
@@ -226,7 +341,9 @@ class _DepositVoucherEditorScreenState extends State<DepositVoucherEditorScreen>
                       const SizedBox(height: 4),
                       SelectableText(scannedCode.code),
                       if (_scannedAt != null)
-                        Text('${l10n.scannedAtLabel}: ${_formatDateTime(_scannedAt!)}'),
+                        Text(
+                          '${l10n.scannedAtLabel}: ${_formatDateTime(_scannedAt!)}',
+                        ),
                     ],
                   ],
                 ),
@@ -327,8 +444,9 @@ class _DepositVoucherEditorScreenState extends State<DepositVoucherEditorScreen>
           builder: (context, _) {
             final stores = [...widget.controller.marketLayouts]
               ..sort(
-                (left, right) => normalizeLatinText(left.name)
-                    .compareTo(normalizeLatinText(right.name)),
+                (left, right) => normalizeLatinText(
+                  left.name,
+                ).compareTo(normalizeLatinText(right.name)),
               );
 
             return SafeArea(
@@ -357,7 +475,8 @@ class _DepositVoucherEditorScreenState extends State<DepositVoucherEditorScreen>
                           return ListTile(
                             leading: const Icon(Icons.storefront_outlined),
                             title: Text(store.name),
-                            onTap: () => Navigator.pop(sheetContext, store.name),
+                            onTap: () =>
+                                Navigator.pop(sheetContext, store.name),
                           );
                         },
                       ),
@@ -414,11 +533,7 @@ class _DepositVoucherEditorScreenState extends State<DepositVoucherEditorScreen>
     }
 
     await widget.controller.upsertMarketLayout(
-      MarketLayout(
-        id: createId(),
-        name: cleanedName,
-        categoryOrder: const [],
-      ),
+      MarketLayout(id: createId(), name: cleanedName, categoryOrder: const []),
     );
 
     return cleanedName;
@@ -482,7 +597,8 @@ class DepositCodeScannerScreen extends StatefulWidget {
   const DepositCodeScannerScreen({super.key});
 
   @override
-  State<DepositCodeScannerScreen> createState() => _DepositCodeScannerScreenState();
+  State<DepositCodeScannerScreen> createState() =>
+      _DepositCodeScannerScreenState();
 }
 
 class _DepositCodeScannerScreenState extends State<DepositCodeScannerScreen> {
@@ -516,7 +632,9 @@ class _DepositCodeScannerScreenState extends State<DepositCodeScannerScreen> {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.88),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
@@ -543,31 +661,26 @@ class _DepositCodeScannerScreenState extends State<DepositCodeScannerScreen> {
       }
 
       _didScan = true;
-      Navigator.of(context).pop(
-        ScannedDepositCode(
-          code: rawValue,
-          format: barcode.format.name,
-        ),
-      );
+      Navigator.of(
+        context,
+      ).pop(ScannedDepositCode(code: rawValue, format: barcode.format.name));
       return;
     }
   }
 }
 
 class ScannedDepositCode {
-  const ScannedDepositCode({
-    required this.code,
-    required this.format,
-  });
+  const ScannedDepositCode({required this.code, required this.format});
 
   final String code;
   final String format;
 }
 
 class _DepositPreviewDialog extends StatelessWidget {
-  const _DepositPreviewDialog({required this.voucher});
+  const _DepositPreviewDialog({required this.voucher, required this.onUsed});
 
   final DepositVoucher voucher;
+  final Future<bool> Function() onUsed;
 
   @override
   Widget build(BuildContext context) {
@@ -580,18 +693,21 @@ class _DepositPreviewDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _VirtualCodePreview(
-              code: voucher.code,
-              format: voucher.format,
-            ),
+            _VirtualCodePreview(code: voucher.code, format: voucher.format),
             const SizedBox(height: 16),
             SelectableText(voucher.code),
             const SizedBox(height: 8),
-            Text('${l10n.depositAmountLabel}: ${_formatAmount(voucher.amount)}'),
+            Text(
+              '${l10n.depositAmountLabel}: ${_formatAmount(voucher.amount)}',
+            ),
             Text('${l10n.storeLabel}: ${voucher.storeName}'),
             if (voucher.validUntil != null)
-              Text('${l10n.validUntilLabel}: ${_formatDate(voucher.validUntil!)}'),
-            Text('${l10n.scannedAtLabel}: ${_formatDateTime(voucher.scannedAt)}'),
+              Text(
+                '${l10n.validUntilLabel}: ${_formatDate(voucher.validUntil!)}',
+              ),
+            Text(
+              '${l10n.scannedAtLabel}: ${_formatDateTime(voucher.scannedAt)}',
+            ),
           ],
         ),
       ),
@@ -600,16 +716,23 @@ class _DepositPreviewDialog extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.cancel),
         ),
+        FilledButton.icon(
+          onPressed: () async {
+            final used = await onUsed();
+            if (used && context.mounted) {
+              Navigator.pop(context);
+            }
+          },
+          icon: const Icon(Icons.check_circle_outline_rounded),
+          label: Text(l10n.used),
+        ),
       ],
     );
   }
 }
 
 class _VirtualCodePreview extends StatelessWidget {
-  const _VirtualCodePreview({
-    required this.code,
-    required this.format,
-  });
+  const _VirtualCodePreview({required this.code, required this.format});
 
   final String code;
   final String format;

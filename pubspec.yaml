@@ -39,6 +39,14 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  crypto: ^3.0.7
+  # FlutterFire 4/16 requires iOS 15; keep the existing iOS 13 support.
+  firebase_core: ^3.15.2
+  firebase_messaging: ^15.2.10
+  geolocator: ^14.0.3
+  supabase_flutter: ^2.14.2
+  google_sign_in: ^7.2.0
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

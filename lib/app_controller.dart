@@ -32,10 +32,7 @@ class CategoryListUsage {
 }
 
 class CategoryLayoutUsage {
-  const CategoryLayoutUsage({
-    required this.layoutId,
-    required this.layoutName,
-  });
+  const CategoryLayoutUsage({required this.layoutId, required this.layoutName});
 
   final String layoutId;
   final String layoutName;
@@ -74,15 +71,14 @@ class AppController extends ChangeNotifier {
   List<GroceryListModel> get groceryLists => _data.groceryLists;
   List<DepositVoucher> get depositVouchers => _data.depositVouchers;
   bool get removeCheckedShoppingItems => _data.removeCheckedShoppingItems;
-  bool get hasReachedCategoryLimit => _data.categories.length >= maxCategoryCount;
+  bool get hasReachedCategoryLimit =>
+      _data.categories.length >= maxCategoryCount;
   int get maxFavoriteFrequentItems => _maxFavoriteFrequentItems;
   int get favoriteFrequentItemCount => _pruneExpiredFrequentItemStats(
-        _data.frequentItemStats,
-      ).where((entry) => entry.isFavorite).length;
+    _data.frequentItemStats,
+  ).where((entry) => entry.isFavorite).length;
 
-  Future<void> load({
-    String localeLanguageCode = 'en',
-  }) async {
+  Future<void> load({String localeLanguageCode = 'en'}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -131,7 +127,9 @@ class AppController extends ChangeNotifier {
     final favorites = <FrequentItemStat>[];
     final suggestions = <FrequentItemStat>[];
 
-    for (final entry in _pruneExpiredFrequentItemStats(_data.frequentItemStats)) {
+    for (final entry in _pruneExpiredFrequentItemStats(
+      _data.frequentItemStats,
+    )) {
       final canonicalCategory = _resolveCategory(entry.category);
       if (canonicalCategory == null) {
         continue;
@@ -157,41 +155,49 @@ class AppController extends ChangeNotifier {
 
     void sortEntries(List<FrequentItemStat> entries) {
       entries.sort((left, right) {
-        final countComparison = right.occurrenceCount.compareTo(left.occurrenceCount);
+        final countComparison = right.occurrenceCount.compareTo(
+          left.occurrenceCount,
+        );
         if (countComparison != 0) {
           return countComparison;
         }
 
-        final lastAddedComparison = right.lastAddedAt.compareTo(left.lastAddedAt);
+        final lastAddedComparison = right.lastAddedAt.compareTo(
+          left.lastAddedAt,
+        );
         if (lastAddedComparison != 0) {
           return lastAddedComparison;
         }
 
-        return normalizeLatinText(left.itemName).compareTo(
-          normalizeLatinText(right.itemName),
-        );
+        return normalizeLatinText(
+          left.itemName,
+        ).compareTo(normalizeLatinText(right.itemName));
       });
     }
 
     sortEntries(favorites);
     sortEntries(suggestions);
 
-    return [...favorites, ...suggestions].take(_maxFrequentItemsToSuggest).toList();
+    return [
+      ...favorites,
+      ...suggestions,
+    ].take(_maxFrequentItemsToSuggest).toList();
   }
 
   List<FrequentItemStat> getFrequentItemsForConfiguration() {
-    final entries = _pruneExpiredFrequentItemStats(_data.frequentItemStats)
-        .map((entry) {
-          final canonicalCategory = _resolveCategory(entry.category) ?? entry.category;
-          return FrequentItemStat(
-            itemName: entry.itemName,
-            category: canonicalCategory,
-            occurrenceCount: entry.occurrenceCount,
-            lastAddedAt: entry.lastAddedAt,
-            isFavorite: entry.isFavorite,
-          );
-        })
-        .toList();
+    final entries = _pruneExpiredFrequentItemStats(_data.frequentItemStats).map(
+      (entry) {
+        final canonicalCategory =
+            _resolveCategory(entry.category) ?? entry.category;
+        return FrequentItemStat(
+          itemName: entry.itemName,
+          category: canonicalCategory,
+          occurrenceCount: entry.occurrenceCount,
+          lastAddedAt: entry.lastAddedAt,
+          isFavorite: entry.isFavorite,
+        );
+      },
+    ).toList();
 
     entries.sort((left, right) {
       final favoriteComparison = (right.isFavorite ? 1 : 0).compareTo(
@@ -201,7 +207,9 @@ class AppController extends ChangeNotifier {
         return favoriteComparison;
       }
 
-      final countComparison = right.occurrenceCount.compareTo(left.occurrenceCount);
+      final countComparison = right.occurrenceCount.compareTo(
+        left.occurrenceCount,
+      );
       if (countComparison != 0) {
         return countComparison;
       }
@@ -211,9 +219,9 @@ class AppController extends ChangeNotifier {
         return lastAddedComparison;
       }
 
-      return normalizeLatinText(left.itemName).compareTo(
-        normalizeLatinText(right.itemName),
-      );
+      return normalizeLatinText(
+        left.itemName,
+      ).compareTo(normalizeLatinText(right.itemName));
     });
 
     return entries;
@@ -338,7 +346,8 @@ class AppController extends ChangeNotifier {
 
     if (isFavorite &&
         !next[index].isFavorite &&
-        next.where((entry) => entry.isFavorite).length >= _maxFavoriteFrequentItems) {
+        next.where((entry) => entry.isFavorite).length >=
+            _maxFavoriteFrequentItems) {
       return false;
     }
 
@@ -358,7 +367,9 @@ class AppController extends ChangeNotifier {
   }
 
   Future<bool> deleteFrequentItem(String itemName) async {
-    final activeEntries = _pruneExpiredFrequentItemStats(_data.frequentItemStats);
+    final activeEntries = _pruneExpiredFrequentItemStats(
+      _data.frequentItemStats,
+    );
     final hadMatch = activeEntries.any(
       (entry) => sameNormalizedText(entry.itemName, itemName),
     );
@@ -388,9 +399,9 @@ class AppController extends ChangeNotifier {
 
     final groceryLists = <CategoryListUsage>[];
     for (final list in _data.groceryLists) {
-      final itemCount = list.items.where(
-        (item) => sameNormalizedText(item.category, canonicalCategory),
-      ).length;
+      final itemCount = list.items
+          .where((item) => sameNormalizedText(item.category, canonicalCategory))
+          .length;
       if (itemCount > 0) {
         groceryLists.add(
           CategoryListUsage(
@@ -408,10 +419,7 @@ class AppController extends ChangeNotifier {
         (entry) => sameNormalizedText(entry, canonicalCategory),
       )) {
         marketLayouts.add(
-          CategoryLayoutUsage(
-            layoutId: layout.id,
-            layoutName: layout.name,
-          ),
+          CategoryLayoutUsage(layoutId: layout.id, layoutName: layout.name),
         );
       }
     }
@@ -534,10 +542,14 @@ class AppController extends ChangeNotifier {
         .where((entry) => !sameNormalizedText(entry, canonicalCategory))
         .toList();
     final updatedMemory = _data.itemCategoryMemory
-        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
+        .where(
+          (entry) => !sameNormalizedText(entry.category, canonicalCategory),
+        )
         .toList();
     final updatedFrequentItems = _data.frequentItemStats
-        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
+        .where(
+          (entry) => !sameNormalizedText(entry.category, canonicalCategory),
+        )
         .toList();
 
     _data = _data.copyWith(
@@ -569,15 +581,21 @@ class AppController extends ChangeNotifier {
     }).toList();
     final updatedLists = _data.groceryLists.map((list) {
       final updatedItems = list.items
-          .where((item) => !sameNormalizedText(item.category, canonicalCategory))
+          .where(
+            (item) => !sameNormalizedText(item.category, canonicalCategory),
+          )
           .toList();
       return list.copyWith(items: updatedItems);
     }).toList();
     final updatedMemory = _data.itemCategoryMemory
-        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
+        .where(
+          (entry) => !sameNormalizedText(entry.category, canonicalCategory),
+        )
         .toList();
     final updatedFrequentItems = _data.frequentItemStats
-        .where((entry) => !sameNormalizedText(entry.category, canonicalCategory))
+        .where(
+          (entry) => !sameNormalizedText(entry.category, canonicalCategory),
+        )
         .toList();
 
     _data = _data.copyWith(
@@ -621,16 +639,15 @@ class AppController extends ChangeNotifier {
       }
     }
 
-    _data = _data.copyWith(
-      categories: mergedCategories,
-      marketLayouts: next,
-    );
+    _data = _data.copyWith(categories: mergedCategories, marketLayouts: next);
     notifyListeners();
     await _persist();
   }
 
   Future<void> deleteMarketLayout(String marketLayoutId) async {
-    final next = _data.marketLayouts.where((layout) => layout.id != marketLayoutId).toList();
+    final next = _data.marketLayouts
+        .where((layout) => layout.id != marketLayoutId)
+        .toList();
     _data = _data.copyWith(marketLayouts: next);
     notifyListeners();
     await _persist();
@@ -642,7 +659,11 @@ class AppController extends ChangeNotifier {
       return null;
     }
 
-    final list = GroceryListModel(id: createId(), name: cleaned, items: const []);
+    final list = GroceryListModel(
+      id: createId(),
+      name: cleaned,
+      items: const [],
+    );
     final next = [..._data.groceryLists, list];
     _data = _data.copyWith(groceryLists: next);
     notifyListeners();
@@ -675,6 +696,41 @@ class AppController extends ChangeNotifier {
   Future<void> deleteGroceryList(String listId) async {
     final next = _data.groceryLists.where((list) => list.id != listId).toList();
     _data = _data.copyWith(groceryLists: next);
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> upsertGroceryList(GroceryListModel list) async {
+    final cleanedName = list.name.trim();
+    if (cleanedName.isEmpty) {
+      return;
+    }
+
+    final normalized = list.copyWith(
+      id: list.id.isEmpty ? createId() : list.id,
+      name: cleanedName,
+    );
+    final nextLists = [..._data.groceryLists];
+    final index = nextLists.indexWhere(
+      (existing) => existing.id == normalized.id,
+    );
+    if (index == -1) {
+      nextLists.add(normalized);
+    } else {
+      nextLists[index] = normalized;
+    }
+
+    final nextCategories = [..._data.categories];
+    for (final item in normalized.items) {
+      if (nextCategories.length >= maxCategoryCount) {
+        break;
+      }
+      if (_findCategoryInList(nextCategories, item.category) == null) {
+        nextCategories.add(item.category);
+      }
+    }
+
+    _data = _data.copyWith(groceryLists: nextLists, categories: nextCategories);
     notifyListeners();
     await _persist();
   }
@@ -924,7 +980,9 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  Future<bool> undoCompletedShoppingItem(CompletedShoppingItemRemoval removal) async {
+  Future<bool> undoCompletedShoppingItem(
+    CompletedShoppingItemRemoval removal,
+  ) async {
     final nextLists = [..._data.groceryLists];
     final listIndex = nextLists.indexWhere((list) => list.id == removal.listId);
 
@@ -984,7 +1042,8 @@ class AppController extends ChangeNotifier {
       if (normalizedName.startsWith(normalizedQuery)) {
         byName[normalizedName] = ItemHint(
           itemName: remembered.itemName,
-          category: _resolveCategory(remembered.category) ?? remembered.category,
+          category:
+              _resolveCategory(remembered.category) ?? remembered.category,
         );
       }
     }
@@ -1006,7 +1065,9 @@ class AppController extends ChangeNotifier {
     }
 
     final hints = byName.values.toList();
-    hints.sort((a, b) => a.itemName.toLowerCase().compareTo(b.itemName.toLowerCase()));
+    hints.sort(
+      (a, b) => a.itemName.toLowerCase().compareTo(b.itemName.toLowerCase()),
+    );
 
     return hints.take(5).toList();
   }
@@ -1039,9 +1100,23 @@ class AppController extends ChangeNotifier {
     required String marketLayoutId,
   }) {
     final groceryList = getGroceryListById(listId);
+    if (groceryList == null) {
+      return const [];
+    }
+
+    return buildShoppingSectionsForList(
+      groceryList: groceryList,
+      marketLayoutId: marketLayoutId,
+    );
+  }
+
+  List<ShoppingSection> buildShoppingSectionsForList({
+    required GroceryListModel groceryList,
+    required String marketLayoutId,
+  }) {
     final marketLayout = getMarketLayoutById(marketLayoutId);
 
-    if (groceryList == null || marketLayout == null) {
+    if (marketLayout == null) {
       return const [];
     }
 
@@ -1056,7 +1131,9 @@ class AppController extends ChangeNotifier {
     }
 
     for (final items in grouped.values) {
-      items.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      items.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
     }
 
     final result = <ShoppingSection>[];
@@ -1069,18 +1146,22 @@ class AppController extends ChangeNotifier {
         continue;
       }
 
-      result.add(ShoppingSection(
-        category: categoryByKey[key] ?? category,
-        items: items,
-        inLayoutOrder: true,
-      ));
+      result.add(
+        ShoppingSection(
+          category: categoryByKey[key] ?? category,
+          items: items,
+          inLayoutOrder: true,
+        ),
+      );
       used.add(key);
     }
 
     final remaining = grouped.keys.where((key) => !used.contains(key)).toList()
-      ..sort((a, b) => (categoryByKey[a] ?? a)
-          .toLowerCase()
-          .compareTo((categoryByKey[b] ?? b).toLowerCase()));
+      ..sort(
+        (a, b) => (categoryByKey[a] ?? a).toLowerCase().compareTo(
+          (categoryByKey[b] ?? b).toLowerCase(),
+        ),
+      );
 
     for (final key in remaining) {
       final items = grouped[key] ?? const <GroceryItem>[];
@@ -1088,11 +1169,13 @@ class AppController extends ChangeNotifier {
         continue;
       }
 
-      result.add(ShoppingSection(
-        category: categoryByKey[key] ?? key,
-        items: items,
-        inLayoutOrder: false,
-      ));
+      result.add(
+        ShoppingSection(
+          category: categoryByKey[key] ?? key,
+          items: items,
+          inLayoutOrder: false,
+        ),
+      );
     }
 
     return result;
@@ -1134,7 +1217,8 @@ class AppController extends ChangeNotifier {
 
     final next = [...source];
     final index = next.indexWhere(
-      (entry) => entry.itemName.trim().toLowerCase() == cleanedName.toLowerCase(),
+      (entry) =>
+          entry.itemName.trim().toLowerCase() == cleanedName.toLowerCase(),
     );
     final updatedEntry = RememberedItemCategory(
       itemName: cleanedName,
@@ -1219,7 +1303,8 @@ class AppController extends ChangeNotifier {
 
     for (final existing in list) {
       final existingNormalized = normalizeLatinText(existing);
-      if (excludedNormalized != null && existingNormalized == excludedNormalized) {
+      if (excludedNormalized != null &&
+          existingNormalized == excludedNormalized) {
         continue;
       }
       if (existingNormalized == normalized) {

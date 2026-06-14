@@ -1,0 +1,2 @@
+create index hidden_shared_deposit_vouchers_voucher_id_idx
+  on public.hidden_shared_deposit_vouchers(voucher_id);

@@ -274,6 +274,7 @@ class MarketLayout {
     required this.id,
     required this.name,
     required this.categoryOrder,
+    this.sourceSharedMarketLayoutId,
   });
 
   factory MarketLayout.fromJson(Map<String, dynamic> json) {
@@ -281,27 +282,38 @@ class MarketLayout {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       categoryOrder: _toStringList(json['categoryOrder']),
+      sourceSharedMarketLayoutId: json['sourceSharedMarketLayoutId']?.toString(),
     );
   }
 
   final String id;
   final String name;
   final List<String> categoryOrder;
+  final String? sourceSharedMarketLayoutId;
 
   MarketLayout copyWith({
     String? id,
     String? name,
     List<String>? categoryOrder,
+    String? sourceSharedMarketLayoutId,
   }) {
     return MarketLayout(
       id: id ?? this.id,
       name: name ?? this.name,
       categoryOrder: categoryOrder ?? this.categoryOrder,
+      sourceSharedMarketLayoutId:
+          sourceSharedMarketLayoutId ?? this.sourceSharedMarketLayoutId,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'categoryOrder': categoryOrder};
+    return {
+      'id': id,
+      'name': name,
+      'categoryOrder': categoryOrder,
+      if (sourceSharedMarketLayoutId != null)
+        'sourceSharedMarketLayoutId': sourceSharedMarketLayoutId,
+    };
   }
 }
 

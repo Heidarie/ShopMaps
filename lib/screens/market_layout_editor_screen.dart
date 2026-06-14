@@ -336,6 +336,7 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
       id: widget.layout?.id ?? createId(),
       name: name,
       categoryOrder: _orderedCategories,
+      sourceSharedMarketLayoutId: widget.layout?.sourceSharedMarketLayoutId,
     );
 
     Navigator.pop(context, result);

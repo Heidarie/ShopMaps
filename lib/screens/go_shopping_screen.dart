@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
+import '../cloud/cloud_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
 
@@ -12,12 +13,16 @@ class GoShoppingScreen extends StatefulWidget {
     required this.groceryListId,
     required this.marketLayoutId,
     required this.shoppingStartedAt,
-  });
+    this.cloudController,
+    this.isShared = false,
+  }) : assert(!isShared || cloudController != null);
 
   final AppController controller;
   final String groceryListId;
   final String marketLayoutId;
   final DateTime shoppingStartedAt;
+  final CloudController? cloudController;
+  final bool isShared;
 
   @override
   State<GoShoppingScreen> createState() => _GoShoppingScreenState();
@@ -35,15 +40,27 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
   bool _completionRewardShown = false;
   Duration? _pendingRewardElapsed;
   bool _isFinishing = false;
+  late final Listenable _listenable;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenable = widget.isShared
+        ? Listenable.merge([widget.controller, widget.cloudController!])
+        : widget.controller;
+  }
 
   Future<void> _completeItem(String itemId) async {
-    if (_processingItemIds.contains(itemId) || _checkedItemIds.contains(itemId)) {
+    if (_processingItemIds.contains(itemId) ||
+        _checkedItemIds.contains(itemId)) {
       return;
     }
 
     final isFinalCheck = _isFinalPendingCheck(itemId);
     if (isFinalCheck && !_completionRewardShown) {
-      _pendingRewardElapsed = DateTime.now().difference(widget.shoppingStartedAt);
+      _pendingRewardElapsed = DateTime.now().difference(
+        widget.shoppingStartedAt,
+      );
     }
 
     HapticFeedback.lightImpact();
@@ -145,10 +162,17 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
       return;
     }
 
-    await widget.controller.removeItemsFromList(
-      listId: widget.groceryListId,
-      itemIds: _checkedItemIds,
-    );
+    if (widget.isShared) {
+      await widget.cloudController!.removeItemsFromSharedList(
+        listId: widget.groceryListId,
+        itemIds: _checkedItemIds,
+      );
+    } else {
+      await widget.controller.removeItemsFromList(
+        listId: widget.groceryListId,
+        itemIds: _checkedItemIds,
+      );
+    }
   }
 
   @override
@@ -156,10 +180,12 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
     final l10n = AppLocalizations.of(context);
 
     return ListenableBuilder(
-      listenable: widget.controller,
+      listenable: _listenable,
       builder: (context, _) {
-        final groceryList = widget.controller.getGroceryListById(widget.groceryListId);
-        final marketLayout = widget.controller.getMarketLayoutById(widget.marketLayoutId);
+        final groceryList = _groceryList;
+        final marketLayout = widget.controller.getMarketLayoutById(
+          widget.marketLayoutId,
+        );
 
         if (groceryList == null || marketLayout == null) {
           return Scaffold(
@@ -200,8 +226,11 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
                 if (activeSections.isEmpty && cartItems.isEmpty)
                   Text(l10n.emptyShoppingList)
                 else ...[
-                  ...activeSections.map((section) => _buildSection(context, l10n, section)),
-                  if (cartItems.isNotEmpty) _buildCartSection(context, l10n, cartItems),
+                  ...activeSections.map(
+                    (section) => _buildSection(context, l10n, section),
+                  ),
+                  if (cartItems.isNotEmpty)
+                    _buildCartSection(context, l10n, cartItems),
                 ],
               ],
             ),
@@ -224,7 +253,9 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
     AppLocalizations l10n,
     ShoppingSection section,
   ) {
-    final isCollapsing = _collapsingSectionCategories.contains(section.category);
+    final isCollapsing = _collapsingSectionCategories.contains(
+      section.category,
+    );
 
     return Padding(
       key: ValueKey('section_wrap_${section.category}'),
@@ -255,15 +286,20 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
                                 l10n.missingInLayout,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.error,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                     ),
                               ),
                             ),
                           const SizedBox(height: 8),
-                          for (var itemIndex = 0;
-                              itemIndex < section.items.length;
-                              itemIndex++)
+                          for (
+                            var itemIndex = 0;
+                            itemIndex < section.items.length;
+                            itemIndex++
+                          )
                             _buildShoppingItem(
                               item: section.items[itemIndex],
                               isLast: itemIndex == section.items.length - 1,
@@ -362,7 +398,9 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _undoStack.isEmpty || _isFinishing ? null : _undoLastItem,
+                onPressed: _undoStack.isEmpty || _isFinishing
+                    ? null
+                    : _undoLastItem,
                 icon: const Icon(Icons.undo),
                 label: Text(l10n.undo),
               ),
@@ -411,8 +449,13 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
   }
 
   List<ShoppingSection> _activeSections() {
-    final sections = widget.controller.buildShoppingSections(
-      listId: widget.groceryListId,
+    final groceryList = _groceryList;
+    if (groceryList == null) {
+      return const [];
+    }
+
+    final sections = widget.controller.buildShoppingSectionsForList(
+      groceryList: groceryList,
       marketLayoutId: widget.marketLayoutId,
     );
 
@@ -420,7 +463,9 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
         .map((section) {
           final visibleItems = section.items
               .where(
-                (item) => !_checkedItemIds.contains(item.id) || _processingItemIds.contains(item.id),
+                (item) =>
+                    !_checkedItemIds.contains(item.id) ||
+                    _processingItemIds.contains(item.id),
               )
               .toList();
           if (visibleItems.isEmpty) {
@@ -437,6 +482,15 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
         .toList();
   }
 
+  GroceryListModel? get _groceryList {
+    if (widget.isShared) {
+      return widget.cloudController
+          ?.getSharedListById(widget.groceryListId)
+          ?.toGroceryListModel();
+    }
+    return widget.controller.getGroceryListById(widget.groceryListId);
+  }
+
   List<GroceryItem> _cartItems(GroceryListModel groceryList) {
     if (widget.controller.removeCheckedShoppingItems) {
       return const [];
@@ -444,7 +498,8 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
 
     final checkedItemsById = <String, GroceryItem>{
       for (final item in groceryList.items)
-        if (_checkedItemIds.contains(item.id) && !_processingItemIds.contains(item.id))
+        if (_checkedItemIds.contains(item.id) &&
+            !_processingItemIds.contains(item.id))
           item.id: item,
     };
 
@@ -461,13 +516,17 @@ class _GoShoppingScreenState extends State<GoShoppingScreen> {
   }
 
   void _showCompletionRewardIfNeeded() {
-    if (_completionRewardShown || _pendingRewardElapsed == null || _activeSections().isNotEmpty) {
+    if (_completionRewardShown ||
+        _pendingRewardElapsed == null ||
+        _activeSections().isNotEmpty) {
       return;
     }
 
     _completionRewardShown = true;
     final l10n = AppLocalizations.of(context);
-    final elapsed = _pendingRewardElapsed!.isNegative ? Duration.zero : _pendingRewardElapsed!;
+    final elapsed = _pendingRewardElapsed!.isNegative
+        ? Duration.zero
+        : _pendingRewardElapsed!;
     final minutes = elapsed.inMinutes;
     final seconds = elapsed.inSeconds % 60;
     _pendingRewardElapsed = null;

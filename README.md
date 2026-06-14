@@ -11,12 +11,15 @@ It helps you:
 - reuse item-to-category mapping from history,
 - generate a shopping list sorted by the selected market layout,
 - complete items while shopping with undo support,
-- keep everything stored locally on device.
+- keep private data stored locally on device,
+- optionally sign in to create groups and share copied grocery lists or deposit codes.
+- receive one grouped push notification when another member finishes adding
+  products to a shared list.
 
 ## Features
 
-- Local-only storage (`shared_preferences`)
-- English and Polish localization (OS language based, fallback to English)
+- Local-first storage (`shared_preferences`) with optional Supabase sharing
+- Nine supported localizations (OS language based, fallback to English)
 - iOS/Android support from one Flutter codebase
 - Dark mode support (follows system appearance)
 - Shopping route sorting by market layout
@@ -48,6 +51,12 @@ flutter pub get
 flutter run
 ```
 
+ShopMaps runs without an account or cloud configuration. To enable optional
+accounts and groups, follow [`docs/supabase_setup.md`](docs/supabase_setup.md).
+
+For a public release, follow the complete operator checklist:
+[`docs/production-release.md`](docs/production-release.md).
+
 ### Run On iPhone (macOS)
 
 ```bash
@@ -65,6 +74,13 @@ Run locally:
 ```bash
 flutter analyze
 flutter test
+```
+
+Validate the production configuration schema:
+
+```bash
+dart run tool/validate_production_config.dart \
+  config/supabase.prod.example.json --example
 ```
 
 The **Test Tracker** badge above reflects the GitHub Actions CI workflow status.
@@ -89,10 +105,11 @@ If no release is published yet, it may show no version until the first release i
 - `lib/screens/go_shopping_screen.dart` - shopping mode and completion flow
 - `lib/app_controller.dart` - app state and business logic
 - `lib/local_store.dart` - local persistence
+- `lib/cloud/` - optional Supabase account and group layer
+- `supabase/migrations/` - database schema, RPC functions, and RLS policies
 
 ## Notes
 
 - App branding name: **ShopMaps**
-- Data is stored locally on the device
+- Private data remains stored locally; sharing is opt-in
 - Portrait orientation only
-

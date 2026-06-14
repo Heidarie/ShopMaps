@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
+import '../cloud/cloud_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
 import '../widgets/category_name_prompt.dart';
@@ -14,25 +17,36 @@ class GroceryListEditorScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.listId,
-  });
+    this.cloudController,
+    this.isShared = false,
+  }) : assert(!isShared || cloudController != null);
 
   final AppController controller;
   final String listId;
+  final CloudController? cloudController;
+  final bool isShared;
 
   @override
-  State<GroceryListEditorScreen> createState() => _GroceryListEditorScreenState();
+  State<GroceryListEditorScreen> createState() =>
+      _GroceryListEditorScreenState();
 }
 
 class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
   late final TextEditingController _itemController;
+  late final Listenable _listenable;
   List<ItemHint> _hints = const [];
   String? _selectedCategory;
   int _selectedQuantity = 1;
+  bool _addedSharedItems = false;
+  bool _sharedAdditionNotificationSent = false;
 
   @override
   void initState() {
     super.initState();
     _itemController = TextEditingController();
+    _listenable = widget.isShared
+        ? Listenable.merge([widget.controller, widget.cloudController!])
+        : widget.controller;
   }
 
   @override
@@ -45,233 +59,299 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return ListenableBuilder(
-      listenable: widget.controller,
-      builder: (context, _) {
-        final groceryList = widget.controller.getGroceryListById(widget.listId);
-
-        if (groceryList == null) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: Center(child: Text(l10n.nothingToShow)),
-          );
+    return PopScope<void>(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          _notifySharedListAdditions();
         }
+      },
+      child: ListenableBuilder(
+        listenable: _listenable,
+        builder: (context, _) {
+          final groceryList = _groceryList;
 
-        final grouped = _groupItems(groceryList.items, l10n);
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(groceryList.name),
-            actions: [
-              IconButton(
-                tooltip: l10n.loadFrequentItems,
-                icon: const Icon(Icons.autorenew_rounded),
-                onPressed: () => _showLoadFrequentItemsDialog(listId: groceryList.id),
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: grouped.isEmpty
-                    ? Center(child: Text(l10n.nothingToShow))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: grouped.length,
-                        itemBuilder: (context, index) {
-                          final entry = grouped[index];
+          if (groceryList == null) {
+            return Scaffold(
+              appBar: AppBar(),
+              body: Center(child: Text(l10n.nothingToShow)),
+            );
+          }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.categoryLabel(entry.key),
-                                      style: Theme.of(context).textTheme.titleMedium,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    for (var itemIndex = 0;
-                                        itemIndex < entry.value.length;
-                                        itemIndex++) ...[
-                                      ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        onTap: () {
-                                          _editItem(
-                                            listId: groceryList.id,
-                                            item: entry.value[itemIndex],
-                                          );
-                                        },
-                                        title: Text(
-                                          '${entry.value[itemIndex].name} x ${entry.value[itemIndex].quantity}',
-                                        ),
-                                        trailing: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              tooltip: l10n.edit,
-                                              icon: const Icon(Icons.edit_outlined),
-                                              onPressed: () {
+          final grouped = _groupItems(groceryList.items, l10n);
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(groceryList.name),
+              actions: [
+                IconButton(
+                  tooltip: l10n.loadFrequentItems,
+                  icon: const Icon(Icons.autorenew_rounded),
+                  onPressed: () =>
+                      _showLoadFrequentItemsDialog(listId: groceryList.id),
+                ),
+              ],
+            ),
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                final editorMaxHeight = (constraints.maxHeight * 0.7)
+                    .clamp(0.0, 440.0)
+                    .toDouble();
+
+                return Column(
+                  children: [
+                    Expanded(
+                      child: grouped.isEmpty
+                          ? Center(child: Text(l10n.nothingToShow))
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: grouped.length,
+                              itemBuilder: (context, index) {
+                                final entry = grouped[index];
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            l10n.categoryLabel(entry.key),
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.titleMedium,
+                                          ),
+                                          const SizedBox(height: 8),
+                                          for (
+                                            var itemIndex = 0;
+                                            itemIndex < entry.value.length;
+                                            itemIndex++
+                                          ) ...[
+                                            ListTile(
+                                              dense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                              onTap: () {
                                                 _editItem(
                                                   listId: groceryList.id,
                                                   item: entry.value[itemIndex],
                                                 );
                                               },
-                                            ),
-                                            IconButton(
-                                              tooltip: l10n.deleteItem,
-                                              icon: Icon(
-                                                Icons.delete_outline,
-                                                color: Theme.of(context).colorScheme.error,
+                                              title: Text(
+                                                '${entry.value[itemIndex].name} x ${entry.value[itemIndex].quantity}',
                                               ),
-                                              onPressed: () {
-                                                widget.controller.removeItemFromList(
-                                                  listId: groceryList.id,
-                                                  itemId: entry.value[itemIndex].id,
-                                                );
-                                              },
+                                              trailing: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    tooltip: l10n.edit,
+                                                    icon: const Icon(
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      _editItem(
+                                                        listId: groceryList.id,
+                                                        item: entry
+                                                            .value[itemIndex],
+                                                      );
+                                                    },
+                                                  ),
+                                                  IconButton(
+                                                    tooltip: l10n.deleteItem,
+                                                    icon: Icon(
+                                                      Icons.delete_outline,
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.error,
+                                                    ),
+                                                    onPressed: () {
+                                                      _removeItem(
+                                                        listId: groceryList.id,
+                                                        itemId: entry
+                                                            .value[itemIndex]
+                                                            .id,
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
                                             ),
+                                            if (itemIndex <
+                                                entry.value.length - 1)
+                                              const Divider(height: 1),
                                           ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: editorMaxHeight),
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: Card(
+                            clipBehavior: Clip.antiAlias,
+                            child: SingleChildScrollView(
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  TextField(
+                                    controller: _itemController,
+                                    inputFormatters: [
+                                      LengthLimitingTextInputFormatter(
+                                        _maxInputChars,
+                                      ),
+                                    ],
+                                    decoration: InputDecoration(
+                                      labelText: l10n.itemName,
+                                    ),
+                                    onChanged: _onItemChanged,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    l10n.selectedCategory,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: ActionChip(
+                                      onPressed: _pickCategory,
+                                      avatar: Icon(
+                                        _selectedCategory == null
+                                            ? Icons.add_circle_outline
+                                            : Icons.category_outlined,
+                                        size: 18,
+                                      ),
+                                      label: Text(
+                                        _selectedCategory == null
+                                            ? l10n.addCategory
+                                            : l10n.categoryLabel(
+                                                _selectedCategory!,
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        l10n.quantity,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                      const Spacer(),
+                                      IconButton(
+                                        onPressed: _selectedQuantity > 1
+                                            ? () {
+                                                setState(() {
+                                                  _selectedQuantity -= 1;
+                                                });
+                                              }
+                                            : null,
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
                                         ),
                                       ),
-                                      if (itemIndex < entry.value.length - 1)
-                                        const Divider(height: 1),
+                                      Text(
+                                        '$_selectedQuantity',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _selectedQuantity += 1;
+                                          });
+                                        },
+                                        icon: const Icon(
+                                          Icons.add_circle_outline,
+                                        ),
+                                      ),
                                     ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          TextField(
-                            controller: _itemController,
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(_maxInputChars),
-                            ],
-                            decoration: InputDecoration(
-                              labelText: l10n.itemName,
-                            ),
-                            onChanged: _onItemChanged,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.selectedCategory,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 6),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: ActionChip(
-                              onPressed: _pickCategory,
-                              avatar: Icon(
-                                _selectedCategory == null
-                                    ? Icons.add_circle_outline
-                                    : Icons.category_outlined,
-                                size: 18,
-                              ),
-                              label: Text(
-                                _selectedCategory == null
-                                    ? l10n.addCategory
-                                    : l10n.categoryLabel(_selectedCategory!),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(
-                                l10n.quantity,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                onPressed: _selectedQuantity > 1
-                                    ? () {
-                                        setState(() {
-                                          _selectedQuantity -= 1;
-                                        });
-                                      }
-                                    : null,
-                                icon: const Icon(Icons.remove_circle_outline),
-                              ),
-                              Text(
-                                '$_selectedQuantity',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedQuantity += 1;
-                                  });
-                                },
-                                icon: const Icon(Icons.add_circle_outline),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (_hints.isNotEmpty) ...[
-                            Text(
-                              l10n.itemHint,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            const SizedBox(height: 6),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: _hints
-                                  .map(
-                                    (hint) => ActionChip(
-                                      label: Text(l10n.hintLabel(hint.itemName, hint.category)),
-                                      onPressed: () {
-                                        setState(() {
-                                          _itemController.text = hint.itemName;
-                                          _itemController.selection = TextSelection.collapsed(
-                                            offset: _itemController.text.length,
-                                          );
-                                          _selectedCategory = hint.category;
-                                          _hints = widget.controller.findItemHints(hint.itemName);
-                                        });
-                                      },
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (_hints.isNotEmpty) ...[
+                                    Text(
+                                      l10n.itemHint,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
-                                  )
-                                  .toList(),
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: _hints
+                                          .map(
+                                            (hint) => ActionChip(
+                                              label: Text(
+                                                l10n.hintLabel(
+                                                  hint.itemName,
+                                                  hint.category,
+                                                ),
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _itemController.text =
+                                                      hint.itemName;
+                                                  _itemController.selection =
+                                                      TextSelection.collapsed(
+                                                        offset: _itemController
+                                                            .text
+                                                            .length,
+                                                      );
+                                                  _selectedCategory =
+                                                      hint.category;
+                                                  _hints = widget.controller
+                                                      .findItemHints(
+                                                        hint.itemName,
+                                                      );
+                                                });
+                                              },
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ] else
+                                    Text(
+                                      l10n.noHints,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  const SizedBox(height: 12),
+                                  FilledButton.icon(
+                                    onPressed: () => _addItem(groceryList.id),
+                                    icon: const Icon(Icons.add),
+                                    label: Text(l10n.addItem),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ] else
-                            Text(
-                              l10n.noHints,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            onPressed: () => _addItem(groceryList.id),
-                            icon: const Icon(Icons.add),
-                            label: Text(l10n.addItem),
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+                  ],
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -286,12 +366,17 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     }
 
     final entries = grouped.entries.toList()
-      ..sort((a, b) => l10n.categoryLabel(a.key).toLowerCase().compareTo(
-            l10n.categoryLabel(b.key).toLowerCase(),
-          ));
+      ..sort(
+        (a, b) => l10n
+            .categoryLabel(a.key)
+            .toLowerCase()
+            .compareTo(l10n.categoryLabel(b.key).toLowerCase()),
+      );
 
     for (final entry in entries) {
-      entry.value.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      entry.value.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
     }
 
     return entries;
@@ -321,9 +406,12 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
             final canCreateNewCategory =
                 widget.controller.categories.length < maxCategoryCount;
             final categories = [...widget.controller.categories]
-              ..sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
-                    l10n.categoryLabel(b).toLowerCase(),
-                  ));
+              ..sort(
+                (a, b) => l10n
+                    .categoryLabel(a)
+                    .toLowerCase()
+                    .compareTo(l10n.categoryLabel(b).toLowerCase()),
+              );
 
             return SafeArea(
               child: Column(
@@ -361,7 +449,8 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                                 Icons.delete_outline,
                                 color: Theme.of(context).colorScheme.error,
                               ),
-                              onPressed: () => _deleteCategoryFromPicker(category),
+                              onPressed: () =>
+                                  _deleteCategoryFromPicker(category),
                             ),
                             onTap: () => Navigator.pop(sheetContext, category),
                           );
@@ -426,13 +515,12 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     });
   }
 
-  Future<void> _showLoadFrequentItemsDialog({
-    required String listId,
-  }) async {
+  Future<void> _showLoadFrequentItemsDialog({required String listId}) async {
     final l10n = AppLocalizations.of(context);
     final suggestions = widget.controller.getTopFrequentItems();
 
-    final shouldLoad = await showDialog<bool>(
+    final shouldLoad =
+        await showDialog<bool>(
           context: context,
           builder: (dialogContext) {
             return AlertDialog(
@@ -452,7 +540,11 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                           style: Theme.of(context).textTheme.bodyMedium,
                         )
                       else
-                        for (var index = 0; index < suggestions.length; index++) ...[
+                        for (
+                          var index = 0;
+                          index < suggestions.length;
+                          index++
+                        ) ...[
                           ListTile(
                             dense: true,
                             contentPadding: EdgeInsets.zero,
@@ -500,10 +592,29 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    await widget.controller.loadTopFrequentItemsIntoList(
-      listId,
-      suggestions: suggestions,
-    );
+    if (widget.isShared) {
+      final currentNames =
+          _groceryList?.items
+              .map((item) => normalizeLatinText(item.name))
+              .toSet() ??
+          <String>{};
+      for (final suggestion in suggestions) {
+        if (!currentNames.add(normalizeLatinText(suggestion.itemName))) {
+          continue;
+        }
+        await _addSharedItem(
+          listId: listId,
+          itemName: suggestion.itemName,
+          category: suggestion.category,
+          quantity: 1,
+        );
+      }
+    } else {
+      await widget.controller.loadTopFrequentItemsIntoList(
+        listId,
+        suggestions: suggestions,
+      );
+    }
   }
 
   Future<void> _editItem({
@@ -513,23 +624,29 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     final l10n = AppLocalizations.of(context);
     final result = await showDialog<_EditItemResult>(
       context: context,
-      builder: (_) => _EditItemDialog(
-        item: item,
-        categories: widget.controller.categories,
-      ),
+      builder: (_) =>
+          _EditItemDialog(item: item, categories: widget.controller.categories),
     );
 
     if (!mounted || result == null) {
       return;
     }
 
-    final updated = await widget.controller.updateItemInList(
-      listId: listId,
-      itemId: item.id,
-      itemName: result.name,
-      category: result.category,
-      quantity: result.quantity,
-    );
+    final updated = widget.isShared
+        ? await _updateSharedItem(
+            listId: listId,
+            itemId: item.id,
+            itemName: result.name,
+            category: result.category,
+            quantity: result.quantity,
+          )
+        : await widget.controller.updateItemInList(
+            listId: listId,
+            itemId: item.id,
+            itemName: result.name,
+            category: result.category,
+            quantity: result.quantity,
+          );
     if (!mounted || updated) {
       return;
     }
@@ -567,25 +684,32 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     final itemName = _itemController.text.trim();
 
     if (itemName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.nameCannotBeEmpty)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.nameCannotBeEmpty)));
       return;
     }
 
     if (_selectedCategory == null || _selectedCategory!.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.selectCategoryFirst)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.selectCategoryFirst)));
       return;
     }
 
-    final added = await widget.controller.addItemToList(
-      listId: listId,
-      itemName: itemName,
-      category: _selectedCategory!,
-      quantity: _selectedQuantity,
-    );
+    final added = widget.isShared
+        ? await _addSharedItem(
+            listId: listId,
+            itemName: itemName,
+            category: _selectedCategory!,
+            quantity: _selectedQuantity,
+          )
+        : await widget.controller.addItemToList(
+            listId: listId,
+            itemName: itemName,
+            category: _selectedCategory!,
+            quantity: _selectedQuantity,
+          );
     if (!added) {
       if (!mounted) {
         return;
@@ -607,6 +731,90 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       _selectedQuantity = 1;
     });
   }
+
+  GroceryListModel? get _groceryList {
+    if (widget.isShared) {
+      return widget.cloudController
+          ?.getSharedListById(widget.listId)
+          ?.toGroceryListModel();
+    }
+    return widget.controller.getGroceryListById(widget.listId);
+  }
+
+  Future<void> _removeItem({
+    required String listId,
+    required String itemId,
+  }) async {
+    if (widget.isShared) {
+      await widget.cloudController!.removeItemFromSharedList(
+        listId: listId,
+        itemId: itemId,
+      );
+      return;
+    }
+    await widget.controller.removeItemFromList(listId: listId, itemId: itemId);
+  }
+
+  Future<bool> _addSharedItem({
+    required String listId,
+    required String itemName,
+    required String category,
+    required int quantity,
+  }) async {
+    if (!await _ensureLocalCategory(category)) {
+      return false;
+    }
+    final added = await widget.cloudController!.addItemToSharedList(
+      listId: listId,
+      itemName: itemName,
+      category: category,
+      quantity: quantity,
+    );
+    if (added) {
+      _addedSharedItems = true;
+    }
+    return added;
+  }
+
+  Future<bool> _updateSharedItem({
+    required String listId,
+    required String itemId,
+    required String itemName,
+    required String category,
+    required int quantity,
+  }) async {
+    if (!await _ensureLocalCategory(category)) {
+      return false;
+    }
+    return widget.cloudController!.updateSharedItem(
+      listId: listId,
+      itemId: itemId,
+      itemName: itemName,
+      category: category,
+      quantity: quantity,
+    );
+  }
+
+  Future<bool> _ensureLocalCategory(String category) async {
+    if (widget.controller.categories.any(
+      (existing) => sameNormalizedText(existing, category),
+    )) {
+      return true;
+    }
+    return await widget.controller.addCategory(category) != null;
+  }
+
+  void _notifySharedListAdditions() {
+    if (!widget.isShared ||
+        !_addedSharedItems ||
+        _sharedAdditionNotificationSent) {
+      return;
+    }
+    _sharedAdditionNotificationSent = true;
+    unawaited(
+      widget.cloudController!.notifySharedListAdditionsCompleted(widget.listId),
+    );
+  }
 }
 
 class _EditItemResult {
@@ -622,10 +830,7 @@ class _EditItemResult {
 }
 
 class _EditItemDialog extends StatefulWidget {
-  const _EditItemDialog({
-    required this.item,
-    required this.categories,
-  });
+  const _EditItemDialog({required this.item, required this.categories});
 
   final GroceryItem item;
   final List<String> categories;
@@ -660,9 +865,12 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     if (!categories.any((entry) => sameNormalizedText(entry, _draftCategory))) {
       categories.add(_draftCategory);
     }
-    categories.sort((a, b) => l10n.categoryLabel(a).toLowerCase().compareTo(
-          l10n.categoryLabel(b).toLowerCase(),
-        ));
+    categories.sort(
+      (a, b) => l10n
+          .categoryLabel(a)
+          .toLowerCase()
+          .compareTo(l10n.categoryLabel(b).toLowerCase()),
+    );
 
     String? selectedCategory;
     for (final category in categories) {

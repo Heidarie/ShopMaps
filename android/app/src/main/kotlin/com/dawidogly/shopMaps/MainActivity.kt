@@ -1,4 +1,4 @@
-package com.example.shopmaps
+package com.dawidogly.shopMaps
 
 import io.flutter.embedding.android.FlutterActivity
 
