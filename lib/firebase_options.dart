@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDmcYBI7fMRPAQiuPiyrg3NlDRHAwck-pc',
+    apiKey: 'key',
     appId: '1:525193240026:android:56e6433cbe63e7cd07f4e3',
     messagingSenderId: '525193240026',
     projectId: 'shopmaps-a446c',
@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAj25EdPZNSIX6hJ_wiU_QmELLR3CaiYcw',
+    apiKey: 'key',
     appId: '1:525193240026:ios:bfc1f98c40e4610f07f4e3',
     messagingSenderId: '525193240026',
     projectId: 'shopmaps-a446c',
