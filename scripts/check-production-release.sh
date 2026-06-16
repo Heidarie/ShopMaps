@@ -7,6 +7,14 @@ cd "$ROOT_DIR"
 CONFIG_PATH="${1:-config/supabase.prod.json}"
 
 dart run tool/validate_production_config.dart "$CONFIG_PATH"
+scripts/check-secrets.sh
+
+if [[ ! -f ios/Flutter/Secrets.xcconfig ]] ||
+  ! rg -q '^GOOGLE_REVERSED_CLIENT_ID=.+$' ios/Flutter/Secrets.xcconfig ||
+  rg -q 'REPLACE_ME' ios/Flutter/Secrets.xcconfig; then
+  echo "Production release check failed: configure ios/Flutter/Secrets.xcconfig." >&2
+  exit 1
+fi
 
 if [[ ! -f android/key.properties ]]; then
   echo "Production release check failed: create android/key.properties." >&2

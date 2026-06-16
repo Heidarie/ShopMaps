@@ -88,6 +88,37 @@ class _MutableSharedCloudController extends CloudController {
   }
 }
 
+class _RejectingSharedCloudController extends _MutableSharedCloudController {
+  _RejectingSharedCloudController(super.list);
+
+  bool _hasError = false;
+
+  @override
+  CloudErrorKind? get errorKind =>
+      _hasError ? CloudErrorKind.contentRejected : null;
+
+  @override
+  String? get errorMessage => _hasError ? 'CONTENT_NOT_ALLOWED' : null;
+
+  @override
+  Future<bool> addItemToSharedList({
+    required String listId,
+    required String itemName,
+    required String category,
+    required int quantity,
+  }) async {
+    _hasError = true;
+    notifyListeners();
+    return false;
+  }
+
+  @override
+  void clearError() {
+    _hasError = false;
+    notifyListeners();
+  }
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -236,6 +267,69 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(cloudController.notifiedListIds, ['shared-list']);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      cloudController.dispose();
+      appController.dispose();
+    },
+  );
+
+  testWidgets(
+    'rejected shared item keeps input and does not send a notification',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      addTearDown(tester.view.resetPhysicalSize);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final appController = AppController(LocalStore());
+      final cloudController = _RejectingSharedCloudController(_sharedList());
+      await appController.load(localeLanguageCode: 'pl');
+
+      await tester.pumpWidget(
+        _testApp(
+          GroceryListEditorScreen(
+            controller: appController,
+            cloudController: cloudController,
+            listId: cloudController.list.id,
+            isShared: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField), 'Odrzucony produkt');
+      await tester.tap(find.text('Dodaj kategorię'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Nabiał'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.widgetWithText(FilledButton, 'Dodaj produkt'),
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Dodaj produkt'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Treść zawiera niedozwolone lub obraźliwe słowa. '
+          'Zmień ją i spróbuj ponownie.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
+        'Odrzucony produkt',
+      );
+      expect(cloudController.addedItemNames, isEmpty);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(cloudController.notifiedListIds, isEmpty);
 
       await tester.pumpWidget(const SizedBox.shrink());
       cloudController.dispose();

@@ -22,6 +22,7 @@ import 'settings_screen.dart';
 
 const int _maxInputChars = 100;
 const int _publicMapPreviewItemLimit = 4;
+const double _nearbyPublicStoresRadiusMeters = 4000;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -658,16 +659,26 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
       itemBuilder: (context, index) {
         final layout = marketLayouts[index];
         final publicMap = widget.cloudController.publicMapForLocalId(layout.id);
+        final hasMoreItems =
+            layout.categoryOrder.length > _publicMapPreviewItemLimit;
+        final previewItems = layout.categoryOrder
+            .take(_publicMapPreviewItemLimit)
+            .map(l10n.categoryLabel);
         return Card(
           child: ListTile(
+            key: ValueKey('local-map-${layout.id}'),
             leading: publicMap == null ? null : const Icon(Icons.public),
-            onTap: () => _editLayout(layout),
+            onTap: hasMoreItems
+                ? () => _showLocalMapDetails(layout)
+                : () => _editLayout(layout),
             title: Text(layout.name),
             subtitle: Text(
               [
                 if (publicMap != null) publicMap.location.formattedAddress,
-                layout.categoryOrder.map(l10n.categoryLabel).join('  →  '),
+                [...previewItems, if (hasMoreItems) '...'].join('  →  '),
               ].where((value) => value.isNotEmpty).join('\n'),
+              maxLines: publicMap == null ? 2 : 3,
+              overflow: TextOverflow.ellipsis,
             ),
             trailing: PopupMenuButton<String>(
               onSelected: (value) =>
@@ -722,7 +733,19 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
         '${map.location.storeName} ${map.location.formattedAddress}',
       ).contains(normalizedSearch);
     }).toList();
-    final stores = _groupPublicMaps(maps, currentLocation: _currentLocation);
+    final groupedStores = _groupPublicMaps(
+      maps,
+      currentLocation: _currentLocation,
+    );
+    final stores = _currentLocation == null
+        ? groupedStores
+        : groupedStores
+              .where(
+                (store) =>
+                    store.distanceMeters != null &&
+                    store.distanceMeters! <= _nearbyPublicStoresRadiusMeters,
+              )
+              .toList();
 
     return Column(
       children: [
@@ -879,6 +902,76 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
         ),
       ],
     );
+  }
+
+  Future<void> _showLocalMapDetails(MarketLayout layout) async {
+    final l10n = AppLocalizations.of(context);
+    final cloudL10n = CloudLocalizations.of(context);
+    final shouldEdit = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final maxListHeight = MediaQuery.sizeOf(sheetContext).height * 0.5;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  layout.name,
+                  style: Theme.of(sheetContext).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxListHeight),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: layout.categoryOrder.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (_, index) => ListTile(
+                      dense: true,
+                      leading: CircleAvatar(
+                        radius: 14,
+                        child: Text('${index + 1}'),
+                      ),
+                      title: Text(
+                        l10n.categoryLabel(layout.categoryOrder[index]),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(sheetContext, true),
+                        child: Text(l10n.edit),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetContext, false),
+                        child: Text(cloudL10n.text('back')),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (shouldEdit == true && mounted) {
+      await _editLayout(layout);
+    }
   }
 
   Future<void> _showPublicMapDetails(SharedMarketLayout map) async {
@@ -1161,7 +1254,9 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
       ).showSnackBar(SnackBar(content: Text(l10n.text('reportSubmitted'))));
       return;
     }
-    final message = widget.cloudController.errorMessage;
+    final message = CloudLocalizations.of(
+      context,
+    ).errorMessage(widget.cloudController);
     if (message != null) {
       ScaffoldMessenger.of(
         context,
@@ -1260,6 +1355,7 @@ class _GroceryListsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final cloudL10n = CloudLocalizations.of(context);
     final sharedSourceLocalIds = cloudController.sharedSourceLocalIds;
     final groceryLists = [
       ...controller.groceryLists
@@ -1360,10 +1456,24 @@ class _GroceryListsTab extends StatelessWidget {
                                 );
                                 if (name != null) {
                                   if (entry.isShared) {
-                                    await cloudController.renameSharedList(
-                                      listId: list.id,
-                                      newName: name,
-                                    );
+                                    final renamed = await cloudController
+                                        .renameSharedList(
+                                          listId: list.id,
+                                          newName: name,
+                                        );
+                                    if (!renamed && context.mounted) {
+                                      final message = cloudL10n.errorMessage(
+                                        cloudController,
+                                      );
+                                      if (message != null) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(content: Text(message)),
+                                        );
+                                      }
+                                      cloudController.clearError();
+                                    }
                                   } else {
                                     await controller.renameGroceryList(
                                       listId: list.id,

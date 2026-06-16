@@ -40,7 +40,21 @@ firebase.json
 !/config/firebase/README.md
 /supabase/functions/.env*
 !/supabase/functions/.env.example
+/supabase/.branches/
+/supabase/.temp/
 /android/key.properties
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
+/ios/Flutter/Secrets.xcconfig
+/lib/firebase_options.dart
+.env
+.env.*
+!**/.env.example
+*.p8
+*.p12
+*.pem
+*firebase-adminsdk*.json
+*service-account*.json
 *.keystore
 *.jks
 

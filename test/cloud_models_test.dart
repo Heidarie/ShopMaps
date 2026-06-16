@@ -95,29 +95,11 @@ void main() {
     expect(sharedMap.toLocalMarketLayout().id, isNot('local-map-id'));
   });
 
-  test('Geoapify address suggestion creates publish payload', () {
-    final suggestion = GeoapifyAddressSuggestion.fromJson({
-      'provider_place_id': 'place-id',
-      'formatted_address': 'Pułaskiego 10, Warszawa',
-      'street': 'Pułaskiego',
-      'house_number': '10',
-      'postcode': '00-001',
-      'city': 'Warszawa',
-      'country_code': 'pl',
-      'latitude': 52.2,
-      'longitude': 21.0,
-    });
-
-    final payload = suggestion.toPublishJson(' Market ');
-    expect(payload['provider'], 'geoapify');
-    expect(payload['store_name'], 'Market');
-    expect(payload['provider_place_id'], 'place-id');
-  });
-
   test(
     'nearby store suggestion includes its distance and canonical address',
     () {
       final store = NearbyStoreSuggestion.fromJson({
+        'store_location_id': 'catalog-store-id',
         'provider_place_id': 'store-place-id',
         'name': 'Lidl',
         'formatted_address': 'Pułaskiego 12, Warszawa',
@@ -133,6 +115,7 @@ void main() {
       });
 
       expect(store.name, 'Lidl');
+      expect(store.storeLocationId, 'catalog-store-id');
       expect(store.distanceMeters, 87);
       expect(store.address.providerPlaceId, 'store-place-id');
       expect(store.categories, contains('commercial.supermarket'));

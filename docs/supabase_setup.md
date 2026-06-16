@@ -20,10 +20,18 @@ The migration creates:
 - groups, memberships, and invitations,
 - shared grocery lists and deposit vouchers,
 - canonical store locations and public store maps,
+- database-enforced filtering for user-created online text,
 - Realtime replication for shared grocery lists, items, and deposit vouchers,
 - Realtime replication for pending group invitations,
 - RPC functions used by the Flutter app,
 - Row Level Security policies.
+
+Database filter tests use pgTAP and are stored under
+`supabase/tests/database/`. With the local Supabase stack running, execute:
+
+```bash
+supabase test db
+```
 
 ## Shared-list push notifications
 
@@ -82,7 +90,7 @@ that leaked-password protection is disabled.
 
 ## Configure authentication
 
-Enable Apple and Google in Supabase Authentication providers.
+Enable Apple, Google, and Facebook in Supabase Authentication providers.
 
 Add this redirect URL to the Supabase Auth redirect allow list:
 
@@ -115,26 +123,49 @@ Client IDs field, separated by a comma, with the web client ID first:
 Keep `Skip nonce check` disabled. ShopMaps generates a nonce for native Google
 Sign-In and passes the matching raw value to Supabase for verification.
 
-For iOS, add the reversed iOS client ID as another URL scheme in
-`ios/Runner/Info.plist`. For example, for:
+For iOS, copy `ios/Flutter/Secrets.xcconfig.example` to the ignored
+`ios/Flutter/Secrets.xcconfig` and set the reversed iOS client ID there.
+For example, for:
 
 ```text
 123-example.apps.googleusercontent.com
 ```
 
-add:
+set:
 
 ```text
-com.googleusercontent.apps.123-example
+GOOGLE_REVERSED_CLIENT_ID=com.googleusercontent.apps.123-example
 ```
 
-Keep `shopmaps` as a separate URL scheme because it is still used by other
-Supabase OAuth providers.
+`ios/Runner/Info.plist` references this local build setting. Keep `shopmaps` as
+a separate URL scheme because it is still used by other Supabase OAuth
+providers.
 
 The iOS and Android projects already register this deep link.
 
 Provider-specific credentials still need to be configured in Apple Developer,
 Google Cloud, and the Supabase dashboard.
+
+## Facebook Sign-In
+
+1. Create a Facebook app at <https://developers.facebook.com>.
+2. Add the Facebook Login product and configure the `email` and
+   `public_profile` permissions.
+3. Add the Supabase callback URL shown under Authentication > Providers >
+   Facebook as a valid Facebook OAuth redirect URI. It has the format:
+
+   ```text
+   https://<project-ref>.supabase.co/auth/v1/callback
+   ```
+
+4. Enable Facebook in Supabase Authentication > Providers and enter the
+   Facebook App ID and App Secret there. Never add the App Secret to the
+   Flutter application.
+5. Keep `shopmaps://login-callback` in the Supabase redirect allow list.
+
+Facebook apps in development mode only allow administrators, developers, and
+testers to sign in. Complete Meta's required app information and switch the app
+live before public release.
 
 ## Run a configured development build
 
@@ -152,8 +183,13 @@ Without these defines, ShopMaps starts in its existing local-only mode.
 
 Public store maps use Geoapify autocomplete so users select a canonical address
 instead of publishing arbitrary address text. After an address is selected, the
-same Edge Function uses Geoapify Places API to show named commercial places
-within 500 meters, ordered by distance.
+same Edge Function uses Geoapify Places API to show named grocery stores,
+convenience stores, food shops, discount stores, and marketplaces within
+4 kilometers, ordered by distance. Restricting the categories prevents stores
+inside shopping malls from pushing nearby supermarkets out of the result
+limit. These results are registered in the canonical `store_locations` catalog
+by the Edge Function. Public maps and new shared deposit codes reference a
+catalog record instead of trusting a user-entered store name.
 
 Create a Geoapify API key and add it as the `GEOAPIFY_API_KEY` secret for the
 Supabase Edge Function environment. The key must not be added to
@@ -186,7 +222,8 @@ supabase/functions/geoapify-address-search/index.ts
 - A public store map is a published copy. The author's local map remains on
   their device.
 - Store locations are deduplicated by Geoapify place ID and normalized store
-  name. Users must select an autocomplete result before publishing.
+  name. Public maps and newly shared deposit codes must use a store registered
+  from Geoapify; local-only deposit codes may keep any store name.
 - Signed-in users can browse public store maps and copy them into their local
   maps. Only the author can update or stop sharing a published map.
 - Users are invited only through their complete `Name#1234` handle.

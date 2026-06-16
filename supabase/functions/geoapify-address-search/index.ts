@@ -1,10 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+const storeCategories = [
+  "commercial.supermarket",
+  "commercial.convenience",
+  "commercial.discount_store",
+  "commercial.food_and_drink",
+  "commercial.marketplace",
+].join(",");
 
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
@@ -113,11 +122,11 @@ async function searchNearbyStores(
 
   try {
     const url = new URL("https://api.geoapify.com/v2/places");
-    url.searchParams.set("categories", "commercial");
+    url.searchParams.set("categories", storeCategories);
     url.searchParams.set("conditions", "named");
-    url.searchParams.set("filter", `circle:${longitude},${latitude},500`);
+    url.searchParams.set("filter", `circle:${longitude},${latitude},4000`);
     url.searchParams.set("bias", `proximity:${longitude},${latitude}`);
-    url.searchParams.set("limit", "20");
+    url.searchParams.set("limit", "50");
     url.searchParams.set("lang", language || "en");
     url.searchParams.set("apiKey", apiKey);
 
@@ -128,7 +137,7 @@ async function searchNearbyStores(
 
     const payload = await geoapifyResponse.json();
     const features = Array.isArray(payload.features) ? payload.features : [];
-    const stores = features
+    const candidates = features
       .map((feature: Record<string, unknown>) => {
         const properties = isRecord(feature.properties)
           ? feature.properties
@@ -185,10 +194,100 @@ async function searchNearbyStores(
           Number(left.distance_meters) - Number(right.distance_meters),
       );
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRoleKey) {
+      return jsonResponse({ error: "Store catalog is not configured" }, 503);
+    }
+
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const stores = [];
+    for (const candidate of candidates) {
+      const registered = await registerCanonicalStore(admin, candidate);
+      if (registered) {
+        stores.push({
+          ...candidate,
+          store_location_id: registered.id,
+          name: registered.store_name,
+        });
+      }
+    }
+
     return jsonResponse({ stores });
   } catch {
     return jsonResponse({ error: "Places provider request failed" }, 502);
   }
+}
+
+async function registerCanonicalStore(
+  admin: ReturnType<typeof createClient>,
+  candidate: Record<string, unknown>,
+): Promise<{ id: string; store_name: string } | null> {
+  const storeName = trimTo(candidate.name, 100);
+  const providerPlaceId = trimTo(candidate.provider_place_id, 512);
+  const formattedAddress = trimTo(candidate.formatted_address, 500);
+  const countryCode = trimTo(candidate.country_code, 2).toLowerCase();
+  if (!storeName || !providerPlaceId || !formattedAddress || !countryCode) {
+    return null;
+  }
+
+  const canonicalData = {
+    provider: "geoapify",
+    provider_place_id: providerPlaceId,
+    store_name: storeName,
+    store_name_normalized: normalizeStoreName(storeName),
+    formatted_address: formattedAddress,
+    street: nullableTrimTo(candidate.street, 200),
+    house_number: nullableTrimTo(candidate.house_number, 50),
+    postcode: nullableTrimTo(candidate.postcode, 50),
+    city: nullableTrimTo(candidate.city, 200),
+    country_code: countryCode,
+    latitude: Number(candidate.latitude),
+    longitude: Number(candidate.longitude),
+  };
+  const { data: existing, error: lookupError } = await admin
+    .from("store_locations")
+    .select("id,store_name_normalized")
+    .eq("provider", "geoapify")
+    .eq("provider_place_id", providerPlaceId)
+    .order("updated_at", { ascending: false });
+
+  if (lookupError) {
+    console.error("Canonical store lookup failed", lookupError.code);
+    return null;
+  }
+
+  const normalizedName = canonicalData.store_name_normalized;
+  const preferred =
+    existing?.find((entry) => entry.store_name_normalized === normalizedName) ??
+    existing?.[0];
+  const write = preferred
+    ? admin
+        .from("store_locations")
+        .update(canonicalData)
+        .eq("id", preferred.id)
+    : admin.from("store_locations").insert(canonicalData);
+  const { data, error } = await write.select("id,store_name").single();
+
+  if (error || !data) {
+    console.error("Canonical store registration failed", error?.code);
+    return null;
+  }
+  return { id: String(data.id), store_name: String(data.store_name) };
+}
+
+function normalizeStoreName(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function trimTo(value: unknown, maxLength: number): string {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function nullableTrimTo(value: unknown, maxLength: number): string | null {
+  return optionalString(trimTo(value, maxLength));
 }
 
 function optionalString(value: unknown): string | null {

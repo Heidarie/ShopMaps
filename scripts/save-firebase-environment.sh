@@ -15,7 +15,7 @@ mkdir -p "$DESTINATION"
 
 cp android/app/google-services.json "$DESTINATION/google-services.json"
 cp ios/Runner/GoogleService-Info.plist "$DESTINATION/GoogleService-Info.plist"
-cp lib/firebase_options.dart "$DESTINATION/firebase_options.dart"
+cp ios/Flutter/Secrets.xcconfig "$DESTINATION/Secrets.xcconfig"
 cp firebase.json "$DESTINATION/firebase.json"
 
 echo "Saved current Firebase configuration as $ENVIRONMENT."

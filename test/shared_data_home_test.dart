@@ -71,9 +71,13 @@ class _SharedDataCloudController extends CloudController {
 }
 
 class _PublicMapsCloudController extends CloudController {
-  _PublicMapsCloudController({this.includeLongMap = false}) : super(null);
+  _PublicMapsCloudController({
+    this.includeLongMap = false,
+    this.includeFarMap = false,
+  }) : super(null);
 
   final bool includeLongMap;
+  final bool includeFarMap;
   int recordedDownloads = 0;
   String? reportedMapId;
   String? reportReason;
@@ -90,6 +94,29 @@ class _PublicMapsCloudController extends CloudController {
 
   @override
   List<SharedMarketLayout> get publicMarketLayouts => [
+    if (includeFarMap)
+      SharedMarketLayout(
+        id: 'far-map',
+        createdBy: 'far-user',
+        creatorHandle: 'Far#0044',
+        sourceLocalId: 'far-source-map',
+        categoryOrder: const ['Household'],
+        downloadCount: 30,
+        location: const CloudStoreLocation(
+          id: 'far-location-id',
+          providerPlaceId: 'far-place-id',
+          storeName: 'Daleki Market',
+          formattedAddress: 'Rynek 1, Kraków',
+          street: 'Rynek',
+          houseNumber: '1',
+          postcode: '31-042',
+          city: 'Kraków',
+          countryCode: 'pl',
+          latitude: 50.0614,
+          longitude: 19.9366,
+        ),
+        updatedAt: DateTime.utc(2026, 6, 13),
+      ),
     SharedMarketLayout(
       id: 'popular-map',
       createdBy: 'popular-user',
@@ -469,6 +496,54 @@ void main() {
     appController.dispose();
   });
 
+  testWidgets('long local map preview opens full map modal', (tester) async {
+    final appController = AppController(LocalStore());
+    final cloudController = CloudController(null);
+    await appController.load(localeLanguageCode: 'pl');
+    await appController.upsertMarketLayout(
+      const MarketLayout(
+        id: 'long-local-map',
+        name: 'Mój długi sklep',
+        categoryOrder: [
+          'Bakery',
+          'Dairy',
+          'Drinks',
+          'Frozen',
+          'Fruits',
+          'Vegetables',
+        ],
+      ),
+    );
+
+    await tester.pumpWidget(
+      _homeApp(appController: appController, cloudController: cloudController),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Bakery  →  Dairy  →  Drinks  →  Frozen  →  ...'),
+      findsOneWidget,
+    );
+    expect(find.text('Fruits'), findsNothing);
+    expect(find.text('Vegetables'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('local-map-long-local-map')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fruits'), findsOneWidget);
+    expect(find.text('Vegetables'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Edytuj'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Wróć'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Wróć'));
+    await tester.pumpAndSettle();
+    expect(find.text('Fruits'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
   testWidgets('public store maps can be sorted by current location', (
     tester,
   ) async {
@@ -514,6 +589,55 @@ void main() {
     );
     expect(find.textContaining('0 m'), findsOneWidget);
     expect(find.byTooltip('Wyczyść lokalizację'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
+  testWidgets('find near me shows stores within four kilometers', (
+    tester,
+  ) async {
+    final appController = AppController(LocalStore());
+    final cloudController = _PublicMapsCloudController(includeFarMap: true);
+    await appController.load(localeLanguageCode: 'pl');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('pl'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          controller: appController,
+          cloudController: cloudController,
+          locationService: const _FixedLocationService(
+            DeviceLocation(latitude: 52.2, longitude: 21.0),
+          ),
+          onToggleThemeMode: () {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Szukaj'));
+    await tester.pumpAndSettle();
+    expect(find.text('Daleki Market'), findsOneWidget);
+
+    await tester.tap(find.text('Znajdź blisko mnie'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Daleki Market'), findsNothing);
+    expect(find.text('Market Pułaskiego'), findsOneWidget);
+    expect(find.text('Popular Market'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Wyczyść lokalizację'));
+    await tester.pumpAndSettle();
+    expect(find.text('Daleki Market'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     cloudController.dispose();

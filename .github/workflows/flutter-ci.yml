@@ -33,8 +33,29 @@ jobs:
       - name: Validate production configuration schema
         run: dart run tool/validate_production_config.dart config/supabase.prod.example.json --example
 
+      - name: Check tracked secrets
+        run: scripts/check-secrets.sh
+
       - name: Analyze
         run: flutter analyze
 
       - name: Test
         run: flutter test
+
+  database-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Test database
+        run: supabase test db

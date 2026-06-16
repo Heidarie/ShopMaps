@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../app_controller.dart';
 import '../cloud/cloud_controller.dart';
+import '../cloud/cloud_localizations.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
 import '../widgets/category_name_prompt.dart';
@@ -602,12 +603,16 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         if (!currentNames.add(normalizeLatinText(suggestion.itemName))) {
           continue;
         }
-        await _addSharedItem(
+        final added = await _addSharedItem(
           listId: listId,
           itemName: suggestion.itemName,
           category: suggestion.category,
           quantity: 1,
         );
+        if (!added) {
+          _showOperationFailure(l10n);
+          break;
+        }
       }
     } else {
       await widget.controller.loadTopFrequentItemsIntoList(
@@ -651,9 +656,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
-    );
+    _showOperationFailure(l10n);
   }
 
   Future<String?> _promptAndCreateCategory() async {
@@ -714,9 +717,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
-      );
+      _showOperationFailure(l10n);
       return;
     }
 
@@ -802,6 +803,22 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       return true;
     }
     return await widget.controller.addCategory(category) != null;
+  }
+
+  void _showOperationFailure(AppLocalizations l10n) {
+    if (!mounted) {
+      return;
+    }
+    final cloudController = widget.cloudController;
+    final message = cloudController == null
+        ? null
+        : CloudLocalizations.of(context).errorMessage(cloudController);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message ?? l10n.maxCategoriesReached(maxCategoryCount)),
+      ),
+    );
+    cloudController?.clearError();
   }
 
   void _notifySharedListAdditions() {

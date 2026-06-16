@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+import 'cloud_controller.dart';
+
 class CloudLocalizations {
   CloudLocalizations(this.languageCode);
 
@@ -19,6 +21,7 @@ class CloudLocalizations {
       'signIn': 'Sign in',
       'signInApple': 'Continue with Apple',
       'signInGoogle': 'Continue with Google',
+      'signInFacebook': 'Continue with Facebook',
       'completeProfile': 'Enter your username',
       'completeProfileDescription': 'Your username is used to join groups.',
       'displayName': 'Public name',
@@ -61,7 +64,12 @@ class CloudLocalizations {
       'copyListExplanation':
           'A separate copy will be created in the group. Your local list will remain unchanged.',
       'moveDepositExplanation':
-          'The deposit code will be moved to the group and removed from this device.',
+          'The deposit code will be moved to the group after you select its store from the catalog.',
+      'selectCanonicalStore': 'Select store',
+      'selectCanonicalStoreDescription':
+          'Find the address and select the matching store from the catalog.',
+      'canonicalStoreRequired':
+          'Select a store from the verified store catalog.',
       'emptySharedLists': 'No shared grocery lists yet.',
       'emptySharedDeposits': 'No shared deposit codes yet.',
       'copiedToGroup': 'List copied to the group.',
@@ -81,7 +89,7 @@ class CloudLocalizations {
       'addressTooShort': 'Enter at least 3 characters.',
       'nearbyStores': 'Stores nearest to this address',
       'nearbyStoresNoResults':
-          'No nearby stores found. Enter the store name manually.',
+          'No nearby stores found. Try a different address.',
       'publishStoreMap': 'Publish map',
       'storeMapPublished': 'Store map published.',
       'storeMapAlreadyExists':
@@ -97,6 +105,8 @@ class CloudLocalizations {
       'reportReasonInappropriate': 'Inappropriate content',
       'reportReasonOther': 'Other issue',
       'reportSubmitted': 'The map was reported.',
+      'contentRejected':
+          'The content contains prohibited or offensive words. Change it and try again.',
       'sharedBy': 'Shared by',
       'findNearMe': 'Find near me',
       'clearLocation': 'Clear location',
@@ -115,7 +125,7 @@ class CloudLocalizations {
       'accountDeletionPage': 'Account deletion',
       'support': 'Support',
       'searchSharedStores': 'Search stores or addresses',
-      'poweredByGeoapify': 'Address search powered by Geoapify',
+      'poweredByGeoapify': 'Geoapify, © OpenStreetMap contributors',
       'mapsCountLabel': 'Maps',
       'downloadsCountLabel': 'Downloads',
       'back': 'Back',
@@ -130,6 +140,7 @@ class CloudLocalizations {
       'signIn': 'Logowanie',
       'signInApple': 'Kontynuuj z Apple',
       'signInGoogle': 'Kontynuuj z Google',
+      'signInFacebook': 'Kontynuuj z Facebookiem',
       'completeProfile': 'Podaj swoją nazwę użytkownika',
       'completeProfileDescription':
           'Nazwa użytkownika jest używana do dołączania do grup.',
@@ -174,7 +185,12 @@ class CloudLocalizations {
       'copyListExplanation':
           'W grupie powstanie osobna kopia. Twoja lokalna lista pozostanie bez zmian.',
       'moveDepositExplanation':
-          'Kod kaucji zostanie przeniesiony do grupy i usunięty z tego urządzenia.',
+          'Kod kaucji zostanie przeniesiony do grupy po wybraniu sklepu z katalogu.',
+      'selectCanonicalStore': 'Wybierz sklep',
+      'selectCanonicalStoreDescription':
+          'Znajdź adres i wybierz właściwy sklep z katalogu.',
+      'canonicalStoreRequired':
+          'Wybierz sklep ze zweryfikowanego katalogu sklepów.',
       'emptySharedLists': 'Brak współdzielonych list zakupów.',
       'emptySharedDeposits': 'Brak współdzielonych kodów kaucji.',
       'copiedToGroup': 'Lista została skopiowana do grupy.',
@@ -194,7 +210,7 @@ class CloudLocalizations {
       'addressTooShort': 'Wpisz przynajmniej 3 znaki.',
       'nearbyStores': 'Sklepy najbliżej tego adresu',
       'nearbyStoresNoResults':
-          'Nie znaleziono pobliskich sklepów. Wpisz nazwę ręcznie.',
+          'Nie znaleziono pobliskich sklepów. Spróbuj podać inny adres.',
       'publishStoreMap': 'Opublikuj mapę',
       'storeMapPublished': 'Mapa sklepu została udostępniona.',
       'storeMapAlreadyExists': 'Taki układ tego sklepu jest już udostępniony.',
@@ -210,6 +226,8 @@ class CloudLocalizations {
       'reportReasonInappropriate': 'Nieodpowiednia treść',
       'reportReasonOther': 'Inny problem',
       'reportSubmitted': 'Mapa została zgłoszona.',
+      'contentRejected':
+          'Treść zawiera niedozwolone lub obraźliwe słowa. Zmień ją i spróbuj ponownie.',
       'sharedBy': 'Udostępnił',
       'findNearMe': 'Znajdź blisko mnie',
       'clearLocation': 'Wyczyść lokalizację',
@@ -228,7 +246,7 @@ class CloudLocalizations {
       'accountDeletionPage': 'Usuwanie konta',
       'support': 'Pomoc i kontakt',
       'searchSharedStores': 'Szukaj sklepów lub adresów',
-      'poweredByGeoapify': 'Wyszukiwanie adresów: Geoapify',
+      'poweredByGeoapify': 'Geoapify, © OpenStreetMap contributors',
       'mapsCountLabel': 'Mapy',
       'downloadsCountLabel': 'Pobrania',
       'back': 'Wróć',
@@ -239,9 +257,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Melde dich nur an, wenn du Gruppen erstellen und Listen oder Pfandcodes teilen möchtest.',
       'notConfigured': 'Supabase ist in diesem Build nicht konfiguriert.',
+      'contentRejected':
+          'Der Inhalt enthält unzulässige oder beleidigende Wörter. Ändere ihn und versuche es erneut.',
       'signIn': 'Anmeldung',
       'signInApple': 'Mit Apple fortfahren',
       'signInGoogle': 'Mit Google fortfahren',
+      'signInFacebook': 'Mit Facebook fortfahren',
       'completeProfile': 'Gib deinen Benutzernamen ein',
       'completeProfileDescription':
           'Dein Benutzername wird zum Beitritt zu Gruppen verwendet.',
@@ -286,9 +307,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Log alleen in als je groepen wilt maken en lijsten of statiegeldcodes wilt delen.',
       'notConfigured': 'Supabase is niet geconfigureerd in deze build.',
+      'contentRejected':
+          'De inhoud bevat verboden of beledigende woorden. Pas deze aan en probeer het opnieuw.',
       'signIn': 'Inloggen',
       'signInApple': 'Doorgaan met Apple',
       'signInGoogle': 'Doorgaan met Google',
+      'signInFacebook': 'Doorgaan met Facebook',
       'completeProfile': 'Voer je gebruikersnaam in',
       'completeProfileDescription':
           'Je gebruikersnaam wordt gebruikt om lid te worden van groepen.',
@@ -333,9 +357,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Inicia sesión solo cuando quieras crear grupos y compartir listas o códigos de depósito.',
       'notConfigured': 'Supabase no está configurado en esta versión.',
+      'contentRejected':
+          'El contenido contiene palabras prohibidas u ofensivas. Cámbialo e inténtalo de nuevo.',
       'signIn': 'Iniciar sesión',
       'signInApple': 'Continuar con Apple',
       'signInGoogle': 'Continuar con Google',
+      'signInFacebook': 'Continuar con Facebook',
       'completeProfile': 'Introduce tu nombre de usuario',
       'completeProfileDescription':
           'Tu nombre de usuario se utiliza para unirte a grupos.',
@@ -381,9 +408,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Connectez-vous uniquement pour créer des groupes et partager des listes ou des codes de consigne.',
       'notConfigured': "Supabase n'est pas configuré dans cette version.",
+      'contentRejected':
+          'Le contenu contient des mots interdits ou offensants. Modifiez-le et réessayez.',
       'signIn': 'Connexion',
       'signInApple': 'Continuer avec Apple',
       'signInGoogle': 'Continuer avec Google',
+      'signInFacebook': 'Continuer avec Facebook',
       'completeProfile': "Saisissez votre nom d'utilisateur",
       'completeProfileDescription':
           "Votre nom d'utilisateur est utilisé pour rejoindre des groupes.",
@@ -428,9 +458,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Увійдіть лише для створення груп і спільного доступу до списків або кодів застави.',
       'notConfigured': 'Supabase не налаштовано в цій збірці.',
+      'contentRejected':
+          'Вміст містить заборонені або образливі слова. Змініть його та спробуйте ще раз.',
       'signIn': 'Вхід',
       'signInApple': 'Продовжити з Apple',
       'signInGoogle': 'Продовжити з Google',
+      'signInFacebook': 'Продовжити з Facebook',
       'completeProfile': 'Введіть ім’я користувача',
       'completeProfileDescription':
           'Ім’я користувача використовується для приєднання до груп.',
@@ -475,9 +508,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Accedi solo quando vuoi creare gruppi e condividere liste o codici cauzione.',
       'notConfigured': 'Supabase non è configurato in questa build.',
+      'contentRejected':
+          'Il contenuto contiene parole vietate o offensive. Modificalo e riprova.',
       'signIn': 'Accesso',
       'signInApple': 'Continua con Apple',
       'signInGoogle': 'Continua con Google',
+      'signInFacebook': 'Continua con Facebook',
       'completeProfile': 'Inserisci il tuo nome utente',
       'completeProfileDescription':
           'Il nome utente viene utilizzato per unirsi ai gruppi.',
@@ -523,9 +559,12 @@ class CloudLocalizations {
       'localModeDescription':
           'Inicie sessão apenas quando quiser criar grupos e partilhar listas ou códigos de caução.',
       'notConfigured': 'O Supabase não está configurado nesta versão.',
+      'contentRejected':
+          'O conteúdo contém palavras proibidas ou ofensivas. Altere-o e tente novamente.',
       'signIn': 'Iniciar sessão',
       'signInApple': 'Continuar com Apple',
       'signInGoogle': 'Continuar com Google',
+      'signInFacebook': 'Continuar com Facebook',
       'completeProfile': 'Introduza o seu nome de utilizador',
       'completeProfileDescription':
           'O nome de utilizador é usado para aderir a grupos.',
@@ -568,5 +607,15 @@ class CloudLocalizations {
 
   String text(String key) {
     return _values[languageCode]?[key] ?? _values['en']![key] ?? key;
+  }
+
+  String? errorMessage(CloudController controller) {
+    if (controller.errorKind == CloudErrorKind.contentRejected) {
+      return text('contentRejected');
+    }
+    if (controller.errorKind == CloudErrorKind.canonicalStoreRequired) {
+      return text('canonicalStoreRequired');
+    }
+    return controller.errorMessage;
   }
 }

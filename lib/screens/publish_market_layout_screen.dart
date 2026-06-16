@@ -27,7 +27,6 @@ class PublishMarketLayoutScreen extends StatefulWidget {
 }
 
 class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
-  late final TextEditingController _storeNameController;
   late final TextEditingController _addressController;
   Timer? _searchTimer;
   List<GeoapifyAddressSuggestion> _suggestions = const [];
@@ -45,13 +44,13 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   void initState() {
     super.initState();
     final existingLocation = widget.existingMap?.location;
-    _storeNameController = TextEditingController(
-      text: existingLocation?.storeName ?? widget.layout.name,
-    );
     _addressController = TextEditingController(
       text: existingLocation?.formattedAddress ?? '',
     );
     _selectedAddress = existingLocation?.toAddressSuggestion();
+    _selectedNearbyStore = existingLocation == null
+        ? null
+        : NearbyStoreSuggestion.fromLocation(existingLocation);
   }
 
   @override
@@ -60,14 +59,19 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     final address = _selectedAddress;
     if (!_didLoadExistingNearbyStores && address != null) {
       _didLoadExistingNearbyStores = true;
-      _searchNearbyStores(address);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted ||
+            _selectedAddress?.providerPlaceId != address.providerPlaceId) {
+          return;
+        }
+        unawaited(_searchNearbyStores(address));
+      });
     }
   }
 
   @override
   void dispose() {
     _searchTimer?.cancel();
-    _storeNameController.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -76,10 +80,7 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cloudL10n = CloudLocalizations.of(context);
-    final canPublish =
-        !_isPublishing &&
-        _storeNameController.text.trim().isNotEmpty &&
-        _selectedAddress != null;
+    final canPublish = !_isPublishing && _selectedNearbyStore != null;
 
     return Scaffold(
       appBar: AppBar(title: Text(cloudL10n.text('shareStoreMap'))),
@@ -109,16 +110,6 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
               ),
               const SizedBox(height: 8),
               Expanded(child: _buildSearchResults(cloudL10n)),
-              TextField(
-                controller: _storeNameController,
-                inputFormatters: [LengthLimitingTextInputFormatter(100)],
-                decoration: InputDecoration(
-                  labelText: cloudL10n.text('storeName'),
-                  helperText: cloudL10n.text('storeNameFallbackHint'),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: 8),
               Text(
                 cloudL10n.text('poweredByGeoapify'),
                 textAlign: TextAlign.center,
@@ -161,7 +152,13 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
             return Card(
               child: ListTile(
                 leading: const Icon(Icons.check_circle_outline),
-                title: Text(_selectedAddress!.formattedAddress),
+                title: Text(
+                  _selectedNearbyStore?.name ??
+                      _selectedAddress!.formattedAddress,
+                ),
+                subtitle: _selectedNearbyStore == null
+                    ? null
+                    : Text(_selectedAddress!.formattedAddress),
               ),
             );
           }
@@ -212,7 +209,6 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
                   _selectedNearbyStore = store;
                   _selectedAddress = store.address;
                   _addressController.text = store.address.formattedAddress;
-                  _storeNameController.text = store.name;
                 });
               },
             ),
@@ -325,8 +321,8 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   }
 
   Future<void> _publish() async {
-    final address = _selectedAddress;
-    if (address == null) {
+    final store = _selectedNearbyStore;
+    if (store == null) {
       return;
     }
     setState(() {
@@ -334,8 +330,7 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     });
     final result = await widget.cloudController.publishMarketLayout(
       layout: widget.layout,
-      storeName: _storeNameController.text,
-      address: address,
+      store: store,
     );
     if (!mounted) {
       return;
@@ -355,9 +350,11 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
       return;
     }
     final message =
-        widget.cloudController.errorMessage ?? 'Could not publish store map.';
+        CloudLocalizations.of(context).errorMessage(widget.cloudController) ??
+        'Could not publish store map.';
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+    widget.cloudController.clearError();
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,6 +10,7 @@ import '../cloud/cloud_localizations.dart';
 import '../cloud/cloud_models.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import 'canonical_store_picker_screen.dart';
 
 class AccountGroupsScreen extends StatefulWidget {
   const AccountGroupsScreen({
@@ -210,10 +212,10 @@ class _AccountGroupsScreenState extends State<AccountGroupsScreen> {
                       onDelete: _deleteAccount,
                     ),
                   ],
-                  if (controller.errorMessage != null) ...[
+                  if (cloudL10n.errorMessage(controller) != null) ...[
                     const SizedBox(height: 12),
                     Text(
-                      controller.errorMessage!,
+                      cloudL10n.errorMessage(controller)!,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -284,6 +286,12 @@ class _SignedOutContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = CloudLocalizations.of(context);
+    const buttonStyle = ButtonStyle(
+      minimumSize: WidgetStatePropertyAll(Size.fromHeight(48)),
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -293,20 +301,36 @@ class _SignedOutContent extends StatelessWidget {
           description: l10n.text('localModeDescription'),
         ),
         const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: controller.isBusy ? null : controller.signInWithApple,
-          icon: const Icon(Icons.apple),
-          label: Text(l10n.text('signInApple')),
+        if (_supportsAppleSignIn) ...[
+          FilledButton.icon(
+            style: buttonStyle,
+            onPressed: controller.isBusy ? null : controller.signInWithApple,
+            icon: const Icon(Icons.apple),
+            label: Text(l10n.text('signInApple')),
+          ),
+          const SizedBox(height: 8),
+        ],
+        OutlinedButton.icon(
+          style: buttonStyle,
+          onPressed: controller.isBusy ? null : controller.signInWithGoogle,
+          icon: const Icon(Icons.g_mobiledata_rounded),
+          label: Text(l10n.text('signInGoogle')),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
-          onPressed: controller.isBusy ? null : controller.signInWithGoogle,
-          icon: const Icon(Icons.g_mobiledata_rounded, size: 30),
-          label: Text(l10n.text('signInGoogle')),
+          style: buttonStyle,
+          onPressed: controller.isBusy ? null : controller.signInWithFacebook,
+          icon: const Icon(Icons.facebook_rounded),
+          label: Text(l10n.text('signInFacebook')),
         ),
       ],
     );
   }
+
+  bool get _supportsAppleSignIn =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
 }
 
 class _ProfileSetupCard extends StatelessWidget {
@@ -537,9 +561,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(cloudL10n.text('invitationSent'))));
-    } else if (mounted && widget.cloudController.errorMessage != null) {
+    } else if (mounted &&
+        cloudL10n.errorMessage(widget.cloudController) != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.cloudController.errorMessage!)),
+        SnackBar(
+          content: Text(cloudL10n.errorMessage(widget.cloudController)!),
+        ),
       );
     }
     widget.cloudController.clearError();
@@ -561,7 +588,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           .toList(),
       label: (list) => '${list.name} (${list.items.length})',
     );
-    if (selected == null) {
+    if (selected == null || !mounted) {
       return;
     }
     final shared = await widget.cloudController.shareListWithGroup(
@@ -649,12 +676,22 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       label: (voucher) =>
           '${voucher.storeName} · ${voucher.amount.toStringAsFixed(2)}',
     );
-    if (selected == null) {
+    if (selected == null || !mounted) {
+      return;
+    }
+    final store = await Navigator.of(context).push<NearbyStoreSuggestion>(
+      MaterialPageRoute<NearbyStoreSuggestion>(
+        builder: (_) =>
+            CanonicalStorePickerScreen(cloudController: widget.cloudController),
+      ),
+    );
+    if (store == null || !mounted) {
       return;
     }
     final moved = await widget.cloudController.moveVoucherToGroup(
       groupId: widget.group.id,
       voucher: selected,
+      store: store,
     );
     if (!moved) {
       _showCloudError();
@@ -711,7 +748,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   }
 
   void _showCloudError() {
-    final message = widget.cloudController.errorMessage;
+    final message = CloudLocalizations.of(
+      context,
+    ).errorMessage(widget.cloudController);
     if (mounted && message != null) {
       ScaffoldMessenger.of(
         context,

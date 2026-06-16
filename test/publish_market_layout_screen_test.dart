@@ -12,6 +12,7 @@ class _NearbyStoresCloudController extends CloudController {
 
   String? publishedStoreName;
   GeoapifyAddressSuggestion? publishedAddress;
+  String? publishedStoreLocationId;
   PublishMarketLayoutResult publishResult = PublishMarketLayoutResult.published;
 
   @override
@@ -41,6 +42,7 @@ class _NearbyStoresCloudController extends CloudController {
   }) async {
     return const [
       NearbyStoreSuggestion(
+        storeLocationId: 'catalog-store-id',
         name: 'Lidl',
         distanceMeters: 87,
         categories: ['commercial.supermarket'],
@@ -62,16 +64,94 @@ class _NearbyStoresCloudController extends CloudController {
   @override
   Future<PublishMarketLayoutResult> publishMarketLayout({
     required MarketLayout layout,
-    required String storeName,
-    required GeoapifyAddressSuggestion address,
+    required NearbyStoreSuggestion store,
   }) async {
-    publishedStoreName = storeName;
-    publishedAddress = address;
+    publishedStoreName = store.name;
+    publishedAddress = store.address;
+    publishedStoreLocationId = store.storeLocationId;
     return publishResult;
   }
 }
 
+class _NotifyingNearbyStoresCloudController
+    extends _NearbyStoresCloudController {
+  int nearbySearchCount = 0;
+
+  @override
+  Future<List<NearbyStoreSuggestion>> searchNearbyStores({
+    required GeoapifyAddressSuggestion address,
+    required String languageCode,
+  }) {
+    nearbySearchCount++;
+    notifyListeners();
+    return super.searchNearbyStores(
+      address: address,
+      languageCode: languageCode,
+    );
+  }
+}
+
 void main() {
+  testWidgets('loads nearby stores for an existing map after the first frame', (
+    tester,
+  ) async {
+    final cloudController = _NotifyingNearbyStoresCloudController();
+    final existingMap = SharedMarketLayout(
+      id: 'shared-map',
+      createdBy: 'current-user',
+      creatorHandle: 'Current#0001',
+      sourceLocalId: 'local-map',
+      categoryOrder: const [],
+      location: const CloudStoreLocation(
+        id: 'catalog-store-id',
+        providerPlaceId: 'store-id',
+        storeName: 'Lidl',
+        formattedAddress: 'Pułaskiego 12, Warszawa',
+        street: 'Pułaskiego',
+        houseNumber: '12',
+        postcode: '00-001',
+        city: 'Warszawa',
+        countryCode: 'pl',
+        latitude: 52.2001,
+        longitude: 21.0001,
+      ),
+      downloadCount: 0,
+      updatedAt: DateTime.utc(2026, 6, 15),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('pl'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: ListenableBuilder(
+          listenable: cloudController,
+          builder: (context, _) => PublishMarketLayoutScreen(
+            cloudController: cloudController,
+            layout: const MarketLayout(
+              id: 'local-map',
+              name: 'Moja mapa',
+              categoryOrder: [],
+            ),
+            existingMap: existingMap,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(cloudController.nearbySearchCount, 1);
+    expect(find.text('Lidl'), findsWidgets);
+
+    cloudController.dispose();
+  });
+
   testWidgets(
     'selecting an address shows nearby stores and uses selected store',
     (tester) async {
@@ -113,13 +193,14 @@ void main() {
 
       await tester.tap(find.text('Lidl'));
       await tester.pumpAndSettle();
-      expect(find.widgetWithText(TextField, 'Lidl'), findsOneWidget);
+      expect(find.text('Lidl'), findsWidgets);
 
       await tester.tap(find.text('Opublikuj mapę'));
       await tester.pumpAndSettle();
 
       expect(cloudController.publishedStoreName, 'Lidl');
       expect(cloudController.publishedAddress?.providerPlaceId, 'store-id');
+      expect(cloudController.publishedStoreLocationId, 'catalog-store-id');
 
       cloudController.dispose();
     },

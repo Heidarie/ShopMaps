@@ -16,7 +16,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>shopmaps</string>
-				<string>com.googleusercontent.apps.108826614682-hi8s347phqlblk4npe2i6nhipjhcqmtv</string>
+				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
 			</array>
 		</dict>
 	</array>

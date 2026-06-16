@@ -79,7 +79,8 @@ Na potrzeby regulaminu poniższe pojęcia oznaczają:
 
 1. Utworzenie Konta jest dobrowolne.
 2. Konto może zostać utworzone lub uwierzytelnione za pomocą obsługiwanych
-   zewnętrznych dostawców logowania, w szczególności Google lub Apple.
+   zewnętrznych dostawców logowania, w szczególności Google, Apple lub
+   Facebook.
 3. Użytkownik zobowiązuje się podawać prawdziwe dane w zakresie wymaganym przez
    Aplikację oraz chronić dostęp do swojego Konta.
 4. Konto może utworzyć osoba posiadająca zdolność do zawarcia umowy
@@ -145,7 +146,8 @@ Na potrzeby regulaminu poniższe pojęcia oznaczają:
    w szczególności:
    1. **Supabase** — do uwierzytelniania, przechowywania i synchronizacji
       danych chmurowych;
-   2. **Google** i **Apple** — jako opcjonalnych dostawców logowania;
+   2. **Google**, **Apple** i **Facebook** — jako opcjonalnych dostawców
+      logowania;
    3. **Geoapify** — do wyszukiwania i ujednolicania adresów oraz wyszukiwania
       pobliskich sklepów.
 2. Dostępność niektórych funkcji może zależeć od działania zewnętrznych

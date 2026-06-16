@@ -11,6 +11,26 @@ import 'cloud_models.dart';
 import 'push_notification_service.dart';
 import 'supabase_config.dart';
 
+enum CloudErrorKind { contentRejected, canonicalStoreRequired }
+
+CloudErrorKind? classifyCloudPostgrestException(PostgrestException error) {
+  const marker = 'CONTENT_NOT_ALLOWED';
+  if (error.message.contains(marker) ||
+      error.code?.contains(marker) == true ||
+      error.details?.toString().contains(marker) == true ||
+      error.hint?.contains(marker) == true) {
+    return CloudErrorKind.contentRejected;
+  }
+  const canonicalStoreMarker = 'CANONICAL_STORE_REQUIRED';
+  if (error.message.contains(canonicalStoreMarker) ||
+      error.code?.contains(canonicalStoreMarker) == true ||
+      error.details?.toString().contains(canonicalStoreMarker) == true ||
+      error.hint?.contains(canonicalStoreMarker) == true) {
+    return CloudErrorKind.canonicalStoreRequired;
+  }
+  return null;
+}
+
 class CloudController extends ChangeNotifier {
   CloudController(
     this._client, {
@@ -35,6 +55,7 @@ class CloudController extends ChangeNotifier {
 
   int _pendingOperations = 0;
   String? _errorMessage;
+  CloudErrorKind? _errorKind;
   CloudProfile? _profile;
   List<CloudGroup> _groups = const [];
   List<CloudGroupInvite> _invites = const [];
@@ -51,6 +72,7 @@ class CloudController extends ChangeNotifier {
   }
 
   String? get errorMessage => _errorMessage;
+  CloudErrorKind? get errorKind => _errorKind;
   CloudProfile? get profile => _profile;
   List<CloudGroup> get groups => _groups;
   List<CloudGroupInvite> get invites => _invites;
@@ -137,7 +159,15 @@ class CloudController extends ChangeNotifier {
 
   Future<void> signInWithApple() => _signIn(OAuthProvider.apple);
 
-  Future<void> _signIn(OAuthProvider provider) async {
+  Future<void> signInWithFacebook() => _signIn(
+    OAuthProvider.facebook,
+    mobileLaunchMode: LaunchMode.externalApplication,
+  );
+
+  Future<void> _signIn(
+    OAuthProvider provider, {
+    LaunchMode mobileLaunchMode = LaunchMode.inAppBrowserView,
+  }) async {
     final client = _client;
     if (client == null) {
       return;
@@ -149,7 +179,7 @@ class CloudController extends ChangeNotifier {
         redirectTo: kIsWeb ? null : redirectUrl,
         authScreenLaunchMode: kIsWeb
             ? LaunchMode.platformDefault
-            : LaunchMode.inAppBrowserView,
+            : mobileLaunchMode,
       );
     });
   }
@@ -354,6 +384,7 @@ class CloudController extends ChangeNotifier {
   }) async {
     final client = _client;
     if (client == null || !isValidPublicHandle(handle)) {
+      _errorKind = null;
       _errorMessage = 'Use the Name#1234 format.';
       notifyListeners();
       return false;
@@ -476,6 +507,7 @@ class CloudController extends ChangeNotifier {
   Future<bool> moveVoucherToGroup({
     required String groupId,
     required DepositVoucher voucher,
+    required NearbyStoreSuggestion store,
   }) async {
     final client = _client;
     if (client == null) {
@@ -485,7 +517,11 @@ class CloudController extends ChangeNotifier {
     return _runWithResult(() async {
       await client.rpc<Object?>(
         'move_deposit_voucher_to_group',
-        params: {'space_id': groupId, 'voucher': voucher.toJson()},
+        params: {
+          'space_id': groupId,
+          'voucher': voucher.toJson(),
+          'store_location_id': store.storeLocationId,
+        },
       );
       await _loadAllSharedData();
       return true;
@@ -752,11 +788,10 @@ class CloudController extends ChangeNotifier {
 
   Future<PublishMarketLayoutResult> publishMarketLayout({
     required MarketLayout layout,
-    required String storeName,
-    required GeoapifyAddressSuggestion address,
+    required NearbyStoreSuggestion store,
   }) async {
     final client = _client;
-    if (client == null || !isSignedIn || storeName.trim().isEmpty) {
+    if (client == null || !isSignedIn || store.storeLocationId.isEmpty) {
       return PublishMarketLayoutResult.failed;
     }
 
@@ -764,7 +799,7 @@ class CloudController extends ChangeNotifier {
       final result = await client.rpc<Object?>(
         'publish_market_layout',
         params: {
-          'location': address.toPublishJson(storeName),
+          'store_location_id': store.storeLocationId,
           'source_local_id': layout.id,
           'category_order': layout.categoryOrder,
         },
@@ -1094,6 +1129,7 @@ class CloudController extends ChangeNotifier {
   Future<void> _run(Future<void> Function() action) async {
     _pendingOperations++;
     _errorMessage = null;
+    _errorKind = null;
     notifyListeners();
 
     try {
@@ -1106,6 +1142,7 @@ class CloudController extends ChangeNotifier {
     } on AuthException catch (error) {
       _errorMessage = error.message;
     } on PostgrestException catch (error) {
+      _errorKind = classifyCloudPostgrestException(error);
       _errorMessage = error.message;
     } catch (error) {
       _errorMessage = error.toString();
@@ -1128,6 +1165,7 @@ class CloudController extends ChangeNotifier {
 
   void clearError() {
     _errorMessage = null;
+    _errorKind = null;
     notifyListeners();
   }
 

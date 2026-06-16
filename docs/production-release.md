@@ -81,7 +81,7 @@ Nie używaj projektu developerskiego `kkytxouitzsmzghzznva` jako produkcji.
      --project-ref <PRODUCTION_PROJECT_REF>
    ```
 
-7. W Supabase Auth włącz Google i Apple.
+7. W Supabase Auth włącz Google, Apple i Facebook.
 8. Dodaj redirect URL `shopmaps://login-callback`.
 9. W Google provider wpisz produkcyjny web client ID oraz iOS client ID.
 10. Pozostaw sprawdzanie nonce włączone.
@@ -114,7 +114,8 @@ Dokumentacja:
    ```
 
 5. Sprawdź aktualizację `google-services.json`, `GoogleService-Info.plist`,
-   `firebase_options.dart` oraz `firebase.json`.
+   `ios/Flutter/Secrets.xcconfig` oraz `firebase.json`. Te pliki pozostają
+   lokalne i nie mogą trafić do Git.
 6. Zapisz konfigurację produkcyjną:
 
    ```bash
@@ -142,6 +143,18 @@ Dokumentacja:
 2. Włącz Sign in with Apple i Push Notifications dla App ID.
 3. W Supabase Auth skonfiguruj produkcyjne dane Apple.
 4. Przetestuj pierwsze logowanie, ponowne logowanie i usuwanie konta.
+
+### Facebook
+
+1. Utwórz aplikację na Meta for Developers i dodaj Facebook Login.
+2. Włącz uprawnienia `email` oraz `public_profile`.
+3. Dodaj callback Supabase
+   `https://<PRODUCTION_PROJECT_REF>.supabase.co/auth/v1/callback` jako
+   poprawny OAuth redirect URI.
+4. W Supabase Auth skonfiguruj App ID i App Secret Facebooka. App Secret nie
+   może trafić do aplikacji ani Git.
+5. Uzupełnij wymagane dane, politykę prywatności i przełącz aplikację Meta z
+   trybu development na live.
 
 ## 6. Skonfiguruj podpisywanie Androida
 
@@ -192,6 +205,7 @@ Sprawdź konfigurację:
 
 ```bash
 scripts/use-firebase-environment.sh prod
+scripts/check-secrets.sh
 dart run tool/validate_production_config.dart config/supabase.prod.json
 ```
 

@@ -226,26 +226,11 @@ class GeoapifyAddressSuggestion {
   final String countryCode;
   final double latitude;
   final double longitude;
-
-  Map<String, dynamic> toPublishJson(String storeName) {
-    return {
-      'provider': 'geoapify',
-      'provider_place_id': providerPlaceId,
-      'store_name': storeName.trim(),
-      'formatted_address': formattedAddress,
-      'street': street,
-      'house_number': houseNumber,
-      'postcode': postcode,
-      'city': city,
-      'country_code': countryCode,
-      'latitude': latitude,
-      'longitude': longitude,
-    };
-  }
 }
 
 class NearbyStoreSuggestion {
   const NearbyStoreSuggestion({
+    required this.storeLocationId,
     required this.name,
     required this.distanceMeters,
     required this.categories,
@@ -254,6 +239,7 @@ class NearbyStoreSuggestion {
 
   factory NearbyStoreSuggestion.fromJson(Map<String, dynamic> json) {
     return NearbyStoreSuggestion(
+      storeLocationId: json['store_location_id'].toString(),
       name: json['name'].toString(),
       distanceMeters: (json['distance_meters'] as num?)?.round() ?? 0,
       categories: (json['categories'] as List<dynamic>? ?? const [])
@@ -263,6 +249,17 @@ class NearbyStoreSuggestion {
     );
   }
 
+  factory NearbyStoreSuggestion.fromLocation(CloudStoreLocation location) {
+    return NearbyStoreSuggestion(
+      storeLocationId: location.id,
+      name: location.storeName,
+      distanceMeters: 0,
+      categories: const [],
+      address: location.toAddressSuggestion(),
+    );
+  }
+
+  final String storeLocationId;
   final String name;
   final int distanceMeters;
   final List<String> categories;

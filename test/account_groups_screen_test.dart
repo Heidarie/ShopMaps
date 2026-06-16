@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,6 +64,23 @@ class _LoadingProfileCloudController extends CloudController {
 
   @override
   bool get isProfileLoading => true;
+}
+
+class _SignedOutCloudController extends CloudController {
+  _SignedOutCloudController() : super(null);
+
+  bool facebookSignInRequested = false;
+
+  @override
+  bool get isConfigured => true;
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<void> signInWithFacebook() async {
+    facebookSignInRequested = true;
+  }
 }
 
 class _DeletableCloudController extends CloudController {
@@ -194,8 +212,84 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  tearDown(() {
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   test('signed-out page has the Polish Logowanie title', () {
     expect(CloudLocalizations('pl').text('signIn'), 'Logowanie');
+  });
+
+  testWidgets('Android login shows Facebook and Google but hides Apple', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final cloudController = _SignedOutCloudController();
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        AccountGroupsScreen(
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kontynuuj z Facebookiem'), findsOneWidget);
+    expect(find.text('Kontynuuj z Google'), findsOneWidget);
+    expect(find.text('Kontynuuj z Apple'), findsNothing);
+
+    await tester.tap(find.text('Kontynuuj z Facebookiem'));
+    expect(cloudController.facebookSignInRequested, isTrue);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('iOS login shows Facebook, Google, and Apple', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    final cloudController = _SignedOutCloudController();
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        AccountGroupsScreen(
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kontynuuj z Facebookiem'), findsOneWidget);
+    expect(find.text('Kontynuuj z Google'), findsOneWidget);
+    expect(find.text('Kontynuuj z Apple'), findsOneWidget);
+    final appleButton = find.widgetWithText(FilledButton, 'Kontynuuj z Apple');
+    final googleButton = find.widgetWithText(
+      OutlinedButton,
+      'Kontynuuj z Google',
+    );
+    final facebookButton = find.widgetWithText(
+      OutlinedButton,
+      'Kontynuuj z Facebookiem',
+    );
+    expect(
+      tester.getSize(appleButton).height,
+      tester.getSize(googleButton).height,
+    );
+    expect(
+      tester.getSize(googleButton).height,
+      tester.getSize(facebookButton).height,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('shows only a loader while the signed-in profile is loading', (
