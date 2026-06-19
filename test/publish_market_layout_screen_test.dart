@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -264,6 +266,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Pułaskiego 10, Warszawa'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Lidl'),
+      120,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('Lidl'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Opublikuj mapę'));
@@ -281,6 +288,18 @@ void main() {
   testWidgets('requires mapping for an unknown local category before publish', (
     tester,
   ) async {
+    final storedData = jsonEncode({
+      'categories': ['Moja alejka'],
+      'marketLayouts': [],
+      'groceryLists': [],
+      'depositVouchers': [],
+      'itemCategoryMemory': [],
+      'frequentItemStats': [],
+      'removeCheckedShoppingItems': true,
+      'predefinedItemsSeedVersion': 0,
+      'onlineCategoryMappings': {'moja alejka': 'drinks'},
+    });
+    SharedPreferences.setMockInitialValues({'shopmaps_data_v1': storedData});
     final appController = AppController(LocalStore());
     await appController.load(localeLanguageCode: 'pl');
     addTearDown(appController.dispose);
@@ -316,6 +335,10 @@ void main() {
     await tester.tap(find.text('Napoje').last);
     await tester.pumpAndSettle();
 
+    expect(find.text('Dopasuj kategorie'), findsOneWidget);
+    expect(find.text('Moja alejka -> Napoje'), findsOneWidget);
+    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
+
     await tester.enterText(
       find.widgetWithText(TextField, 'Adres sklepu'),
       'Pulaskiego 10',
@@ -324,6 +347,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Pułaskiego 10, Warszawa'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Lidl'),
+      120,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('Lidl'));
     await tester.pumpAndSettle();
 

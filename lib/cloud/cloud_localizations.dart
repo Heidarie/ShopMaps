@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'cloud_controller.dart';
+import 'supabase_config.dart';
 
 class CloudLocalizations {
   CloudLocalizations(this.languageCode);
@@ -77,6 +78,7 @@ class CloudLocalizations {
           'Select a store from the verified store catalog.',
       'storeCountryMismatch':
           'Select a store from the country set in your profile.',
+      'genericOnlineError': 'Something went wrong. Try again.',
       'emptySharedLists': 'No shared grocery lists yet.',
       'emptySharedDeposits': 'No shared deposit codes yet.',
       'copiedToGroup': 'List copied to the group.',
@@ -211,6 +213,7 @@ class CloudLocalizations {
       'canonicalStoreRequired':
           'Wybierz sklep ze zweryfikowanego katalogu sklepów.',
       'storeCountryMismatch': 'Wybierz sklep z kraju ustawionego w profilu.',
+      'genericOnlineError': 'Coś poszło nie tak. Spróbuj ponownie.',
       'emptySharedLists': 'Brak współdzielonych list zakupów.',
       'emptySharedDeposits': 'Brak współdzielonych kodów kaucji.',
       'copiedToGroup': 'Lista została skopiowana do grupy.',
@@ -287,6 +290,7 @@ class CloudLocalizations {
       'notConfigured': 'Supabase ist in diesem Build nicht konfiguriert.',
       'contentRejected':
           'Der Inhalt enthält unzulässige oder beleidigende Wörter. Ändere ihn und versuche es erneut.',
+      'genericOnlineError': 'Etwas ist schiefgelaufen. Versuche es erneut.',
       'signIn': 'Anmeldung',
       'signInApple': 'Mit Apple fortfahren',
       'signInGoogle': 'Mit Google fortfahren',
@@ -337,6 +341,7 @@ class CloudLocalizations {
       'notConfigured': 'Supabase is niet geconfigureerd in deze build.',
       'contentRejected':
           'De inhoud bevat verboden of beledigende woorden. Pas deze aan en probeer het opnieuw.',
+      'genericOnlineError': 'Er is iets misgegaan. Probeer het opnieuw.',
       'signIn': 'Inloggen',
       'signInApple': 'Doorgaan met Apple',
       'signInGoogle': 'Doorgaan met Google',
@@ -387,6 +392,7 @@ class CloudLocalizations {
       'notConfigured': 'Supabase no está configurado en esta versión.',
       'contentRejected':
           'El contenido contiene palabras prohibidas u ofensivas. Cámbialo e inténtalo de nuevo.',
+      'genericOnlineError': 'Algo salió mal. Inténtalo de nuevo.',
       'signIn': 'Iniciar sesión',
       'signInApple': 'Continuar con Apple',
       'signInGoogle': 'Continuar con Google',
@@ -438,6 +444,7 @@ class CloudLocalizations {
       'notConfigured': "Supabase n'est pas configuré dans cette version.",
       'contentRejected':
           'Le contenu contient des mots interdits ou offensants. Modifiez-le et réessayez.',
+      'genericOnlineError': 'Une erreur est survenue. Réessayez.',
       'signIn': 'Connexion',
       'signInApple': 'Continuer avec Apple',
       'signInGoogle': 'Continuer avec Google',
@@ -488,6 +495,7 @@ class CloudLocalizations {
       'notConfigured': 'Supabase не налаштовано в цій збірці.',
       'contentRejected':
           'Вміст містить заборонені або образливі слова. Змініть його та спробуйте ще раз.',
+      'genericOnlineError': 'Щось пішло не так. Спробуйте ще раз.',
       'signIn': 'Вхід',
       'signInApple': 'Продовжити з Apple',
       'signInGoogle': 'Продовжити з Google',
@@ -538,6 +546,7 @@ class CloudLocalizations {
       'notConfigured': 'Supabase non è configurato in questa build.',
       'contentRejected':
           'Il contenuto contiene parole vietate o offensive. Modificalo e riprova.',
+      'genericOnlineError': 'Qualcosa è andato storto. Riprova.',
       'signIn': 'Accesso',
       'signInApple': 'Continua con Apple',
       'signInGoogle': 'Continua con Google',
@@ -589,6 +598,7 @@ class CloudLocalizations {
       'notConfigured': 'O Supabase não está configurado nesta versão.',
       'contentRejected':
           'O conteúdo contém palavras proibidas ou ofensivas. Altere-o e tente novamente.',
+      'genericOnlineError': 'Algo correu mal. Tente novamente.',
       'signIn': 'Iniciar sessão',
       'signInApple': 'Continuar com Apple',
       'signInGoogle': 'Continuar com Google',
@@ -745,7 +755,7 @@ class CloudLocalizations {
         countryCode.toUpperCase();
   }
 
-  String? errorMessage(CloudController controller) {
+  String? errorMessage(CloudController controller, {bool? showRawDetails}) {
     if (controller.errorKind == CloudErrorKind.contentRejected) {
       return text('contentRejected');
     }
@@ -755,6 +765,13 @@ class CloudLocalizations {
     if (controller.errorKind == CloudErrorKind.storeCountryMismatch) {
       return text('storeCountryMismatch');
     }
-    return controller.errorMessage;
+    final rawMessage = controller.errorMessage;
+    if (rawMessage == null) {
+      return null;
+    }
+    if (showRawDetails ?? !SupabaseConfig.isProduction) {
+      return rawMessage;
+    }
+    return text('genericOnlineError');
   }
 }

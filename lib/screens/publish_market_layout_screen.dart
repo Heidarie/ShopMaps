@@ -45,6 +45,7 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   bool _didLoadExistingNearbyStores = false;
   bool _didInitializeCategoryMappings = false;
   Map<String, String?> _categoryMappings = const {};
+  List<String> _manualCategoryMappingCategories = const [];
 
   @override
   void initState() {
@@ -64,10 +65,15 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     super.didChangeDependencies();
     if (!_didInitializeCategoryMappings) {
       _didInitializeCategoryMappings = true;
-      _categoryMappings = widget.controller.resolveOnlineCategoryMappings(
+      final resolvedMappings = widget.controller.resolveOnlineCategoryMappings(
         widget.layout.categoryOrder,
         languageCode: Localizations.localeOf(context).languageCode,
       );
+      _categoryMappings = resolvedMappings;
+      _manualCategoryMappingCategories = resolvedMappings.entries
+          .where((entry) => entry.value == null)
+          .map((entry) => entry.key)
+          .toList();
     }
 
     final address = _selectedAddress;
@@ -105,7 +111,7 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_hasUnmappedCategories) ...[
+              if (_hasManualCategoryMappings) ...[
                 _buildCategoryMappingSection(cloudL10n),
                 const SizedBox(height: 12),
               ],
@@ -271,10 +277,6 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
 
   Widget _buildCategoryMappingSection(CloudLocalizations l10n) {
     final languageCode = Localizations.localeOf(context).languageCode;
-    final missingCategories = _categoryMappings.entries
-        .where((entry) => entry.value == null)
-        .map((entry) => entry.key)
-        .toList();
 
     return Card(
       child: Padding(
@@ -289,13 +291,17 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
             const SizedBox(height: 6),
             Text(l10n.text('matchStoreMapCategoriesDescription')),
             const SizedBox(height: 12),
-            for (final localCategory in missingCategories) ...[
+            for (final localCategory in _manualCategoryMappingCategories) ...[
               DropdownButtonFormField<String>(
                 initialValue: _categoryMappings[localCategory],
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: localCategory,
-                  helperText: l10n.text('selectOnlineCategory'),
+                  helperText: _categoryMappingHelperText(
+                    l10n: l10n,
+                    languageCode: languageCode,
+                    localCategory: localCategory,
+                  ),
                 ),
                 items: OnlineCategories.all.map((category) {
                   return DropdownMenuItem<String>(
@@ -327,6 +333,18 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
       return '$distanceMeters m';
     }
     return '${(distanceMeters / 1000).toStringAsFixed(1)} km';
+  }
+
+  String _categoryMappingHelperText({
+    required CloudLocalizations l10n,
+    required String languageCode,
+    required String localCategory,
+  }) {
+    final selectedId = _categoryMappings[localCategory];
+    if (selectedId == null) {
+      return l10n.text('selectOnlineCategory');
+    }
+    return '$localCategory -> ${OnlineCategories.label(selectedId, languageCode)}';
   }
 
   void _scheduleAddressSearch(String value) {
@@ -417,7 +435,6 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     setState(() {
       _isPublishing = true;
     });
-    await widget.controller.rememberOnlineCategoryMappings(selectedMappings);
     final result = await widget.cloudController.publishMarketLayout(
       layout: widget.layout,
       store: store,
@@ -449,9 +466,8 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     widget.cloudController.clearError();
   }
 
-  bool get _hasUnmappedCategories => _categoryMappings.values.any(
-    (onlineCategoryId) => onlineCategoryId == null,
-  );
+  bool get _hasManualCategoryMappings =>
+      _manualCategoryMappingCategories.isNotEmpty;
 
   bool get _allCategoriesMapped => _categoryMappings.values.every(
     (onlineCategoryId) => onlineCategoryId != null,

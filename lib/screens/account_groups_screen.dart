@@ -431,13 +431,15 @@ class _SignedOutContent extends StatelessWidget {
           icon: const Icon(Icons.g_mobiledata_rounded),
           label: Text(l10n.text('signInGoogle')),
         ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          style: buttonStyle,
-          onPressed: controller.isBusy ? null : controller.signInWithFacebook,
-          icon: const Icon(Icons.facebook_rounded),
-          label: Text(l10n.text('signInFacebook')),
-        ),
+        if (controller.isFacebookSignInEnabled) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            style: buttonStyle,
+            onPressed: controller.isBusy ? null : controller.signInWithFacebook,
+            icon: const Icon(Icons.facebook_rounded),
+            label: Text(l10n.text('signInFacebook')),
+          ),
+        ],
       ],
     );
   }

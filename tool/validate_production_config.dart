@@ -13,6 +13,7 @@ const _requiredKeys = {
   'SUPABASE_PUBLISHABLE_KEY',
   'GOOGLE_WEB_CLIENT_ID',
   'GOOGLE_IOS_CLIENT_ID',
+  'FACEBOOK_SSO_ENABLED',
   'PUSH_NOTIFICATIONS_ENABLED',
   'FIREBASE_PROJECT_ID',
   'PRIVACY_POLICY_URL',
@@ -69,6 +70,11 @@ void main(List<String> arguments) {
 
   if (config['APP_ENV'] != 'production') {
     _fail('APP_ENV must equal "production".');
+  }
+  for (final key in ['FACEBOOK_SSO_ENABLED', 'PUSH_NOTIFICATIONS_ENABLED']) {
+    if (config[key] is! bool) {
+      _fail('$key must be a boolean.');
+    }
   }
   if (config['PUSH_NOTIFICATIONS_ENABLED'] != true) {
     _fail('PUSH_NOTIFICATIONS_ENABLED must be true for production.');

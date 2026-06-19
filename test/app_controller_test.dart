@@ -262,8 +262,20 @@ void main() {
   });
 
   test(
-    'online category mappings resolve aliases and persist custom choices',
+    'online category publishing ignores persisted custom mappings',
     () async {
+      final storedData = jsonEncode({
+        'categories': ['Napoje', 'Moja alejka'],
+        'marketLayouts': [],
+        'groceryLists': [],
+        'depositVouchers': [],
+        'itemCategoryMemory': [],
+        'frequentItemStats': [],
+        'removeCheckedShoppingItems': true,
+        'predefinedItemsSeedVersion': 0,
+        'onlineCategoryMappings': {'moja alejka': 'snacks'},
+      });
+      SharedPreferences.setMockInitialValues({'shopmaps_data_v1': storedData});
       final controller = AppController(LocalStore());
       await controller.load(localeLanguageCode: 'pl');
 
@@ -275,28 +287,22 @@ void main() {
         {'Napoje': 'drinks', 'Moja alejka': null},
       );
 
-      await controller.rememberOnlineCategoryMappings({
-        'Moja alejka': 'snacks',
-      });
-
       expect(
         controller.encodeOnlineCategoryOrder(
           ['Moja alejka', 'Napoje'],
           selectedMappings: const {},
           languageCode: 'pl',
         ),
-        ['snacks', 'drinks'],
+        isNull,
       );
 
-      final reloadedController = AppController(LocalStore());
-      await reloadedController.load(localeLanguageCode: 'pl');
-
       expect(
-        reloadedController.resolveOnlineCategoryId(
-          'Moja alejka',
+        controller.encodeOnlineCategoryOrder(
+          ['Moja alejka', 'Napoje'],
+          selectedMappings: const {'Moja alejka': 'snacks'},
           languageCode: 'pl',
         ),
-        'snacks',
+        ['snacks', 'drinks'],
       );
     },
   );

@@ -141,8 +141,12 @@ Dokumentacja:
 
 1. Dołącz do Apple Developer Program.
 2. Włącz Sign in with Apple i Push Notifications dla App ID.
-3. W Supabase Auth skonfiguruj produkcyjne dane Apple.
-4. Przetestuj pierwsze logowanie, ponowne logowanie i usuwanie konta.
+3. W Xcode upewnij się, że Runner ma capability `Sign in with Apple`.
+4. W Supabase Auth skonfiguruj Apple provider i dodaj natywny Bundle ID
+   `com.dawidogly.shopMaps`.
+5. Jeżeli używasz także web/OAuth fallbacku, skonfiguruj Services ID i callback
+   `https://<PRODUCTION_PROJECT_REF>.supabase.co/auth/v1/callback`.
+6. Przetestuj pierwsze logowanie, ponowne logowanie i usuwanie konta.
 
 ### Facebook
 
@@ -153,7 +157,9 @@ Dokumentacja:
    poprawny OAuth redirect URI.
 4. W Supabase Auth skonfiguruj App ID i App Secret Facebooka. App Secret nie
    może trafić do aplikacji ani Git.
-5. Uzupełnij wymagane dane, politykę prywatności i przełącz aplikację Meta z
+5. Zostaw `"FACEBOOK_SSO_ENABLED": false` w `config/supabase.prod.json`, dopóki
+   provider nie jest gotowy do publicznego użycia. Po włączeniu ustaw `true`.
+6. Uzupełnij wymagane dane, politykę prywatności i przełącz aplikację Meta z
    trybu development na live.
 
 ## 6. Skonfiguruj podpisywanie Androida

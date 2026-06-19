@@ -1,3 +1,9 @@
+class SsoProviderSettings {
+  const SsoProviderSettings({required this.isEnabled});
+
+  final bool isEnabled;
+}
+
 class SupabaseConfig {
   const SupabaseConfig._();
 
@@ -14,6 +20,9 @@ class SupabaseConfig {
   );
   static const googleIosClientId = String.fromEnvironment(
     'GOOGLE_IOS_CLIENT_ID',
+  );
+  static const facebookSso = SsoProviderSettings(
+    isEnabled: bool.fromEnvironment('FACEBOOK_SSO_ENABLED'),
   );
   static const pushNotificationsEnabled = bool.fromEnvironment(
     'PUSH_NOTIFICATIONS_ENABLED',

@@ -125,12 +125,16 @@ class _ProfileSetupCloudController extends CloudController {
 }
 
 class _SignedOutCloudController extends CloudController {
-  _SignedOutCloudController() : super(null);
+  _SignedOutCloudController({this.facebookSignInEnabled = false}) : super(null);
 
   bool facebookSignInRequested = false;
+  final bool facebookSignInEnabled;
 
   @override
   bool get isConfigured => true;
+
+  @override
+  bool get isFacebookSignInEnabled => facebookSignInEnabled;
 
   @override
   Future<void> refresh() async {}
@@ -280,11 +284,40 @@ void main() {
     expect(CloudLocalizations('pl').text('signIn'), 'Logowanie');
   });
 
-  testWidgets('Android login shows Facebook and Google but hides Apple', (
+  testWidgets('Android login hides disabled Facebook and Apple', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     final cloudController = _SignedOutCloudController();
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        AccountGroupsScreen(
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kontynuuj z Facebookiem'), findsNothing);
+    expect(find.text('Kontynuuj z Google'), findsOneWidget);
+    expect(find.text('Kontynuuj z Apple'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('Android login shows enabled Facebook and handles tap', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final cloudController = _SignedOutCloudController(
+      facebookSignInEnabled: true,
+    );
     final appController = AppController(LocalStore());
 
     await tester.pumpWidget(
@@ -310,9 +343,13 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('iOS login shows Facebook, Google, and Apple', (tester) async {
+  testWidgets('iOS login shows enabled Facebook, Google, and Apple', (
+    tester,
+  ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    final cloudController = _SignedOutCloudController();
+    final cloudController = _SignedOutCloudController(
+      facebookSignInEnabled: true,
+    );
     final appController = AppController(LocalStore());
 
     await tester.pumpWidget(

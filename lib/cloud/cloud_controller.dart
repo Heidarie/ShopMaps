@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models.dart';
@@ -79,6 +80,7 @@ class CloudController extends ChangeNotifier {
   bool get isConfigured => _client != null;
   bool get isSignedIn => _client?.auth.currentUser != null;
   bool get isBusy => _pendingOperations > 0;
+  bool get isFacebookSignInEnabled => SupabaseConfig.facebookSso.isEnabled;
   bool get isProfileLoading {
     final userId = _client?.auth.currentUser?.id;
     return userId != null && _resolvedProfileUserId != userId;
@@ -173,12 +175,26 @@ class CloudController extends ChangeNotifier {
     return _signIn(OAuthProvider.google);
   }
 
-  Future<void> signInWithApple() => _signIn(OAuthProvider.apple);
+  Future<void> signInWithApple() {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      return _signInWithNativeApple();
+    }
+    return _signIn(OAuthProvider.apple);
+  }
 
-  Future<void> signInWithFacebook() => _signIn(
-    OAuthProvider.facebook,
-    mobileLaunchMode: LaunchMode.externalApplication,
-  );
+  Future<void> signInWithFacebook() {
+    if (!isFacebookSignInEnabled) {
+      return _run(() async {
+        throw const AuthException(
+          'Facebook sign-in is disabled in this build.',
+        );
+      });
+    }
+    return _signIn(
+      OAuthProvider.facebook,
+      mobileLaunchMode: LaunchMode.externalApplication,
+    );
+  }
 
   Future<void> _signIn(
     OAuthProvider provider, {
@@ -196,6 +212,37 @@ class CloudController extends ChangeNotifier {
         authScreenLaunchMode: kIsWeb
             ? LaunchMode.platformDefault
             : mobileLaunchMode,
+      );
+    });
+  }
+
+  Future<void> _signInWithNativeApple() async {
+    final client = _client;
+    if (client == null) {
+      return;
+    }
+
+    await _run(() async {
+      final rawNonce = client.auth.generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw const AuthException(
+          'Apple sign-in did not return an identity token.',
+        );
+      }
+
+      await client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
       );
     });
   }
@@ -1200,6 +1247,12 @@ class CloudController extends ChangeNotifier {
 
     try {
       await action();
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code != AuthorizationErrorCode.canceled) {
+        _errorMessage = error.message;
+      }
+    } on SignInWithAppleException catch (error) {
+      _errorMessage = error.toString();
     } on GoogleSignInException catch (error) {
       if (error.code != GoogleSignInExceptionCode.canceled) {
         _errorMessage =

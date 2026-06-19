@@ -91,7 +91,9 @@ that leaked-password protection is disabled.
 
 ## Configure authentication
 
-Enable Apple, Google, and Facebook in Supabase Authentication providers.
+Enable Apple and Google in Supabase Authentication providers. Facebook can be
+configured ahead of time, but the application hides and blocks Facebook Sign-In
+unless `FACEBOOK_SSO_ENABLED` is set to `true` in the build configuration.
 
 Add this redirect URL to the Supabase Auth redirect allow list:
 
@@ -147,6 +149,21 @@ The iOS and Android projects already register this deep link.
 Provider-specific credentials still need to be configured in Apple Developer,
 Google Cloud, and the Supabase dashboard.
 
+## Apple Sign-In
+
+ShopMaps uses native Apple Sign-In on iOS and exchanges the Apple identity token
+with Supabase via `signInWithIdToken`. The Runner target must have the
+`Sign in with Apple` capability enabled, and Supabase Authentication > Providers
+> Apple must include the native app bundle ID:
+
+```text
+com.dawidogly.shopMaps
+```
+
+If Apple is also configured for web OAuth fallback, keep the Services ID,
+domain, and return URL configured in Apple Developer and Supabase. The native
+iOS flow should not open the browser.
+
 ## Facebook Sign-In
 
 1. Create a Facebook app at <https://developers.facebook.com>.
@@ -163,6 +180,9 @@ Google Cloud, and the Supabase dashboard.
    Facebook App ID and App Secret there. Never add the App Secret to the
    Flutter application.
 5. Keep `shopmaps://login-callback` in the Supabase redirect allow list.
+6. Set `"FACEBOOK_SSO_ENABLED": true` in the app configuration only when the
+   provider is ready to be exposed. Keep it `false` to hide and block Facebook
+   Sign-In.
 
 Facebook apps in development mode only allow administrators, developers, and
 testers to sign in. Complete Meta's required app information and switch the app

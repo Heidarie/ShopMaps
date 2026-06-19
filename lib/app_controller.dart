@@ -662,15 +662,19 @@ class AppController extends ChangeNotifier {
   String? resolveOnlineCategoryId(
     String localCategory, {
     required String languageCode,
+    bool useRememberedMappings = false,
   }) {
     final cleaned = localCategory.trim();
     if (cleaned.isEmpty) {
       return null;
     }
 
-    final mappedId = _data.onlineCategoryMappings[normalizeLatinText(cleaned)];
-    if (mappedId != null && OnlineCategories.isId(mappedId)) {
-      return mappedId;
+    if (useRememberedMappings) {
+      final mappedId =
+          _data.onlineCategoryMappings[normalizeLatinText(cleaned)];
+      if (mappedId != null && OnlineCategories.isId(mappedId)) {
+        return mappedId;
+      }
     }
 
     return OnlineCategories.idForLabelOrAlias(
@@ -682,10 +686,15 @@ class AppController extends ChangeNotifier {
   Map<String, String?> resolveOnlineCategoryMappings(
     Iterable<String> localCategories, {
     required String languageCode,
+    bool useRememberedMappings = false,
   }) {
     return {
       for (final category in _canonicalCategoryList(localCategories.toList()))
-        category: resolveOnlineCategoryId(category, languageCode: languageCode),
+        category: resolveOnlineCategoryId(
+          category,
+          languageCode: languageCode,
+          useRememberedMappings: useRememberedMappings,
+        ),
     };
   }
 
@@ -693,6 +702,7 @@ class AppController extends ChangeNotifier {
     List<String> localCategoryOrder, {
     required Map<String, String> selectedMappings,
     required String languageCode,
+    bool useRememberedMappings = false,
   }) {
     final ids = <String>[];
 
@@ -701,7 +711,11 @@ class AppController extends ChangeNotifier {
       final selectedId = selectedMappings[category] ?? selectedMappings[key];
       final resolvedId =
           selectedId ??
-          resolveOnlineCategoryId(category, languageCode: languageCode);
+          resolveOnlineCategoryId(
+            category,
+            languageCode: languageCode,
+            useRememberedMappings: useRememberedMappings,
+          );
       if (resolvedId == null || !OnlineCategories.isId(resolvedId)) {
         return null;
       }
@@ -709,32 +723,6 @@ class AppController extends ChangeNotifier {
     }
 
     return OnlineCategories.canonicalizeOrder(ids);
-  }
-
-  Future<void> rememberOnlineCategoryMappings(
-    Map<String, String> mappings,
-  ) async {
-    final nextMappings = Map<String, String>.from(_data.onlineCategoryMappings);
-    var changed = false;
-
-    mappings.forEach((localCategory, onlineCategoryId) {
-      final key = normalizeLatinText(localCategory);
-      if (key.isEmpty || !OnlineCategories.isId(onlineCategoryId)) {
-        return;
-      }
-      if (nextMappings[key] != onlineCategoryId) {
-        nextMappings[key] = onlineCategoryId;
-        changed = true;
-      }
-    });
-
-    if (!changed) {
-      return;
-    }
-
-    _data = _data.copyWith(onlineCategoryMappings: nextMappings);
-    notifyListeners();
-    await _persist();
   }
 
   Future<List<String>?> ensureLocalCategoriesForOnlineOrder(
