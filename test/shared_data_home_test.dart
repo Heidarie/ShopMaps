@@ -90,6 +90,7 @@ class _PublicMapsCloudController extends CloudController {
     id: 'current-user',
     displayName: 'Current',
     discriminator: 1,
+    countryCode: 'pl',
   );
 
   @override
@@ -100,7 +101,7 @@ class _PublicMapsCloudController extends CloudController {
         createdBy: 'far-user',
         creatorHandle: 'Far#0044',
         sourceLocalId: 'far-source-map',
-        categoryOrder: const ['Household'],
+        categoryOrder: const ['household_cleaning'],
         downloadCount: 30,
         location: const CloudStoreLocation(
           id: 'far-location-id',
@@ -122,7 +123,7 @@ class _PublicMapsCloudController extends CloudController {
       createdBy: 'popular-user',
       creatorHandle: 'Popular#0021',
       sourceLocalId: 'popular-source-map',
-      categoryOrder: const ['Drinks'],
+      categoryOrder: const ['drinks'],
       downloadCount: 25,
       location: const CloudStoreLocation(
         id: 'popular-location-id',
@@ -144,7 +145,7 @@ class _PublicMapsCloudController extends CloudController {
       createdBy: 'other-user',
       creatorHandle: 'Endriu#0042',
       sourceLocalId: 'source-map',
-      categoryOrder: const ['Bakery', 'Dairy'],
+      categoryOrder: const ['bakery', 'dairy_eggs'],
       downloadCount: 7,
       location: const CloudStoreLocation(
         id: 'location-id',
@@ -168,12 +169,12 @@ class _PublicMapsCloudController extends CloudController {
         creatorHandle: 'Long#0043',
         sourceLocalId: 'long-source-map',
         categoryOrder: const [
-          'Bakery',
-          'Dairy',
-          'Drinks',
-          'Frozen',
-          'Fruits',
-          'Vegetables',
+          'bakery',
+          'dairy_eggs',
+          'drinks',
+          'frozen',
+          'fruit',
+          'vegetables',
         ],
         downloadCount: 1,
         location: const CloudStoreLocation(
@@ -221,6 +222,7 @@ class _InvitedCloudController extends CloudController {
     id: 'current-user',
     displayName: 'Tester',
     discriminator: 8533,
+    countryCode: 'pl',
   );
 
   @override
@@ -409,8 +411,8 @@ void main() {
     expect(cloudController.recordedDownloads, 1);
     expect(appController.marketLayouts.single.name, 'Market Pułaskiego');
     expect(appController.marketLayouts.single.categoryOrder, [
-      'Bakery',
-      'Dairy',
+      'Piekarnia',
+      'Nabiał',
     ]);
     expect(
       appController.marketLayouts.single.sourceSharedMarketLayoutId,
@@ -457,17 +459,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Bakery  →  Dairy  →  Drinks  →  Frozen  →  ...'),
+      find.text('Piekarnia  →  Nabiał i jajka  →  Napoje  →  Mrożonki  →  ...'),
       findsOneWidget,
     );
-    expect(find.text('Fruits'), findsNothing);
-    expect(find.text('Vegetables'), findsNothing);
+    expect(find.text('Owoce'), findsNothing);
+    expect(find.text('Warzywa'), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('public-map-long-map')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Fruits'), findsOneWidget);
-    expect(find.text('Vegetables'), findsOneWidget);
+    expect(find.text('Owoce'), findsOneWidget);
+    expect(find.text('Warzywa'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Dodaj'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Wróć'), findsOneWidget);
 
@@ -483,12 +485,12 @@ void main() {
     expect(cloudController.recordedDownloads, 1);
     expect(appController.marketLayouts.single.name, 'Long Market');
     expect(appController.marketLayouts.single.categoryOrder, [
-      'Bakery',
-      'Dairy',
-      'Drinks',
-      'Frozen',
-      'Fruits',
-      'Vegetables',
+      'Piekarnia',
+      'Nabiał',
+      'Napoje',
+      'Mrożonki',
+      'Owoce',
+      'Warzywa',
     ]);
 
     await tester.pumpWidget(const SizedBox.shrink());

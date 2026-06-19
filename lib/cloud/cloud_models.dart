@@ -1,10 +1,12 @@
 import '../models.dart';
+import 'store_countries.dart';
 
 class CloudProfile {
   const CloudProfile({
     required this.id,
     required this.displayName,
     required this.discriminator,
+    this.countryCode,
   });
 
   factory CloudProfile.fromJson(Map<String, dynamic> json) {
@@ -12,15 +14,19 @@ class CloudProfile {
       id: json['id'].toString(),
       displayName: json['display_name'].toString(),
       discriminator: json['discriminator'] as int,
+      countryCode: json['country_code']?.toString(),
     );
   }
 
   final String id;
   final String displayName;
   final int discriminator;
+  final String? countryCode;
 
   String get handle =>
       '$displayName#${discriminator.toString().padLeft(4, '0')}';
+
+  bool get hasStoreCountry => StoreCountries.isSupported(countryCode);
 }
 
 class CloudGroup {
@@ -376,11 +382,11 @@ class SharedMarketLayout {
         : String.fromCharCode(nickname.runes.first).toUpperCase();
   }
 
-  MarketLayout toLocalMarketLayout() {
+  MarketLayout toLocalMarketLayout({required List<String> localCategoryOrder}) {
     return MarketLayout(
       id: createId(),
       name: location.storeName,
-      categoryOrder: categoryOrder,
+      categoryOrder: localCategoryOrder,
       sourceSharedMarketLayoutId: id,
     );
   }

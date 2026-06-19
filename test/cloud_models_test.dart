@@ -7,9 +7,23 @@ void main() {
       'id': 'user-id',
       'display_name': 'Endriu',
       'discriminator': 42,
+      'country_code': 'pl',
     });
 
     expect(profile.handle, 'Endriu#0042');
+    expect(profile.countryCode, 'pl');
+    expect(profile.hasStoreCountry, isTrue);
+  });
+
+  test('profile is incomplete when store country is unsupported', () {
+    final profile = CloudProfile.fromJson({
+      'id': 'user-id',
+      'display_name': 'Endriu',
+      'discriminator': 42,
+      'country_code': 'xx',
+    });
+
+    expect(profile.hasStoreCountry, isFalse);
   });
 
   test('public handle requires a name and exactly four digits', () {
@@ -65,7 +79,7 @@ void main() {
       'created_by': 'user-id',
       'creator_handle_snapshot': 'Endriu#0042',
       'source_local_id': 'local-map-id',
-      'category_order': ['Bakery', 'Dairy'],
+      'category_order': ['bakery', 'dairy_eggs'],
       'download_count': 12,
       'updated_at': '2026-06-11T12:00:00Z',
       'store_locations': {
@@ -87,12 +101,12 @@ void main() {
     expect(sharedMap.location.formattedAddress, contains('Pułaskiego'));
     expect(sharedMap.creatorInitial, 'E');
     expect(sharedMap.downloadCount, 12);
-    expect(sharedMap.toLocalMarketLayout().categoryOrder, ['Bakery', 'Dairy']);
-    expect(
-      sharedMap.toLocalMarketLayout().sourceSharedMarketLayoutId,
-      'shared-map-id',
+    final localMap = sharedMap.toLocalMarketLayout(
+      localCategoryOrder: const ['Piekarnia', 'Nabiał'],
     );
-    expect(sharedMap.toLocalMarketLayout().id, isNot('local-map-id'));
+    expect(localMap.categoryOrder, ['Piekarnia', 'Nabiał']);
+    expect(localMap.sourceSharedMarketLayoutId, 'shared-map-id');
+    expect(localMap.id, isNot('local-map-id'));
   });
 
   test(

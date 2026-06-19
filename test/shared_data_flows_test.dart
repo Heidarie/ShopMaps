@@ -193,10 +193,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.byType(SingleChildScrollView), findsOneWidget);
-    await tester.ensureVisible(
-      find.widgetWithText(FilledButton, 'Dodaj produkt'),
-    );
-    await tester.pumpAndSettle();
     expect(
       find.widgetWithText(FilledButton, 'Dodaj produkt').hitTestable(),
       findsOneWidget,

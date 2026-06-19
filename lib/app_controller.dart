@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'local_store.dart';
 import 'models.dart';
+import 'online_categories.dart';
 
 class CompletedShoppingItemRemoval {
   const CompletedShoppingItemRemoval({
@@ -518,6 +519,17 @@ class AppController extends ChangeNotifier {
         isFavorite: entry.isFavorite,
       );
     }).toList();
+    final updatedOnlineMappings = Map<String, String>.from(
+      _data.onlineCategoryMappings,
+    );
+    final currentMappingKey = normalizeLatinText(currentCanonical);
+    final targetMappingKey = normalizeLatinText(targetCategory);
+    final rememberedOnlineCategoryId = updatedOnlineMappings.remove(
+      currentMappingKey,
+    );
+    if (rememberedOnlineCategoryId != null && targetMappingKey.isNotEmpty) {
+      updatedOnlineMappings[targetMappingKey] = rememberedOnlineCategoryId;
+    }
 
     _data = _data.copyWith(
       categories: updatedCategories,
@@ -525,6 +537,7 @@ class AppController extends ChangeNotifier {
       groceryLists: updatedLists,
       itemCategoryMemory: updatedMemory,
       frequentItemStats: updatedFrequentItems,
+      onlineCategoryMappings: updatedOnlineMappings,
     );
     notifyListeners();
     await _persist();
@@ -556,6 +569,7 @@ class AppController extends ChangeNotifier {
       categories: updatedCategories,
       itemCategoryMemory: updatedMemory,
       frequentItemStats: updatedFrequentItems,
+      onlineCategoryMappings: _withoutOnlineCategoryMapping(canonicalCategory),
     );
     notifyListeners();
     await _persist();
@@ -604,6 +618,7 @@ class AppController extends ChangeNotifier {
       groceryLists: updatedLists,
       itemCategoryMemory: updatedMemory,
       frequentItemStats: updatedFrequentItems,
+      onlineCategoryMappings: _withoutOnlineCategoryMapping(canonicalCategory),
     );
     notifyListeners();
     await _persist();
@@ -642,6 +657,149 @@ class AppController extends ChangeNotifier {
     _data = _data.copyWith(categories: mergedCategories, marketLayouts: next);
     notifyListeners();
     await _persist();
+  }
+
+  String? resolveOnlineCategoryId(
+    String localCategory, {
+    required String languageCode,
+  }) {
+    final cleaned = localCategory.trim();
+    if (cleaned.isEmpty) {
+      return null;
+    }
+
+    final mappedId = _data.onlineCategoryMappings[normalizeLatinText(cleaned)];
+    if (mappedId != null && OnlineCategories.isId(mappedId)) {
+      return mappedId;
+    }
+
+    return OnlineCategories.idForLabelOrAlias(
+      cleaned,
+      languageCode: languageCode,
+    );
+  }
+
+  Map<String, String?> resolveOnlineCategoryMappings(
+    Iterable<String> localCategories, {
+    required String languageCode,
+  }) {
+    return {
+      for (final category in _canonicalCategoryList(localCategories.toList()))
+        category: resolveOnlineCategoryId(category, languageCode: languageCode),
+    };
+  }
+
+  List<String>? encodeOnlineCategoryOrder(
+    List<String> localCategoryOrder, {
+    required Map<String, String> selectedMappings,
+    required String languageCode,
+  }) {
+    final ids = <String>[];
+
+    for (final category in _canonicalCategoryList(localCategoryOrder)) {
+      final key = normalizeLatinText(category);
+      final selectedId = selectedMappings[category] ?? selectedMappings[key];
+      final resolvedId =
+          selectedId ??
+          resolveOnlineCategoryId(category, languageCode: languageCode);
+      if (resolvedId == null || !OnlineCategories.isId(resolvedId)) {
+        return null;
+      }
+      ids.add(resolvedId);
+    }
+
+    return OnlineCategories.canonicalizeOrder(ids);
+  }
+
+  Future<void> rememberOnlineCategoryMappings(
+    Map<String, String> mappings,
+  ) async {
+    final nextMappings = Map<String, String>.from(_data.onlineCategoryMappings);
+    var changed = false;
+
+    mappings.forEach((localCategory, onlineCategoryId) {
+      final key = normalizeLatinText(localCategory);
+      if (key.isEmpty || !OnlineCategories.isId(onlineCategoryId)) {
+        return;
+      }
+      if (nextMappings[key] != onlineCategoryId) {
+        nextMappings[key] = onlineCategoryId;
+        changed = true;
+      }
+    });
+
+    if (!changed) {
+      return;
+    }
+
+    _data = _data.copyWith(onlineCategoryMappings: nextMappings);
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<List<String>?> ensureLocalCategoriesForOnlineOrder(
+    List<String> onlineCategoryOrder, {
+    required String languageCode,
+  }) async {
+    final onlineIds = <String>[];
+    final seenOnlineIds = <String>{};
+    for (final rawValue in onlineCategoryOrder) {
+      final onlineId = OnlineCategories.isId(rawValue)
+          ? rawValue.trim()
+          : OnlineCategories.idForLabelOrAlias(rawValue) ??
+                OnlineCategories.otherId;
+      if (seenOnlineIds.add(onlineId)) {
+        onlineIds.add(onlineId);
+      }
+    }
+
+    final nextCategories = [..._data.categories];
+    final nextMappings = Map<String, String>.from(_data.onlineCategoryMappings);
+    final localOrder = <String>[];
+    var addedCategoryCount = 0;
+    var changed = false;
+
+    for (final onlineId in onlineIds) {
+      var localCategory = _findLocalCategoryForOnlineId(
+        onlineId,
+        categories: nextCategories,
+        mappings: nextMappings,
+      );
+      localCategory ??= OnlineCategories.label(onlineId, languageCode);
+
+      final existingLocalCategory = _findCategoryInList(
+        nextCategories,
+        localCategory,
+      );
+      if (existingLocalCategory != null) {
+        localCategory = existingLocalCategory;
+      } else {
+        if (_data.categories.length + addedCategoryCount >= maxCategoryCount) {
+          return null;
+        }
+        nextCategories.add(localCategory);
+        addedCategoryCount++;
+        changed = true;
+      }
+
+      final mappingKey = normalizeLatinText(localCategory);
+      if (mappingKey.isNotEmpty && nextMappings[mappingKey] != onlineId) {
+        nextMappings[mappingKey] = onlineId;
+        changed = true;
+      }
+      localOrder.add(localCategory);
+    }
+
+    if (changed) {
+      _data = _data.copyWith(
+        categories: nextCategories,
+        onlineCategoryMappings: nextMappings,
+      );
+      notifyListeners();
+      await _persist();
+    }
+
+    return localOrder;
   }
 
   Future<void> deleteMarketLayout(String marketLayoutId) async {
@@ -1202,6 +1360,31 @@ class AppController extends ChangeNotifier {
 
   String? _resolveCategory(String candidate) {
     return _findCategoryInList(_data.categories, candidate);
+  }
+
+  String? _findLocalCategoryForOnlineId(
+    String onlineCategoryId, {
+    required List<String> categories,
+    required Map<String, String> mappings,
+  }) {
+    for (final category in categories) {
+      if (mappings[normalizeLatinText(category)] == onlineCategoryId) {
+        return category;
+      }
+    }
+
+    for (final category in categories) {
+      if (OnlineCategories.idForLabelOrAlias(category) == onlineCategoryId) {
+        return category;
+      }
+    }
+
+    return null;
+  }
+
+  Map<String, String> _withoutOnlineCategoryMapping(String category) {
+    return Map<String, String>.from(_data.onlineCategoryMappings)
+      ..remove(normalizeLatinText(category));
   }
 
   List<RememberedItemCategory> _upsertItemCategoryMemory({

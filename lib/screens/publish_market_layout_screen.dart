@@ -3,20 +3,24 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app_controller.dart';
 import '../cloud/cloud_controller.dart';
 import '../cloud/cloud_localizations.dart';
 import '../cloud/cloud_models.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import '../online_categories.dart';
 
 class PublishMarketLayoutScreen extends StatefulWidget {
   const PublishMarketLayoutScreen({
     super.key,
+    required this.controller,
     required this.cloudController,
     required this.layout,
     this.existingMap,
   });
 
+  final AppController controller;
   final CloudController cloudController;
   final MarketLayout layout;
   final SharedMarketLayout? existingMap;
@@ -39,6 +43,8 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   String _lastRequestedQuery = '';
   String? _lastNearbyAddressId;
   bool _didLoadExistingNearbyStores = false;
+  bool _didInitializeCategoryMappings = false;
+  Map<String, String?> _categoryMappings = const {};
 
   @override
   void initState() {
@@ -56,6 +62,14 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_didInitializeCategoryMappings) {
+      _didInitializeCategoryMappings = true;
+      _categoryMappings = widget.controller.resolveOnlineCategoryMappings(
+        widget.layout.categoryOrder,
+        languageCode: Localizations.localeOf(context).languageCode,
+      );
+    }
+
     final address = _selectedAddress;
     if (!_didLoadExistingNearbyStores && address != null) {
       _didLoadExistingNearbyStores = true;
@@ -80,7 +94,8 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final cloudL10n = CloudLocalizations.of(context);
-    final canPublish = !_isPublishing && _selectedNearbyStore != null;
+    final canPublish =
+        !_isPublishing && _selectedNearbyStore != null && _allCategoriesMapped;
 
     return Scaffold(
       appBar: AppBar(title: Text(cloudL10n.text('shareStoreMap'))),
@@ -90,6 +105,10 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (_hasUnmappedCategories) ...[
+                _buildCategoryMappingSection(cloudL10n),
+                const SizedBox(height: 12),
+              ],
               TextField(
                 controller: _addressController,
                 inputFormatters: [LengthLimitingTextInputFormatter(200)],
@@ -250,6 +269,59 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     );
   }
 
+  Widget _buildCategoryMappingSection(CloudLocalizations l10n) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final missingCategories = _categoryMappings.entries
+        .where((entry) => entry.value == null)
+        .map((entry) => entry.key)
+        .toList();
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.text('matchStoreMapCategories'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(l10n.text('matchStoreMapCategoriesDescription')),
+            const SizedBox(height: 12),
+            for (final localCategory in missingCategories) ...[
+              DropdownButtonFormField<String>(
+                initialValue: _categoryMappings[localCategory],
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: localCategory,
+                  helperText: l10n.text('selectOnlineCategory'),
+                ),
+                items: OnlineCategories.all.map((category) {
+                  return DropdownMenuItem<String>(
+                    value: category.id,
+                    child: Text(
+                      OnlineCategories.label(category.id, languageCode),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _categoryMappings = {
+                      ..._categoryMappings,
+                      localCategory: value,
+                    };
+                  });
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   String _formatDistance(int distanceMeters) {
     if (distanceMeters < 1000) {
       return '$distanceMeters m';
@@ -325,12 +397,31 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     if (store == null) {
       return;
     }
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final selectedMappings = _selectedCategoryMappings();
+    final onlineCategoryOrder = widget.controller.encodeOnlineCategoryOrder(
+      widget.layout.categoryOrder,
+      selectedMappings: selectedMappings,
+      languageCode: languageCode,
+    );
+    if (onlineCategoryOrder == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            CloudLocalizations.of(context).text('categoryMappingRequired'),
+          ),
+        ),
+      );
+      return;
+    }
     setState(() {
       _isPublishing = true;
     });
+    await widget.controller.rememberOnlineCategoryMappings(selectedMappings);
     final result = await widget.cloudController.publishMarketLayout(
       layout: widget.layout,
       store: store,
+      onlineCategoryOrder: onlineCategoryOrder,
     );
     if (!mounted) {
       return;
@@ -356,5 +447,20 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
     widget.cloudController.clearError();
+  }
+
+  bool get _hasUnmappedCategories => _categoryMappings.values.any(
+    (onlineCategoryId) => onlineCategoryId == null,
+  );
+
+  bool get _allCategoriesMapped => _categoryMappings.values.every(
+    (onlineCategoryId) => onlineCategoryId != null,
+  );
+
+  Map<String, String> _selectedCategoryMappings() {
+    return {
+      for (final entry in _categoryMappings.entries)
+        if (entry.value != null) entry.key: entry.value!,
+    };
   }
 }

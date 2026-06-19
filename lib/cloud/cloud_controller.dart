@@ -7,11 +7,17 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models.dart';
+import '../online_categories.dart';
 import 'cloud_models.dart';
 import 'push_notification_service.dart';
+import 'store_countries.dart';
 import 'supabase_config.dart';
 
-enum CloudErrorKind { contentRejected, canonicalStoreRequired }
+enum CloudErrorKind {
+  contentRejected,
+  canonicalStoreRequired,
+  storeCountryMismatch,
+}
 
 CloudErrorKind? classifyCloudPostgrestException(PostgrestException error) {
   const marker = 'CONTENT_NOT_ALLOWED';
@@ -27,6 +33,13 @@ CloudErrorKind? classifyCloudPostgrestException(PostgrestException error) {
       error.details?.toString().contains(canonicalStoreMarker) == true ||
       error.hint?.contains(canonicalStoreMarker) == true) {
     return CloudErrorKind.canonicalStoreRequired;
+  }
+  const storeCountryMarker = 'STORE_COUNTRY_MISMATCH';
+  if (error.message.contains(storeCountryMarker) ||
+      error.code?.contains(storeCountryMarker) == true ||
+      error.details?.toString().contains(storeCountryMarker) == true ||
+      error.hint?.contains(storeCountryMarker) == true) {
+    return CloudErrorKind.storeCountryMismatch;
   }
   return null;
 }
@@ -81,7 +94,10 @@ class CloudController extends ChangeNotifier {
   List<SharedMarketLayout> get publicMarketLayouts => _publicMarketLayouts;
   Set<String> get sharedSourceLocalIds =>
       sharedLists.map((list) => list.sourceLocalId).whereType<String>().toSet();
-  bool get needsProfile => isSignedIn && !isProfileLoading && _profile == null;
+  bool get needsProfile =>
+      isSignedIn &&
+      !isProfileLoading &&
+      (_profile == null || !_profile!.hasStoreCountry);
 
   SharedGroceryList? getSharedListById(String id) {
     for (final list in _sharedLists) {
@@ -315,7 +331,7 @@ class CloudController extends ChangeNotifier {
           : CloudProfile.fromJson(profileJson);
       _resolvedProfileUserId = user.id;
 
-      if (_profile == null) {
+      if (_profile == null || !_profile!.hasStoreCountry) {
         _groups = const [];
         _invites = const [];
         _sharedLists = const [];
@@ -346,7 +362,10 @@ class CloudController extends ChangeNotifier {
     });
   }
 
-  Future<bool> claimHandle(String displayName) async {
+  Future<bool> completeProfile({
+    required String displayName,
+    required String countryCode,
+  }) async {
     final client = _client;
     if (client == null) {
       return false;
@@ -354,17 +373,36 @@ class CloudController extends ChangeNotifier {
 
     return _runWithResult(() async {
       await client.rpc<Object?>(
-        'claim_handle',
-        params: {'display_name': displayName.trim()},
+        'complete_profile',
+        params: {
+          'display_name': displayName.trim(),
+          'country_code': countryCode.toLowerCase(),
+        },
       );
       await refresh();
-      return _profile != null;
+      return _profile?.hasStoreCountry == true;
+    }, fallback: false);
+  }
+
+  Future<bool> updateProfileCountry(String countryCode) async {
+    final client = _client;
+    if (client == null || !isSignedIn) {
+      return false;
+    }
+
+    return _runWithResult(() async {
+      await client.rpc<Object?>(
+        'update_profile_country',
+        params: {'country_code': countryCode.toLowerCase()},
+      );
+      await refresh();
+      return _profile?.hasStoreCountry == true;
     }, fallback: false);
   }
 
   Future<bool> createGroup(String name) async {
     final client = _client;
-    if (client == null) {
+    if (client == null || _profile?.hasStoreCountry != true) {
       return false;
     }
 
@@ -510,7 +548,7 @@ class CloudController extends ChangeNotifier {
     required NearbyStoreSuggestion store,
   }) async {
     final client = _client;
-    if (client == null) {
+    if (client == null || !_ensureStoreMatchesProfileCountry(store)) {
       return false;
     }
 
@@ -720,7 +758,10 @@ class CloudController extends ChangeNotifier {
   }) async {
     final client = _client;
     final cleanedQuery = query.trim();
-    if (client == null || !isSignedIn || cleanedQuery.length < 3) {
+    if (client == null ||
+        !isSignedIn ||
+        _profile?.hasStoreCountry != true ||
+        cleanedQuery.length < 3) {
       return const [];
     }
 
@@ -753,7 +794,7 @@ class CloudController extends ChangeNotifier {
     required String languageCode,
   }) async {
     final client = _client;
-    if (client == null || !isSignedIn) {
+    if (client == null || !isSignedIn || _profile?.hasStoreCountry != true) {
       return const [];
     }
 
@@ -789,9 +830,19 @@ class CloudController extends ChangeNotifier {
   Future<PublishMarketLayoutResult> publishMarketLayout({
     required MarketLayout layout,
     required NearbyStoreSuggestion store,
+    required List<String> onlineCategoryOrder,
   }) async {
+    if (onlineCategoryOrder.any((id) => !OnlineCategories.isId(id))) {
+      return PublishMarketLayoutResult.failed;
+    }
+    final canonicalCategoryOrder = OnlineCategories.canonicalizeOrder(
+      onlineCategoryOrder,
+    );
     final client = _client;
-    if (client == null || !isSignedIn || store.storeLocationId.isEmpty) {
+    if (client == null ||
+        !isSignedIn ||
+        store.storeLocationId.isEmpty ||
+        !_ensureStoreMatchesProfileCountry(store)) {
       return PublishMarketLayoutResult.failed;
     }
 
@@ -801,7 +852,7 @@ class CloudController extends ChangeNotifier {
         params: {
           'store_location_id': store.storeLocationId,
           'source_local_id': layout.id,
-          'category_order': layout.categoryOrder,
+          'category_order': canonicalCategoryOrder,
         },
       );
       if (result == 'duplicate') {
@@ -878,7 +929,7 @@ class CloudController extends ChangeNotifier {
   }
 
   Future<void> refreshSharedData() async {
-    if (_client == null || !isSignedIn) {
+    if (_client == null || !isSignedIn || _profile?.hasStoreCountry != true) {
       return;
     }
     await _run(_loadAllSharedData);
@@ -886,7 +937,7 @@ class CloudController extends ChangeNotifier {
 
   Future<void> _loadAllSharedData() async {
     final client = _client;
-    if (client == null || !isSignedIn) {
+    if (client == null || !isSignedIn || _profile?.hasStoreCountry != true) {
       _sharedLists = const [];
       _sharedVouchers = const [];
       _publicMarketLayouts = const [];
@@ -951,6 +1002,21 @@ class CloudController extends ChangeNotifier {
         .toList();
     _hasLoadedSharedData = true;
     notifyListeners();
+  }
+
+  bool _ensureStoreMatchesProfileCountry(NearbyStoreSuggestion store) {
+    final countryCode = _profile?.countryCode?.toLowerCase();
+    if (!StoreCountries.isSupported(countryCode)) {
+      return false;
+    }
+    if (store.address.countryCode.toLowerCase() == countryCode) {
+      return true;
+    }
+
+    _errorKind = CloudErrorKind.storeCountryMismatch;
+    _errorMessage = 'STORE_COUNTRY_MISMATCH';
+    notifyListeners();
+    return false;
   }
 
   Future<void> _ensureRealtimeSubscription(String userId) async {

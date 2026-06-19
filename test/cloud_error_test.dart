@@ -37,4 +37,17 @@ void main() {
       CloudErrorKind.canonicalStoreRequired,
     );
   });
+
+  test('classifies the store country mismatch database error', () {
+    const error = PostgrestException(
+      message: 'STORE_COUNTRY_MISMATCH',
+      code: 'P0001',
+      details: 'STORE_COUNTRY_MISMATCH',
+    );
+
+    expect(
+      classifyCloudPostgrestException(error),
+      CloudErrorKind.storeCountryMismatch,
+    );
+  });
 }

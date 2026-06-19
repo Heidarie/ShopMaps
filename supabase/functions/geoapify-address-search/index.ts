@@ -15,6 +15,20 @@ const storeCategories = [
   "commercial.marketplace",
 ].join(",");
 
+const supportedStoreCountries = new Set([
+  "gb",
+  "pl",
+  "de",
+  "nl",
+  "es",
+  "fr",
+  "ua",
+  "it",
+  "pt",
+]);
+
+type SupabaseAdmin = ReturnType<typeof createClient>;
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -35,12 +49,22 @@ Deno.serve(async (request: Request) => {
       .trim()
       .toLowerCase()
       .slice(0, 2);
-
-    if (body.mode === "nearby_stores") {
-      return searchNearbyStores(body, language, apiKey);
+    const profileContext = await resolveProfileContext(request);
+    if ("response" in profileContext) {
+      return profileContext.response;
     }
 
-    return searchAddresses(body, language, apiKey);
+    if (body.mode === "nearby_stores") {
+      return searchNearbyStores(
+        body,
+        language,
+        apiKey,
+        profileContext.countryCode,
+        profileContext.admin,
+      );
+    }
+
+    return searchAddresses(body, language, apiKey, profileContext.countryCode);
   } catch {
     return jsonResponse({ error: "Invalid request" }, 400);
   }
@@ -50,6 +74,7 @@ async function searchAddresses(
   body: Record<string, unknown>,
   language: string,
   apiKey: string,
+  countryCode: string,
 ): Promise<Response> {
   const query = String(body.query ?? "").trim();
 
@@ -66,7 +91,7 @@ async function searchAddresses(
     url.searchParams.set("format", "json");
     url.searchParams.set("limit", "8");
     url.searchParams.set("lang", language || "en");
-    url.searchParams.set("bias", "countrycode:none");
+    url.searchParams.set("filter", `countrycode:${countryCode}`);
     url.searchParams.set("apiKey", apiKey);
 
     const geoapifyResponse = await fetch(url);
@@ -93,6 +118,9 @@ async function searchAddresses(
         longitude: Number(entry.lon),
       }))
       .filter((entry: Record<string, unknown>) =>
+        entry.country_code === countryCode
+      )
+      .filter((entry: Record<string, unknown>) =>
         Number.isFinite(entry.latitude) && Number.isFinite(entry.longitude)
       );
 
@@ -106,6 +134,8 @@ async function searchNearbyStores(
   body: Record<string, unknown>,
   language: string,
   apiKey: string,
+  countryCode: string,
+  admin: SupabaseAdmin,
 ): Promise<Response> {
   const latitude = Number(body.latitude);
   const longitude = Number(body.longitude);
@@ -189,20 +219,14 @@ async function searchNearbyStores(
         Number.isFinite(entry.longitude) &&
         Number.isFinite(entry.distance_meters)
       )
+      .filter((entry: Record<string, unknown>) =>
+        entry.country_code === countryCode
+      )
       .sort(
         (left: Record<string, unknown>, right: Record<string, unknown>) =>
           Number(left.distance_meters) - Number(right.distance_meters),
       );
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !serviceRoleKey) {
-      return jsonResponse({ error: "Store catalog is not configured" }, 503);
-    }
-
-    const admin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     const stores = [];
     for (const candidate of candidates) {
       const registered = await registerCanonicalStore(admin, candidate);
@@ -221,8 +245,66 @@ async function searchNearbyStores(
   }
 }
 
+async function resolveProfileContext(
+  request: Request,
+): Promise<
+  | { admin: SupabaseAdmin; countryCode: string }
+  | { response: Response }
+> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    return {
+      response: jsonResponse({ error: "Supabase is not configured" }, 503),
+    };
+  }
+
+  const userId = userIdFromAuthorization(request.headers.get("Authorization"));
+  if (!userId) {
+    return {
+      response: jsonResponse({ error: "Authentication required" }, 401),
+    };
+  }
+
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await admin
+    .from("profiles")
+    .select("country_code")
+    .eq("id", userId)
+    .single();
+  const countryCode = optionalString(data?.country_code)?.toLowerCase();
+  if (error || !countryCode || !supportedStoreCountries.has(countryCode)) {
+    return {
+      response: jsonResponse({ error: "Complete your profile first" }, 403),
+    };
+  }
+
+  return { admin, countryCode };
+}
+
+function userIdFromAuthorization(header: string | null): string | null {
+  const token = header?.replace(/^Bearer\s+/i, "").trim();
+  const payload = token?.split(".")[1];
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = payload
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    const claims = JSON.parse(atob(normalizedPayload));
+    return optionalString(claims.sub);
+  } catch {
+    return null;
+  }
+}
+
 async function registerCanonicalStore(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseAdmin,
   candidate: Record<string, unknown>,
 ): Promise<{ id: string; store_name: string } | null> {
   const storeName = trimTo(candidate.name, 100);

@@ -176,7 +176,7 @@ select throws_ok(
     select public.publish_market_layout(
       '00000000-0000-0000-0000-000000001099',
       'missing-catalog-store',
-      '["Food"]'::jsonb
+      '["dry_goods"]'::jsonb
     )
   $$,
   'P0001',
@@ -188,7 +188,7 @@ select is(
   public.publish_market_layout(
     '00000000-0000-0000-0000-000000001003',
     'canonical-layout',
-    '["Food"]'::jsonb
+    '["dry_goods"]'::jsonb
   ),
   'published',
   'public maps accept a canonical store id'

@@ -61,13 +61,15 @@ insert into public.profiles (
   id,
   display_name,
   display_name_normalized,
-  discriminator
+  discriminator,
+  country_code
 )
 values (
   '00000000-0000-0000-0000-000000000101',
   'Filter One',
   'filter one',
-  101
+  101,
+  'pl'
 );
 
 insert into public.spaces (id, name, created_by)
@@ -128,7 +130,7 @@ select set_config(
 );
 
 select throws_ok(
-  $$select public.claim_handle('K.u.r.w.4')$$,
+  $$select public.complete_profile('K.u.r.w.4', 'pl')$$,
   'P0001',
   'CONTENT_NOT_ALLOWED',
   'profile RPC rejects blocked display names'
@@ -298,7 +300,7 @@ select throws_ok(
       '00000000-0000-0000-0000-000000000101',
       'Filter One#0101',
       'blocked-category-layout',
-      '["Food", "K.u.r.w.4"]'::jsonb
+      '["other", "K.u.r.w.4"]'::jsonb
     )
   $$,
   'P0001',
@@ -424,7 +426,7 @@ values (
   '00000000-0000-0000-0000-000000000101',
   'K.u.r.w.4#0101',
   'legacy-snapshot-layout',
-  '["Food"]'::jsonb
+  '["other"]'::jsonb
 );
 
 select ok(

@@ -10,6 +10,7 @@ import '../cloud/cloud_models.dart';
 import '../device_location_service.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
+import '../online_categories.dart';
 import 'account_groups_screen.dart';
 import 'categories_configuration_screen.dart';
 import 'deposit_vouchers_screen.dart';
@@ -686,7 +687,7 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
               itemBuilder: (menuContext) => [
                 PopupMenuItem<String>(value: 'edit', child: Text(l10n.edit)),
                 if (widget.cloudController.isSignedIn &&
-                    widget.cloudController.profile != null)
+                    widget.cloudController.profile?.hasStoreCountry == true)
                   PopupMenuItem<String>(
                     value: 'publish',
                     child: Text(
@@ -722,6 +723,14 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
   Widget _buildPublicMaps(AppLocalizations l10n, CloudLocalizations cloudL10n) {
     if (!widget.cloudController.isSignedIn) {
       return Center(child: Text(cloudL10n.text('signInToBrowseStoreMaps')));
+    }
+    if (widget.cloudController.isProfileLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (widget.cloudController.profile?.hasStoreCountry != true) {
+      return Center(
+        child: Text(cloudL10n.text('completeProfileToBrowseStoreMaps')),
+      );
     }
 
     final normalizedSearch = normalizeLatinText(_publicSearch);
@@ -822,7 +831,7 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
                                 _publicMapPreviewItemLimit;
                             final previewItems = map.categoryOrder
                                 .take(_publicMapPreviewItemLimit)
-                                .map(l10n.categoryLabel);
+                                .map(_publicCategoryLabel);
                             return ListTile(
                               key: ValueKey('public-map-${map.id}'),
                               onTap: hasMoreItems
@@ -1009,7 +1018,9 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
                         radius: 14,
                         child: Text('${index + 1}'),
                       ),
-                      title: Text(l10n.categoryLabel(map.categoryOrder[index])),
+                      title: Text(
+                        _publicCategoryLabel(map.categoryOrder[index]),
+                      ),
                     ),
                   ),
                 ),
@@ -1157,6 +1168,7 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
       final published = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           builder: (_) => PublishMarketLayoutScreen(
+            controller: widget.controller,
             cloudController: widget.cloudController,
             layout: layout,
             existingMap: publicMap,
@@ -1184,7 +1196,24 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
     if (_isPublicMapInMyStores(map)) {
       return;
     }
-    await widget.controller.upsertMarketLayout(map.toLocalMarketLayout());
+    final localCategoryOrder = await widget.controller
+        .ensureLocalCategoriesForOnlineOrder(
+          map.categoryOrder,
+          languageCode: Localizations.localeOf(context).languageCode,
+        );
+    if (localCategoryOrder == null) {
+      if (!mounted) {
+        return;
+      }
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.maxCategoriesReached(maxCategoryCount))),
+      );
+      return;
+    }
+    await widget.controller.upsertMarketLayout(
+      map.toLocalMarketLayout(localCategoryOrder: localCategoryOrder),
+    );
     await widget.cloudController.recordMarketLayoutDownload(map.id);
     if (!mounted) {
       return;
@@ -1201,6 +1230,13 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
           layout.sourceSharedMarketLayoutId == map.id ||
           (widget.cloudController.isOwnPublicMap(map) &&
               layout.id == map.sourceLocalId),
+    );
+  }
+
+  String _publicCategoryLabel(String categoryId) {
+    return OnlineCategories.label(
+      categoryId,
+      Localizations.localeOf(context).languageCode,
     );
   }
 

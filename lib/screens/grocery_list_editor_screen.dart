@@ -197,150 +197,166 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                           child: Card(
                             clipBehavior: Clip.antiAlias,
-                            child: SingleChildScrollView(
-                              keyboardDismissBehavior:
-                                  ScrollViewKeyboardDismissBehavior.onDrag,
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  TextField(
-                                    controller: _itemController,
-                                    inputFormatters: [
-                                      LengthLimitingTextInputFormatter(
-                                        _maxInputChars,
-                                      ),
-                                    ],
-                                    decoration: InputDecoration(
-                                      labelText: l10n.itemName,
-                                    ),
-                                    onChanged: _onItemChanged,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    l10n.selectedCategory,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: ActionChip(
-                                      onPressed: _pickCategory,
-                                      avatar: Icon(
-                                        _selectedCategory == null
-                                            ? Icons.add_circle_outline
-                                            : Icons.category_outlined,
-                                        size: 18,
-                                      ),
-                                      label: Text(
-                                        _selectedCategory == null
-                                            ? l10n.addCategory
-                                            : l10n.categoryLabel(
-                                                _selectedCategory!,
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        l10n.quantity,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall,
-                                      ),
-                                      const Spacer(),
-                                      IconButton(
-                                        onPressed: _selectedQuantity > 1
-                                            ? () {
-                                                setState(() {
-                                                  _selectedQuantity -= 1;
-                                                });
-                                              }
-                                            : null,
-                                        icon: const Icon(
-                                          Icons.remove_circle_outline,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    keyboardDismissBehavior:
+                                        ScrollViewKeyboardDismissBehavior
+                                            .onDrag,
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        TextField(
+                                          controller: _itemController,
+                                          inputFormatters: [
+                                            LengthLimitingTextInputFormatter(
+                                              _maxInputChars,
+                                            ),
+                                          ],
+                                          decoration: InputDecoration(
+                                            labelText: l10n.itemName,
+                                          ),
+                                          onChanged: _onItemChanged,
                                         ),
-                                      ),
-                                      Text(
-                                        '$_selectedQuantity',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleMedium,
-                                      ),
-                                      IconButton(
-                                        onPressed: () {
-                                          setState(() {
-                                            _selectedQuantity += 1;
-                                          });
-                                        },
-                                        icon: const Icon(
-                                          Icons.add_circle_outline,
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          l10n.selectedCategory,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (_hints.isNotEmpty) ...[
-                                    Text(
-                                      l10n.itemHint,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: _hints
-                                          .map(
-                                            (hint) => ActionChip(
-                                              label: Text(
-                                                l10n.hintLabel(
-                                                  hint.itemName,
-                                                  hint.category,
-                                                ),
+                                        const SizedBox(height: 6),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: ActionChip(
+                                            onPressed: _pickCategory,
+                                            avatar: Icon(
+                                              _selectedCategory == null
+                                                  ? Icons.add_circle_outline
+                                                  : Icons.category_outlined,
+                                              size: 18,
+                                            ),
+                                            label: Text(
+                                              _selectedCategory == null
+                                                  ? l10n.addCategory
+                                                  : l10n.categoryLabel(
+                                                      _selectedCategory!,
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              l10n.quantity,
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall,
+                                            ),
+                                            const Spacer(),
+                                            IconButton(
+                                              onPressed: _selectedQuantity > 1
+                                                  ? () {
+                                                      setState(() {
+                                                        _selectedQuantity -= 1;
+                                                      });
+                                                    }
+                                                  : null,
+                                              icon: const Icon(
+                                                Icons.remove_circle_outline,
                                               ),
+                                            ),
+                                            Text(
+                                              '$_selectedQuantity',
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.titleMedium,
+                                            ),
+                                            IconButton(
                                               onPressed: () {
                                                 setState(() {
-                                                  _itemController.text =
-                                                      hint.itemName;
-                                                  _itemController.selection =
-                                                      TextSelection.collapsed(
-                                                        offset: _itemController
-                                                            .text
-                                                            .length,
-                                                      );
-                                                  _selectedCategory =
-                                                      hint.category;
-                                                  _hints = widget.controller
-                                                      .findItemHints(
-                                                        hint.itemName,
-                                                      );
+                                                  _selectedQuantity += 1;
                                                 });
                                               },
+                                              icon: const Icon(
+                                                Icons.add_circle_outline,
+                                              ),
                                             ),
-                                          )
-                                          .toList(),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (_hints.isNotEmpty) ...[
+                                          Text(
+                                            l10n.itemHint,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Wrap(
+                                            spacing: 8,
+                                            runSpacing: 8,
+                                            children: _hints
+                                                .map(
+                                                  (hint) => ActionChip(
+                                                    label: Text(
+                                                      l10n.hintLabel(
+                                                        hint.itemName,
+                                                        hint.category,
+                                                      ),
+                                                    ),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        _itemController.text =
+                                                            hint.itemName;
+                                                        _itemController
+                                                                .selection =
+                                                            TextSelection.collapsed(
+                                                              offset:
+                                                                  _itemController
+                                                                      .text
+                                                                      .length,
+                                                            );
+                                                        _selectedCategory =
+                                                            hint.category;
+                                                        _hints = widget
+                                                            .controller
+                                                            .findItemHints(
+                                                              hint.itemName,
+                                                            );
+                                                      });
+                                                    },
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                        ] else
+                                          Text(
+                                            l10n.noHints,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                          ),
+                                      ],
                                     ),
-                                  ] else
-                                    Text(
-                                      l10n.noHints,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  const SizedBox(height: 12),
-                                  FilledButton.icon(
+                                  ),
+                                ),
+                                const Divider(height: 1),
+                                Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: FilledButton.icon(
                                     onPressed: () => _addItem(groceryList.id),
                                     icon: const Icon(Icons.add),
                                     label: Text(l10n.addItem),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

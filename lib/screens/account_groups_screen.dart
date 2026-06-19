@@ -8,6 +8,7 @@ import '../app_controller.dart';
 import '../cloud/cloud_controller.dart';
 import '../cloud/cloud_localizations.dart';
 import '../cloud/cloud_models.dart';
+import '../cloud/store_countries.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
 import 'canonical_store_picker_screen.dart';
@@ -28,6 +29,7 @@ class AccountGroupsScreen extends StatefulWidget {
 
 class _AccountGroupsScreenState extends State<AccountGroupsScreen> {
   final _displayNameController = TextEditingController();
+  String? _selectedCountryCode;
 
   @override
   void initState() {
@@ -40,17 +42,103 @@ class _AccountGroupsScreenState extends State<AccountGroupsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _selectedCountryCode ??= StoreCountries.defaultForLanguageCode(
+      Localizations.localeOf(context).languageCode,
+    );
+  }
+
+  @override
   void dispose() {
     _displayNameController.dispose();
     super.dispose();
   }
 
-  Future<void> _claimHandle() async {
+  Future<void> _completeProfile() async {
+    final countryCode =
+        _selectedCountryCode ??
+        StoreCountries.defaultForLanguageCode(
+          Localizations.localeOf(context).languageCode,
+        );
+    if (!StoreCountries.isSupported(countryCode)) {
+      return;
+    }
+
+    final profile = widget.cloudController.profile;
+    if (profile != null) {
+      await widget.cloudController.updateProfileCountry(countryCode);
+      return;
+    }
+
     final name = _displayNameController.text.trim();
     if (name.length < 2) {
       return;
     }
-    await widget.cloudController.claimHandle(name);
+    await widget.cloudController.completeProfile(
+      displayName: name,
+      countryCode: countryCode,
+    );
+  }
+
+  Future<void> _changeCountry() async {
+    final cloudL10n = CloudLocalizations.of(context);
+    final currentCountry =
+        widget.cloudController.profile?.countryCode ??
+        StoreCountries.defaultForLanguageCode(
+          Localizations.localeOf(context).languageCode,
+        );
+    var selectedCountry = currentCountry;
+    final nextCountry = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(cloudL10n.text('changeStoreCountry')),
+          content: DropdownButtonFormField<String>(
+            initialValue: selectedCountry,
+            decoration: InputDecoration(
+              labelText: cloudL10n.text('storeCountry'),
+            ),
+            items: [
+              for (final country in StoreCountries.all)
+                DropdownMenuItem(
+                  value: country.code,
+                  child: Text(cloudL10n.countryName(country.code)),
+                ),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                setDialogState(() {
+                  selectedCountry = value;
+                });
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(AppLocalizations.of(context).cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, selectedCountry),
+              child: Text(cloudL10n.text('saveStoreCountry')),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (nextCountry == null || nextCountry == currentCountry) {
+      return;
+    }
+
+    final updated = await widget.cloudController.updateProfileCountry(
+      nextCountry,
+    );
+    if (updated && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cloudL10n.text('storeCountryUpdated'))),
+      );
+    }
   }
 
   Future<void> _createGroup() async {
@@ -142,13 +230,40 @@ class _AccountGroupsScreenState extends State<AccountGroupsScreen> {
                       height: 320,
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  else if (controller.needsProfile)
-                    _ProfileSetupCard(
-                      displayNameController: _displayNameController,
-                      onSubmit: _claimHandle,
-                    )
-                  else ...[
+                  else if (controller.needsProfile) ...[
+                    if (controller.profile == null)
+                      _ProfileNameSetupCard(
+                        displayNameController: _displayNameController,
+                        onSubmit: _completeProfile,
+                      )
+                    else
+                      _ProfileCard(controller: controller),
+                    const SizedBox(height: 8),
+                    _StoreCountrySetupCard(
+                      isNewProfile: controller.profile == null,
+                      selectedCountryCode:
+                          _selectedCountryCode ??
+                          StoreCountries.defaultForLanguageCode(
+                            Localizations.localeOf(context).languageCode,
+                          ),
+                      onCountryChanged: (value) {
+                        if (value == null) {
+                          return;
+                        }
+                        setState(() {
+                          _selectedCountryCode = value;
+                        });
+                      },
+                      onSubmit: _completeProfile,
+                    ),
+                  ] else ...[
                     _ProfileCard(controller: controller),
+                    const SizedBox(height: 8),
+                    _StoreCountryCard(
+                      profile: controller.profile!,
+                      isBusy: controller.isBusy,
+                      onChangeCountry: _changeCountry,
+                    ),
                     const SizedBox(height: 16),
                     if (controller.invites.isNotEmpty) ...[
                       Text(
@@ -333,8 +448,8 @@ class _SignedOutContent extends StatelessWidget {
           defaultTargetPlatform == TargetPlatform.macOS);
 }
 
-class _ProfileSetupCard extends StatelessWidget {
-  const _ProfileSetupCard({
+class _ProfileNameSetupCard extends StatelessWidget {
+  const _ProfileNameSetupCard({
     required this.displayNameController,
     required this.onSubmit,
   });
@@ -370,10 +485,62 @@ class _ProfileSetupCard extends StatelessWidget {
               decoration: InputDecoration(labelText: l10n.text('displayName')),
               onSubmitted: (_) => onSubmit(),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreCountrySetupCard extends StatelessWidget {
+  const _StoreCountrySetupCard({
+    required this.isNewProfile,
+    required this.selectedCountryCode,
+    required this.onCountryChanged,
+    required this.onSubmit,
+  });
+
+  final bool isNewProfile;
+  final String selectedCountryCode;
+  final ValueChanged<String?> onCountryChanged;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = CloudLocalizations.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.text('storeCountry'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: selectedCountryCode,
+              decoration: InputDecoration(
+                labelText: l10n.text('chooseStoreCountry'),
+              ),
+              items: [
+                for (final country in StoreCountries.all)
+                  DropdownMenuItem(
+                    value: country.code,
+                    child: Text(l10n.countryName(country.code)),
+                  ),
+              ],
+              onChanged: onCountryChanged,
+            ),
             const SizedBox(height: 8),
             FilledButton(
               onPressed: onSubmit,
-              child: Text(l10n.text('createProfile')),
+              child: Text(
+                isNewProfile
+                    ? l10n.text('createProfile')
+                    : l10n.text('saveStoreCountry'),
+              ),
             ),
           ],
         ),
@@ -390,25 +557,76 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = CloudLocalizations.of(context);
+    final profile = controller.profile!;
     return Card(
-      child: ListTile(
-        leading: const CircleAvatar(child: Icon(Icons.person_outline_rounded)),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(
+            child: Icon(Icons.person_outline_rounded),
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.text('signedInAs'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Text(
+                profile.handle,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          trailing: TextButton(
+            onPressed: controller.isBusy ? null : controller.signOut,
+            child: Text(l10n.text('signOut')),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreCountryCard extends StatelessWidget {
+  const _StoreCountryCard({
+    required this.profile,
+    required this.isBusy,
+    required this.onChangeCountry,
+  });
+
+  final CloudProfile profile;
+  final bool isBusy;
+  final VoidCallback onChangeCountry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = CloudLocalizations.of(context);
+    final countryName = profile.countryCode == null
+        ? null
+        : l10n.countryName(profile.countryCode!);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              l10n.text('signedInAs'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            Text(
-              controller.profile!.handle,
+              l10n.text('storeCountry'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            if (countryName != null) ...[
+              const SizedBox(height: 8),
+              Text(countryName),
+            ],
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: isBusy ? null : onChangeCountry,
+              icon: const Icon(Icons.public_outlined),
+              label: Text(l10n.text('changeStoreCountry')),
+            ),
           ],
-        ),
-        trailing: TextButton(
-          onPressed: controller.isBusy ? null : controller.signOut,
-          child: Text(l10n.text('signOut')),
         ),
       ),
     );

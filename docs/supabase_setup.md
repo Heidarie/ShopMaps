@@ -17,6 +17,7 @@ All versioned files in `supabase/migrations/` must be applied in order.
 The migration creates:
 
 - public profiles with handles such as `Endriu#1337`,
+- profile store countries used to scope online store discovery,
 - groups, memberships, and invitations,
 - shared grocery lists and deposit vouchers,
 - canonical store locations and public store maps,
@@ -182,14 +183,17 @@ Without these defines, ShopMaps starts in its existing local-only mode.
 ## Geoapify address search
 
 Public store maps use Geoapify autocomplete so users select a canonical address
-instead of publishing arbitrary address text. After an address is selected, the
-same Edge Function uses Geoapify Places API to show named grocery stores,
-convenience stores, food shops, discount stores, and marketplaces within
-4 kilometers, ordered by distance. Restricting the categories prevents stores
-inside shopping malls from pushing nearby supermarkets out of the result
-limit. These results are registered in the canonical `store_locations` catalog
-by the Edge Function. Public maps and new shared deposit codes reference a
-catalog record instead of trusting a user-entered store name.
+instead of publishing arbitrary address text. The authenticated Edge Function
+reads the signed-in user's profile country from Supabase and applies it as a
+hard Geoapify country filter; clients do not provide the country in the request
+body. After an address is selected, the same Edge Function uses Geoapify Places
+API to show named grocery stores, convenience stores, food shops, discount
+stores, and marketplaces within 4 kilometers, ordered by distance. Nearby
+results outside the user's profile country are discarded before anything is
+registered in the canonical `store_locations` catalog. Restricting the
+categories prevents stores inside shopping malls from pushing nearby
+supermarkets out of the result limit. Public maps and new shared deposit codes
+reference a catalog record instead of trusting a user-entered store name.
 
 Create a Geoapify API key and add it as the `GEOAPIFY_API_KEY` secret for the
 Supabase Edge Function environment. The key must not be added to
@@ -204,6 +208,9 @@ supabase/functions/geoapify-address-search/index.ts
 ## Sharing rules
 
 - Signing in is optional.
+- A cloud profile is complete only after the user chooses both a public handle
+  and one supported store country: `gb`, `pl`, `de`, `nl`, `es`, `fr`, `ua`,
+  `it`, or `pt`.
 - Sharing a grocery list moves it from private local lists into the selected
   group, so it is shown only once as a shared list.
 - Stopping sharing restores the latest group version as a private local list on
@@ -224,6 +231,10 @@ supabase/functions/geoapify-address-search/index.ts
 - Store locations are deduplicated by Geoapify place ID and normalized store
   name. Public maps and newly shared deposit codes must use a store registered
   from Geoapify; local-only deposit codes may keep any store name.
+- Store locations and public maps are visible only when their country matches
+  the signed-in user's profile country. Publishing, copying, reporting public
+  maps, and moving deposit codes into a group reject mismatched stores with
+  `STORE_COUNTRY_MISMATCH`.
 - Signed-in users can browse public store maps and copy them into their local
   maps. Only the author can update or stop sharing a published map.
 - Users are invited only through their complete `Name#1234` handle.

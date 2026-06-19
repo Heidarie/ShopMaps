@@ -66,6 +66,64 @@ class _LoadingProfileCloudController extends CloudController {
   bool get isProfileLoading => true;
 }
 
+class _ProfileSetupCloudController extends CloudController {
+  _ProfileSetupCloudController({this.currentProfile}) : super(null);
+
+  CloudProfile? currentProfile;
+  String? completedDisplayName;
+  String? completedCountryCode;
+  String? updatedCountryCode;
+
+  @override
+  bool get isConfigured => true;
+
+  @override
+  bool get isSignedIn => true;
+
+  @override
+  bool get isProfileLoading => false;
+
+  @override
+  bool get needsProfile =>
+      currentProfile == null || !currentProfile!.hasStoreCountry;
+
+  @override
+  CloudProfile? get profile => currentProfile;
+
+  @override
+  Future<bool> completeProfile({
+    required String displayName,
+    required String countryCode,
+  }) async {
+    completedDisplayName = displayName;
+    completedCountryCode = countryCode;
+    currentProfile = CloudProfile(
+      id: 'user-id',
+      displayName: displayName,
+      discriminator: 7,
+      countryCode: countryCode,
+    );
+    notifyListeners();
+    return true;
+  }
+
+  @override
+  Future<bool> updateProfileCountry(String countryCode) async {
+    updatedCountryCode = countryCode;
+    final profile = currentProfile;
+    if (profile != null) {
+      currentProfile = CloudProfile(
+        id: profile.id,
+        displayName: profile.displayName,
+        discriminator: profile.discriminator,
+        countryCode: countryCode,
+      );
+    }
+    notifyListeners();
+    return true;
+  }
+}
+
 class _SignedOutCloudController extends CloudController {
   _SignedOutCloudController() : super(null);
 
@@ -105,6 +163,7 @@ class _DeletableCloudController extends CloudController {
     id: 'user-id',
     displayName: 'Endriu',
     discriminator: 42,
+    countryCode: 'pl',
   );
 
   @override
@@ -144,6 +203,7 @@ class _InvitedCloudController extends CloudController {
     id: 'user-id',
     displayName: 'Tester',
     discriminator: 8533,
+    countryCode: 'pl',
   );
 
   @override
@@ -322,6 +382,92 @@ void main() {
     appController.dispose();
   });
 
+  testWidgets('new profile setup asks for username and store country', (
+    tester,
+  ) async {
+    final cloudController = _ProfileSetupCloudController();
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        AccountGroupsScreen(
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Podaj swoją nazwę użytkownika'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Publiczna nazwa'), findsOneWidget);
+    expect(find.text('Kraj sklepów'), findsOneWidget);
+    expect(find.text('Polska'), findsOneWidget);
+    final nameCard = tester.element(
+      find
+          .ancestor(
+            of: find.text('Podaj swoją nazwę użytkownika'),
+            matching: find.byType(Card),
+          )
+          .first,
+    );
+    final countryCard = tester.element(
+      find
+          .ancestor(of: find.text('Kraj sklepów'), matching: find.byType(Card))
+          .first,
+    );
+    expect(nameCard, isNot(countryCard));
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Publiczna nazwa'),
+      'Endriu',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Utwórz profil'));
+    await tester.pumpAndSettle();
+
+    expect(cloudController.completedDisplayName, 'Endriu');
+    expect(cloudController.completedCountryCode, 'pl');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
+  testWidgets('legacy profile without a country asks only for store country', (
+    tester,
+  ) async {
+    final cloudController = _ProfileSetupCloudController(
+      currentProfile: const CloudProfile(
+        id: 'user-id',
+        displayName: 'Legacy',
+        discriminator: 7,
+      ),
+    );
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        AccountGroupsScreen(
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Legacy#0007'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Polska'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Zapisz kraj'));
+    await tester.pumpAndSettle();
+
+    expect(cloudController.updatedCountryCode, 'pl');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
   testWidgets('opening groups does not notify listeners during build', (
     tester,
   ) async {
@@ -339,6 +485,44 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
+  testWidgets('profile country can be changed later', (tester) async {
+    final cloudController = _ProfileSetupCloudController(
+      currentProfile: const CloudProfile(
+        id: 'user-id',
+        displayName: 'Endriu',
+        discriminator: 42,
+        countryCode: 'pl',
+      ),
+    );
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        AccountGroupsScreen(
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Zmień kraj'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Polska').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Niemcy').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Zapisz kraj'));
+    await tester.pumpAndSettle();
+
+    expect(cloudController.updatedCountryCode, 'de');
+    expect(find.text('Kraj sklepów został zaktualizowany.'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     cloudController.dispose();
@@ -367,7 +551,10 @@ void main() {
       ),
     );
 
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Delete account'));
+    final deleteButton = find.widgetWithText(OutlinedButton, 'Delete account');
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tester.tap(deleteButton);
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(TextButton, 'Delete account'));
     await tester.pump();

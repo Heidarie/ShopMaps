@@ -262,6 +262,77 @@ void main() {
   });
 
   test(
+    'online category mappings resolve aliases and persist custom choices',
+    () async {
+      final controller = AppController(LocalStore());
+      await controller.load(localeLanguageCode: 'pl');
+
+      expect(
+        controller.resolveOnlineCategoryMappings([
+          'Napoje',
+          'Moja alejka',
+        ], languageCode: 'pl'),
+        {'Napoje': 'drinks', 'Moja alejka': null},
+      );
+
+      await controller.rememberOnlineCategoryMappings({
+        'Moja alejka': 'snacks',
+      });
+
+      expect(
+        controller.encodeOnlineCategoryOrder(
+          ['Moja alejka', 'Napoje'],
+          selectedMappings: const {},
+          languageCode: 'pl',
+        ),
+        ['snacks', 'drinks'],
+      );
+
+      final reloadedController = AppController(LocalStore());
+      await reloadedController.load(localeLanguageCode: 'pl');
+
+      expect(
+        reloadedController.resolveOnlineCategoryId(
+          'Moja alejka',
+          languageCode: 'pl',
+        ),
+        'snacks',
+      );
+    },
+  );
+
+  test(
+    'online category order is localized when importing public maps',
+    () async {
+      final controller = AppController(LocalStore());
+      await controller.load(localeLanguageCode: 'pl');
+
+      final localOrder = await controller.ensureLocalCategoriesForOnlineOrder([
+        'bakery',
+        'dairy_eggs',
+        'fish_seafood',
+      ], languageCode: 'pl');
+
+      expect(localOrder, ['Piekarnia', 'Nabiał', 'Ryby i owoce morza']);
+      expect(
+        controller.categories.where((entry) => entry == 'Nabiał'),
+        hasLength(1),
+      );
+      expect(controller.categories, contains('Ryby i owoce morza'));
+
+      final secondOrder = await controller.ensureLocalCategoriesForOnlineOrder([
+        'fish_seafood',
+      ], languageCode: 'pl');
+
+      expect(secondOrder, ['Ryby i owoce morza']);
+      expect(
+        controller.categories.where((entry) => entry == 'Ryby i owoce morza'),
+        hasLength(1),
+      );
+    },
+  );
+
+  test(
     'removeItemsFromList removes selected items and keeps the grocery list',
     () async {
       final controller = AppController(LocalStore());

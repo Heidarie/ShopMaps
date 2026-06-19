@@ -3,9 +3,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shopmaps/cloud/cloud_controller.dart';
 import 'package:shopmaps/cloud/cloud_models.dart';
+import 'package:shopmaps/app_controller.dart';
+import 'package:shopmaps/local_store.dart';
 import 'package:shopmaps/l10n/app_localizations.dart';
 import 'package:shopmaps/models.dart';
 import 'package:shopmaps/screens/publish_market_layout_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _NearbyStoresCloudController extends CloudController {
   _NearbyStoresCloudController() : super(null);
@@ -13,6 +16,7 @@ class _NearbyStoresCloudController extends CloudController {
   String? publishedStoreName;
   GeoapifyAddressSuggestion? publishedAddress;
   String? publishedStoreLocationId;
+  List<String>? publishedOnlineCategoryOrder;
   PublishMarketLayoutResult publishResult = PublishMarketLayoutResult.published;
 
   @override
@@ -65,10 +69,12 @@ class _NearbyStoresCloudController extends CloudController {
   Future<PublishMarketLayoutResult> publishMarketLayout({
     required MarketLayout layout,
     required NearbyStoreSuggestion store,
+    required List<String> onlineCategoryOrder,
   }) async {
     publishedStoreName = store.name;
     publishedAddress = store.address;
     publishedStoreLocationId = store.storeLocationId;
+    publishedOnlineCategoryOrder = onlineCategoryOrder;
     return publishResult;
   }
 }
@@ -92,9 +98,16 @@ class _NotifyingNearbyStoresCloudController
 }
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('loads nearby stores for an existing map after the first frame', (
     tester,
   ) async {
+    final appController = AppController(LocalStore());
+    await appController.load(localeLanguageCode: 'pl');
+    addTearDown(appController.dispose);
     final cloudController = _NotifyingNearbyStoresCloudController();
     final existingMap = SharedMarketLayout(
       id: 'shared-map',
@@ -132,6 +145,7 @@ void main() {
         home: ListenableBuilder(
           listenable: cloudController,
           builder: (context, _) => PublishMarketLayoutScreen(
+            controller: appController,
             cloudController: cloudController,
             layout: const MarketLayout(
               id: 'local-map',
@@ -155,6 +169,9 @@ void main() {
   testWidgets(
     'selecting an address shows nearby stores and uses selected store',
     (tester) async {
+      final appController = AppController(LocalStore());
+      await appController.load(localeLanguageCode: 'pl');
+      addTearDown(appController.dispose);
       final cloudController = _NearbyStoresCloudController();
 
       await tester.pumpWidget(
@@ -168,6 +185,7 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           home: PublishMarketLayoutScreen(
+            controller: appController,
             cloudController: cloudController,
             layout: const MarketLayout(
               id: 'local-map',
@@ -201,6 +219,7 @@ void main() {
       expect(cloudController.publishedStoreName, 'Lidl');
       expect(cloudController.publishedAddress?.providerPlaceId, 'store-id');
       expect(cloudController.publishedStoreLocationId, 'catalog-store-id');
+      expect(cloudController.publishedOnlineCategoryOrder, isEmpty);
 
       cloudController.dispose();
     },
@@ -209,6 +228,9 @@ void main() {
   testWidgets('shows a message when the same store layout already exists', (
     tester,
   ) async {
+    final appController = AppController(LocalStore());
+    await appController.load(localeLanguageCode: 'pl');
+    addTearDown(appController.dispose);
     final cloudController = _NearbyStoresCloudController()
       ..publishResult = PublishMarketLayoutResult.duplicate;
 
@@ -223,6 +245,7 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: PublishMarketLayoutScreen(
+          controller: appController,
           cloudController: cloudController,
           layout: const MarketLayout(
             id: 'duplicate-local-map',
@@ -251,6 +274,63 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(PublishMarketLayoutScreen), findsOneWidget);
+
+    cloudController.dispose();
+  });
+
+  testWidgets('requires mapping for an unknown local category before publish', (
+    tester,
+  ) async {
+    final appController = AppController(LocalStore());
+    await appController.load(localeLanguageCode: 'pl');
+    addTearDown(appController.dispose);
+    final cloudController = _NearbyStoresCloudController();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('pl'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: PublishMarketLayoutScreen(
+          controller: appController,
+          cloudController: cloudController,
+          layout: const MarketLayout(
+            id: 'custom-local-map',
+            name: 'Moja mapa',
+            categoryOrder: ['Moja alejka'],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Dopasuj kategorie'), findsOneWidget);
+    expect(find.text('Moja alejka'), findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Napoje').last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Adres sklepu'),
+      'Pulaskiego 10',
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pułaskiego 10, Warszawa'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Lidl'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Opublikuj mapę'));
+    await tester.pumpAndSettle();
+
+    expect(cloudController.publishedOnlineCategoryOrder, ['drinks']);
 
     cloudController.dispose();
   });

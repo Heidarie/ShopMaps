@@ -25,6 +25,11 @@ class CloudLocalizations {
       'completeProfile': 'Enter your username',
       'completeProfileDescription': 'Your username is used to join groups.',
       'displayName': 'Public name',
+      'storeCountry': 'Store country',
+      'chooseStoreCountry': 'Choose store country',
+      'changeStoreCountry': 'Change country',
+      'saveStoreCountry': 'Save country',
+      'storeCountryUpdated': 'Store country updated.',
       'createProfile': 'Create profile',
       'signedInAs': 'Signed in as',
       'signOut': 'Sign out',
@@ -70,6 +75,8 @@ class CloudLocalizations {
           'Find the address and select the matching store from the catalog.',
       'canonicalStoreRequired':
           'Select a store from the verified store catalog.',
+      'storeCountryMismatch':
+          'Select a store from the country set in your profile.',
       'emptySharedLists': 'No shared grocery lists yet.',
       'emptySharedDeposits': 'No shared deposit codes yet.',
       'copiedToGroup': 'List copied to the group.',
@@ -91,12 +98,19 @@ class CloudLocalizations {
       'nearbyStoresNoResults':
           'No nearby stores found. Try a different address.',
       'publishStoreMap': 'Publish map',
+      'matchStoreMapCategories': 'Match categories',
+      'matchStoreMapCategoriesDescription':
+          'Choose the public category that matches each local category before publishing.',
+      'selectOnlineCategory': 'Public category',
+      'categoryMappingRequired': 'Match all map categories before publishing.',
       'storeMapPublished': 'Store map published.',
       'storeMapAlreadyExists':
           'An identical layout for this store is already shared.',
       'storeMapUnpublished': 'Store map is no longer shared.',
       'emptyPublicStoreMaps': 'No shared store maps yet.',
       'signInToBrowseStoreMaps': 'Sign in to browse and share store maps.',
+      'completeProfileToBrowseStoreMaps':
+          'Complete your profile to browse and share store maps.',
       'copyStoreMap': 'Add to my stores',
       'storeMapCopied': 'Store map added to your maps.',
       'storeMapAlreadyAdded': 'Already in my stores',
@@ -145,6 +159,11 @@ class CloudLocalizations {
       'completeProfileDescription':
           'Nazwa użytkownika jest używana do dołączania do grup.',
       'displayName': 'Publiczna nazwa',
+      'storeCountry': 'Kraj sklepów',
+      'chooseStoreCountry': 'Wybierz kraj sklepów',
+      'changeStoreCountry': 'Zmień kraj',
+      'saveStoreCountry': 'Zapisz kraj',
+      'storeCountryUpdated': 'Kraj sklepów został zaktualizowany.',
       'createProfile': 'Utwórz profil',
       'signedInAs': 'Zalogowano jako',
       'signOut': 'Wyloguj się',
@@ -191,6 +210,7 @@ class CloudLocalizations {
           'Znajdź adres i wybierz właściwy sklep z katalogu.',
       'canonicalStoreRequired':
           'Wybierz sklep ze zweryfikowanego katalogu sklepów.',
+      'storeCountryMismatch': 'Wybierz sklep z kraju ustawionego w profilu.',
       'emptySharedLists': 'Brak współdzielonych list zakupów.',
       'emptySharedDeposits': 'Brak współdzielonych kodów kaucji.',
       'copiedToGroup': 'Lista została skopiowana do grupy.',
@@ -212,12 +232,20 @@ class CloudLocalizations {
       'nearbyStoresNoResults':
           'Nie znaleziono pobliskich sklepów. Spróbuj podać inny adres.',
       'publishStoreMap': 'Opublikuj mapę',
+      'matchStoreMapCategories': 'Dopasuj kategorie',
+      'matchStoreMapCategoriesDescription':
+          'Przed publikacją wybierz publiczną kategorię pasującą do każdej lokalnej kategorii.',
+      'selectOnlineCategory': 'Publiczna kategoria',
+      'categoryMappingRequired':
+          'Dopasuj wszystkie kategorie mapy przed publikacją.',
       'storeMapPublished': 'Mapa sklepu została udostępniona.',
       'storeMapAlreadyExists': 'Taki układ tego sklepu jest już udostępniony.',
       'storeMapUnpublished': 'Mapa sklepu nie jest już udostępniona.',
       'emptyPublicStoreMaps': 'Brak udostępnionych map sklepów.',
       'signInToBrowseStoreMaps':
           'Zaloguj się, aby przeglądać i udostępniać mapy sklepów.',
+      'completeProfileToBrowseStoreMaps':
+          'Uzupełnij profil, aby przeglądać i udostępniać mapy sklepów.',
       'copyStoreMap': 'Dodaj do moich sklepów',
       'storeMapCopied': 'Mapa sklepu została dodana do Twoich map.',
       'storeMapAlreadyAdded': 'Już w moich sklepach',
@@ -605,8 +633,116 @@ class CloudLocalizations {
     },
   };
 
+  static const _countryNames = <String, Map<String, String>>{
+    'en': {
+      'gb': 'United Kingdom',
+      'pl': 'Poland',
+      'de': 'Germany',
+      'nl': 'Netherlands',
+      'es': 'Spain',
+      'fr': 'France',
+      'ua': 'Ukraine',
+      'it': 'Italy',
+      'pt': 'Portugal',
+    },
+    'pl': {
+      'gb': 'Wielka Brytania',
+      'pl': 'Polska',
+      'de': 'Niemcy',
+      'nl': 'Holandia',
+      'es': 'Hiszpania',
+      'fr': 'Francja',
+      'ua': 'Ukraina',
+      'it': 'Włochy',
+      'pt': 'Portugalia',
+    },
+    'de': {
+      'gb': 'Vereinigtes Königreich',
+      'pl': 'Polen',
+      'de': 'Deutschland',
+      'nl': 'Niederlande',
+      'es': 'Spanien',
+      'fr': 'Frankreich',
+      'ua': 'Ukraine',
+      'it': 'Italien',
+      'pt': 'Portugal',
+    },
+    'nl': {
+      'gb': 'Verenigd Koninkrijk',
+      'pl': 'Polen',
+      'de': 'Duitsland',
+      'nl': 'Nederland',
+      'es': 'Spanje',
+      'fr': 'Frankrijk',
+      'ua': 'Oekraïne',
+      'it': 'Italië',
+      'pt': 'Portugal',
+    },
+    'es': {
+      'gb': 'Reino Unido',
+      'pl': 'Polonia',
+      'de': 'Alemania',
+      'nl': 'Países Bajos',
+      'es': 'España',
+      'fr': 'Francia',
+      'ua': 'Ucrania',
+      'it': 'Italia',
+      'pt': 'Portugal',
+    },
+    'fr': {
+      'gb': 'Royaume-Uni',
+      'pl': 'Pologne',
+      'de': 'Allemagne',
+      'nl': 'Pays-Bas',
+      'es': 'Espagne',
+      'fr': 'France',
+      'ua': 'Ukraine',
+      'it': 'Italie',
+      'pt': 'Portugal',
+    },
+    'uk': {
+      'gb': 'Велика Британія',
+      'pl': 'Польща',
+      'de': 'Німеччина',
+      'nl': 'Нідерланди',
+      'es': 'Іспанія',
+      'fr': 'Франція',
+      'ua': 'Україна',
+      'it': 'Італія',
+      'pt': 'Португалія',
+    },
+    'it': {
+      'gb': 'Regno Unito',
+      'pl': 'Polonia',
+      'de': 'Germania',
+      'nl': 'Paesi Bassi',
+      'es': 'Spagna',
+      'fr': 'Francia',
+      'ua': 'Ucraina',
+      'it': 'Italia',
+      'pt': 'Portogallo',
+    },
+    'pt': {
+      'gb': 'Reino Unido',
+      'pl': 'Polónia',
+      'de': 'Alemanha',
+      'nl': 'Países Baixos',
+      'es': 'Espanha',
+      'fr': 'França',
+      'ua': 'Ucrânia',
+      'it': 'Itália',
+      'pt': 'Portugal',
+    },
+  };
+
   String text(String key) {
     return _values[languageCode]?[key] ?? _values['en']![key] ?? key;
+  }
+
+  String countryName(String countryCode) {
+    return _countryNames[languageCode]?[countryCode] ??
+        _countryNames['en']![countryCode] ??
+        countryCode.toUpperCase();
   }
 
   String? errorMessage(CloudController controller) {
@@ -615,6 +751,9 @@ class CloudLocalizations {
     }
     if (controller.errorKind == CloudErrorKind.canonicalStoreRequired) {
       return text('canonicalStoreRequired');
+    }
+    if (controller.errorKind == CloudErrorKind.storeCountryMismatch) {
+      return text('storeCountryMismatch');
     }
     return controller.errorMessage;
   }
