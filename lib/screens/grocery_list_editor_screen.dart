@@ -12,6 +12,8 @@ import '../widgets/category_name_prompt.dart';
 import '../widgets/delete_category_prompt.dart';
 
 const int _maxInputChars = 100;
+const int _maxVisibleItemHints = 3;
+const _itemEditorScrollKey = ValueKey('grocery-list-item-editor-scroll');
 
 class GroceryListEditorScreen extends StatefulWidget {
   const GroceryListEditorScreen({
@@ -34,17 +36,22 @@ class GroceryListEditorScreen extends StatefulWidget {
 
 class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
   late final TextEditingController _itemController;
+  late final FocusNode _itemFocusNode;
   late final Listenable _listenable;
   List<ItemHint> _hints = const [];
   String? _selectedCategory;
   int _selectedQuantity = 1;
+  bool _isAddingItem = false;
+  bool _showAddedItemToast = false;
   bool _addedSharedItems = false;
   bool _sharedAdditionNotificationSent = false;
+  Timer? _addedItemToastTimer;
 
   @override
   void initState() {
     super.initState();
     _itemController = TextEditingController();
+    _itemFocusNode = FocusNode();
     _listenable = widget.isShared
         ? Listenable.merge([widget.controller, widget.cloudController!])
         : widget.controller;
@@ -52,7 +59,9 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
   @override
   void dispose() {
+    _addedItemToastTimer?.cancel();
     _itemController.dispose();
+    _itemFocusNode.dispose();
     super.dispose();
   }
 
@@ -61,7 +70,12 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     final l10n = AppLocalizations.of(context);
 
     return PopScope<void>(
+      canPop: !_isAddingItem,
       onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _isAddingItem) {
+          _showList();
+          return;
+        }
         if (didPop) {
           _notifySharedListAdditions();
         }
@@ -81,294 +95,297 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
           final grouped = _groupItems(groceryList.items, l10n);
           return Scaffold(
             appBar: AppBar(
-              title: Text(groceryList.name),
-              actions: [
-                IconButton(
-                  tooltip: l10n.loadFrequentItems,
-                  icon: const Icon(Icons.autorenew_rounded),
-                  onPressed: () =>
-                      _showLoadFrequentItemsDialog(listId: groceryList.id),
-                ),
-              ],
-            ),
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                final editorMaxHeight = (constraints.maxHeight * 0.7)
-                    .clamp(0.0, 440.0)
-                    .toDouble();
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: grouped.isEmpty
-                          ? Center(child: Text(l10n.nothingToShow))
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: grouped.length,
-                              itemBuilder: (context, index) {
-                                final entry = grouped[index];
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: Card(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            l10n.categoryLabel(entry.key),
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.titleMedium,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          for (
-                                            var itemIndex = 0;
-                                            itemIndex < entry.value.length;
-                                            itemIndex++
-                                          ) ...[
-                                            ListTile(
-                                              dense: true,
-                                              contentPadding: EdgeInsets.zero,
-                                              onTap: () {
-                                                _editItem(
-                                                  listId: groceryList.id,
-                                                  item: entry.value[itemIndex],
-                                                );
-                                              },
-                                              title: Text(
-                                                '${entry.value[itemIndex].name} x ${entry.value[itemIndex].quantity}',
-                                              ),
-                                              trailing: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  IconButton(
-                                                    tooltip: l10n.edit,
-                                                    icon: const Icon(
-                                                      Icons.edit_outlined,
-                                                    ),
-                                                    onPressed: () {
-                                                      _editItem(
-                                                        listId: groceryList.id,
-                                                        item: entry
-                                                            .value[itemIndex],
-                                                      );
-                                                    },
-                                                  ),
-                                                  IconButton(
-                                                    tooltip: l10n.deleteItem,
-                                                    icon: Icon(
-                                                      Icons.delete_outline,
-                                                      color: Theme.of(
-                                                        context,
-                                                      ).colorScheme.error,
-                                                    ),
-                                                    onPressed: () {
-                                                      _removeItem(
-                                                        listId: groceryList.id,
-                                                        itemId: entry
-                                                            .value[itemIndex]
-                                                            .id,
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            if (itemIndex <
-                                                entry.value.length - 1)
-                                              const Divider(height: 1),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: editorMaxHeight),
-                      child: SafeArea(
-                        top: false,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: Card(
-                            clipBehavior: Clip.antiAlias,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Flexible(
-                                  child: SingleChildScrollView(
-                                    keyboardDismissBehavior:
-                                        ScrollViewKeyboardDismissBehavior
-                                            .onDrag,
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        TextField(
-                                          controller: _itemController,
-                                          inputFormatters: [
-                                            LengthLimitingTextInputFormatter(
-                                              _maxInputChars,
-                                            ),
-                                          ],
-                                          decoration: InputDecoration(
-                                            labelText: l10n.itemName,
-                                          ),
-                                          onChanged: _onItemChanged,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          l10n.selectedCategory,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodySmall,
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: ActionChip(
-                                            onPressed: _pickCategory,
-                                            avatar: Icon(
-                                              _selectedCategory == null
-                                                  ? Icons.add_circle_outline
-                                                  : Icons.category_outlined,
-                                              size: 18,
-                                            ),
-                                            label: Text(
-                                              _selectedCategory == null
-                                                  ? l10n.addCategory
-                                                  : l10n.categoryLabel(
-                                                      _selectedCategory!,
-                                                    ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              l10n.quantity,
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.bodySmall,
-                                            ),
-                                            const Spacer(),
-                                            IconButton(
-                                              onPressed: _selectedQuantity > 1
-                                                  ? () {
-                                                      setState(() {
-                                                        _selectedQuantity -= 1;
-                                                      });
-                                                    }
-                                                  : null,
-                                              icon: const Icon(
-                                                Icons.remove_circle_outline,
-                                              ),
-                                            ),
-                                            Text(
-                                              '$_selectedQuantity',
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.titleMedium,
-                                            ),
-                                            IconButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  _selectedQuantity += 1;
-                                                });
-                                              },
-                                              icon: const Icon(
-                                                Icons.add_circle_outline,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        if (_hints.isNotEmpty) ...[
-                                          Text(
-                                            l10n.itemHint,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall,
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 8,
-                                            children: _hints
-                                                .map(
-                                                  (hint) => ActionChip(
-                                                    label: Text(
-                                                      l10n.hintLabel(
-                                                        hint.itemName,
-                                                        hint.category,
-                                                      ),
-                                                    ),
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        _itemController.text =
-                                                            hint.itemName;
-                                                        _itemController
-                                                                .selection =
-                                                            TextSelection.collapsed(
-                                                              offset:
-                                                                  _itemController
-                                                                      .text
-                                                                      .length,
-                                                            );
-                                                        _selectedCategory =
-                                                            hint.category;
-                                                        _hints = widget
-                                                            .controller
-                                                            .findItemHints(
-                                                              hint.itemName,
-                                                            );
-                                                      });
-                                                    },
-                                                  ),
-                                                )
-                                                .toList(),
-                                          ),
-                                        ] else
-                                          Text(
-                                            l10n.noHints,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: FilledButton.icon(
-                                    onPressed: () => _addItem(groceryList.id),
-                                    icon: const Icon(Icons.add),
-                                    label: Text(l10n.addItem),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+              title: Text(_isAddingItem ? l10n.addItem : groceryList.name),
+              actions: _isAddingItem
+                  ? null
+                  : [
+                      IconButton(
+                        tooltip: l10n.loadFrequentItems,
+                        icon: const Icon(Icons.autorenew_rounded),
+                        onPressed: () => _showLoadFrequentItemsDialog(
+                          listId: groceryList.id,
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
             ),
+            body: _isAddingItem
+                ? _buildAddItemScreen(
+                    context: context,
+                    listId: groceryList.id,
+                    l10n: l10n,
+                  )
+                : _buildListScreen(
+                    context: context,
+                    grouped: grouped,
+                    listId: groceryList.id,
+                    l10n: l10n,
+                  ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildListScreen({
+    required BuildContext context,
+    required List<MapEntry<String, List<GroceryItem>>> grouped,
+    required String listId,
+    required AppLocalizations l10n,
+  }) {
+    return Column(
+      children: [
+        Expanded(
+          child: _buildGroupedItems(
+            context: context,
+            grouped: grouped,
+            listId: listId,
+            l10n: l10n,
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: FilledButton.icon(
+              onPressed: _showAddItem,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addItem),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddItemScreen({
+    required BuildContext context,
+    required String listId,
+    required AppLocalizations l10n,
+  }) {
+    return SafeArea(
+      top: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              key: _itemEditorScrollKey,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            controller: _itemController,
+                            focusNode: _itemFocusNode,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(_maxInputChars),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: l10n.itemName,
+                            ),
+                            onChanged: _onItemChanged,
+                          ),
+                          const SizedBox(height: 8),
+                          if (_hints.isNotEmpty) ...[
+                            Text(
+                              l10n.itemHint,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 6),
+                            _ItemHints(hints: _hints, onSelected: _selectHint),
+                            const SizedBox(height: 8),
+                          ] else if (_itemController.text
+                              .trim()
+                              .isNotEmpty) ...[
+                            Text(
+                              l10n.noHints,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          Text(
+                            l10n.selectedCategory,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: ActionChip(
+                              onPressed: _pickCategory,
+                              avatar: Icon(
+                                _selectedCategory == null
+                                    ? Icons.add_circle_outline
+                                    : Icons.category_outlined,
+                                size: 18,
+                              ),
+                              label: Text(
+                                _selectedCategory == null
+                                    ? l10n.addCategory
+                                    : l10n.categoryLabel(_selectedCategory!),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                l10n.quantity,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                onPressed: _selectedQuantity > 1
+                                    ? () {
+                                        setState(() {
+                                          _selectedQuantity -= 1;
+                                        });
+                                      }
+                                    : null,
+                                icon: const Icon(Icons.remove_circle_outline),
+                              ),
+                              Text(
+                                '$_selectedQuantity',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedQuantity += 1;
+                                  });
+                                },
+                                icon: const Icon(Icons.add_circle_outline),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_showAddedItemToast)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: _InlineToast(message: l10n.itemAdded),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _showList,
+                    icon: const Icon(Icons.arrow_back),
+                    label: Text(l10n.back),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _addItem(listId),
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.addItem),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupedItems({
+    required BuildContext context,
+    required List<MapEntry<String, List<GroceryItem>>> grouped,
+    required String listId,
+    required AppLocalizations l10n,
+  }) {
+    if (grouped.isEmpty) {
+      return Center(child: Text(l10n.nothingToShow));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      itemCount: grouped.length,
+      itemBuilder: (context, index) {
+        final entry = grouped[index];
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.categoryLabel(entry.key),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  for (
+                    var itemIndex = 0;
+                    itemIndex < entry.value.length;
+                    itemIndex++
+                  ) ...[
+                    ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      onTap: () {
+                        _editItem(listId: listId, item: entry.value[itemIndex]);
+                      },
+                      title: Text(
+                        '${entry.value[itemIndex].name} x ${entry.value[itemIndex].quantity}',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: l10n.edit,
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () {
+                              _editItem(
+                                listId: listId,
+                                item: entry.value[itemIndex],
+                              );
+                            },
+                          ),
+                          IconButton(
+                            tooltip: l10n.deleteItem,
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            onPressed: () {
+                              _removeItem(
+                                listId: listId,
+                                itemId: entry.value[itemIndex].id,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (itemIndex < entry.value.length - 1)
+                      const Divider(height: 1),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -400,15 +417,60 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
   }
 
   void _onItemChanged(String value) {
-    final hints = widget.controller.findItemHints(value);
+    final hints = _visibleHintsFor(value);
     final exactCategory = widget.controller.findCategoryForExactItem(value);
 
     setState(() {
+      _showAddedItemToast = false;
       _hints = hints;
       if (exactCategory != null) {
         _selectedCategory = exactCategory;
       }
     });
+  }
+
+  void _selectHint(ItemHint hint) {
+    setState(() {
+      _itemController.text = hint.itemName;
+      _itemController.selection = TextSelection.collapsed(
+        offset: _itemController.text.length,
+      );
+      _selectedCategory = hint.category;
+      _hints = const [];
+      _showAddedItemToast = false;
+    });
+    _requestItemInputFocus();
+  }
+
+  List<ItemHint> _visibleHintsFor(String value) {
+    return widget.controller
+        .findItemHints(value)
+        .take(_maxVisibleItemHints)
+        .toList(growable: false);
+  }
+
+  void _requestItemInputFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _itemFocusNode.requestFocus();
+      }
+    });
+  }
+
+  void _showAddItem() {
+    setState(() {
+      _isAddingItem = true;
+    });
+    _requestItemInputFocus();
+  }
+
+  void _showList() {
+    setState(() {
+      _isAddingItem = false;
+      _showAddedItemToast = false;
+    });
+    _addedItemToastTimer?.cancel();
+    _itemFocusNode.unfocus();
   }
 
   Future<void> _pickCategory() async {
@@ -494,12 +556,14 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
 
       setState(() {
         _selectedCategory = created;
+        _showAddedItemToast = false;
       });
       return;
     }
 
     setState(() {
       _selectedCategory = selection;
+      _showAddedItemToast = false;
     });
   }
 
@@ -702,10 +766,13 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     final l10n = AppLocalizations.of(context);
     final itemName = _itemController.text.trim();
 
+    _hideAddedItemToast();
+
     if (itemName.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.nameCannotBeEmpty)));
+      _requestItemInputFocus();
       return;
     }
 
@@ -713,6 +780,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.selectCategoryFirst)));
+      _requestItemInputFocus();
       return;
     }
 
@@ -734,6 +802,7 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
         return;
       }
       _showOperationFailure(l10n);
+      _requestItemInputFocus();
       return;
     }
 
@@ -746,6 +815,31 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
       _hints = const [];
       _selectedCategory = null;
       _selectedQuantity = 1;
+      _showAddedItemToast = true;
+    });
+    _startAddedItemToastTimer();
+    _requestItemInputFocus();
+  }
+
+  void _hideAddedItemToast() {
+    _addedItemToastTimer?.cancel();
+    if (!_showAddedItemToast) {
+      return;
+    }
+    setState(() {
+      _showAddedItemToast = false;
+    });
+  }
+
+  void _startAddedItemToastTimer() {
+    _addedItemToastTimer?.cancel();
+    _addedItemToastTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _showAddedItemToast = false;
+      });
     });
   }
 
@@ -846,6 +940,59 @@ class _GroceryListEditorScreenState extends State<GroceryListEditorScreen> {
     _sharedAdditionNotificationSent = true;
     unawaited(
       widget.cloudController!.notifySharedListAdditionsCompleted(widget.listId),
+    );
+  }
+}
+
+class _ItemHints extends StatelessWidget {
+  const _ItemHints({required this.hints, required this.onSelected});
+
+  final List<ItemHint> hints;
+  final ValueChanged<ItemHint> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final chips = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final hint in hints)
+          ActionChip(
+            label: Text(l10n.hintLabel(hint.itemName, hint.category)),
+            onPressed: () => onSelected(hint),
+          ),
+      ],
+    );
+
+    return chips;
+  }
+}
+
+class _InlineToast extends StatelessWidget {
+  const _InlineToast({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: colorScheme.onSecondaryContainer,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 }

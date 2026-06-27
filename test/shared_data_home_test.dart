@@ -10,6 +10,7 @@ import 'package:shopmaps/l10n/app_localizations.dart';
 import 'package:shopmaps/local_store.dart';
 import 'package:shopmaps/models.dart';
 import 'package:shopmaps/screens/home_screen.dart';
+import 'package:shopmaps/screens/publish_market_layout_screen.dart';
 
 class _SharedDataCloudController extends CloudController {
   _SharedDataCloudController() : super(null);
@@ -433,6 +434,46 @@ void main() {
     await tester.tap(find.byType(PopupMenuButton<String>).first);
     await tester.pumpAndSettle();
     expect(find.text('Dodaj do moich sklepów'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
+  testWidgets('search tab can open share flow for a local store map', (
+    tester,
+  ) async {
+    final appController = AppController(LocalStore());
+    final cloudController = _PublicMapsCloudController();
+    await appController.load(localeLanguageCode: 'pl');
+    await appController.upsertMarketLayout(
+      const MarketLayout(
+        id: 'local-store-map',
+        name: 'Mój sklep',
+        categoryOrder: ['Piekarnia'],
+      ),
+    );
+
+    await tester.pumpWidget(
+      _homeApp(appController: appController, cloudController: cloudController),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Szukaj'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(FilledButton, 'Udostępnij'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Udostępnij'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Wybierz mapę do udostępnienia'), findsOneWidget);
+    expect(find.text('Mój sklep'), findsOneWidget);
+
+    await tester.tap(find.text('Mój sklep'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PublishMarketLayoutScreen), findsOneWidget);
+    expect(find.text('Udostępnij mapę sklepu'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     cloudController.dispose();

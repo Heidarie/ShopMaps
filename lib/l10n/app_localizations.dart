@@ -53,6 +53,7 @@ class AppLocalizations {
       'addCategory': 'Add category',
       'save': 'Save',
       'cancel': 'Cancel',
+      'back': 'Back',
       'delete': 'Delete',
       'rename': 'Rename',
       'edit': 'Edit',
@@ -104,6 +105,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'The list is empty.',
       'items': 'items',
       'addItem': 'Add item',
+      'itemAdded': 'Added',
       'loadFrequentItems': 'Load frequent items',
       'frequentItemsDialogTitle': '10 most frequent items:',
       'frequentItemsDialogExplanation':
@@ -179,6 +181,7 @@ class AppLocalizations {
       'addCategory': 'Dodaj kategorię',
       'save': 'Zapisz',
       'cancel': 'Anuluj',
+      'back': 'Wróć',
       'delete': 'Usuń',
       'rename': 'Zmień nazwę',
       'edit': 'Edytuj',
@@ -230,6 +233,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'Lista jest pusta.',
       'items': 'pozycji',
       'addItem': 'Dodaj produkt',
+      'itemAdded': 'Dodano',
       'loadFrequentItems': 'Załaduj najczęstsze artykuły',
       'frequentItemsDialogTitle': '10 najczęściej występujących artykułów:',
       'frequentItemsDialogExplanation':
@@ -305,6 +309,7 @@ class AppLocalizations {
       'addCategory': 'Kategorie hinzufügen',
       'save': 'Speichern',
       'cancel': 'Abbrechen',
+      'back': 'Zurück',
       'delete': 'Löschen',
       'rename': 'Umbenennen',
       'edit': 'Bearbeiten',
@@ -353,6 +358,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'Die Liste ist leer.',
       'items': 'Artikel',
       'addItem': 'Artikel hinzufügen',
+      'itemAdded': 'Hinzugefügt',
       'loadFrequentItems': 'Häufige Artikel laden',
       'frequentItemsDialogTitle': '10 häufigste Artikel:',
       'frequentItemsDialogExplanation':
@@ -431,6 +437,7 @@ class AppLocalizations {
       'addCategory': 'Categorie toevoegen',
       'save': 'Opslaan',
       'cancel': 'Annuleren',
+      'back': 'Terug',
       'delete': 'Verwijderen',
       'rename': 'Hernoemen',
       'edit': 'Bewerken',
@@ -479,6 +486,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'De lijst is leeg.',
       'items': 'items',
       'addItem': 'Item toevoegen',
+      'itemAdded': 'Toegevoegd',
       'loadFrequentItems': 'Vaak gebruikte items laden',
       'frequentItemsDialogTitle': '10 meest voorkomende items:',
       'frequentItemsDialogExplanation':
@@ -556,6 +564,7 @@ class AppLocalizations {
       'addCategory': 'Añadir categoría',
       'save': 'Guardar',
       'cancel': 'Cancelar',
+      'back': 'Volver',
       'delete': 'Eliminar',
       'rename': 'Renombrar',
       'edit': 'Editar',
@@ -604,6 +613,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'La lista está vacía.',
       'items': 'elementos',
       'addItem': 'Añadir producto',
+      'itemAdded': 'Añadido',
       'loadFrequentItems': 'Cargar artículos frecuentes',
       'frequentItemsDialogTitle': '10 artículos más frecuentes:',
       'frequentItemsDialogExplanation':
@@ -683,6 +693,7 @@ class AppLocalizations {
       'addCategory': 'Ajouter une catégorie',
       'save': 'Enregistrer',
       'cancel': 'Annuler',
+      'back': 'Retour',
       'delete': 'Supprimer',
       'rename': 'Renommer',
       'edit': 'Modifier',
@@ -731,6 +742,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'La liste est vide.',
       'items': 'articles',
       'addItem': 'Ajouter un article',
+      'itemAdded': 'Ajouté',
       'loadFrequentItems': 'Charger les articles fréquents',
       'frequentItemsDialogTitle': '10 articles les plus fréquents :',
       'frequentItemsDialogExplanation':
@@ -808,6 +820,7 @@ class AppLocalizations {
       'addCategory': 'Додати категорію',
       'save': 'Зберегти',
       'cancel': 'Скасувати',
+      'back': 'Назад',
       'delete': 'Видалити',
       'rename': 'Перейменувати',
       'edit': 'Редагувати',
@@ -856,6 +869,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'Список порожній.',
       'items': 'позицій',
       'addItem': 'Додати товар',
+      'itemAdded': 'Додано',
       'loadFrequentItems': 'Завантажити часті товари',
       'frequentItemsDialogTitle': '10 найчастіших товарів:',
       'frequentItemsDialogExplanation':
@@ -934,6 +948,7 @@ class AppLocalizations {
       'addCategory': 'Aggiungi categoria',
       'save': 'Salva',
       'cancel': 'Annulla',
+      'back': 'Indietro',
       'delete': 'Elimina',
       'rename': 'Rinomina',
       'edit': 'Modifica',
@@ -982,6 +997,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'La lista è vuota.',
       'items': 'elementi',
       'addItem': 'Aggiungi articolo',
+      'itemAdded': 'Aggiunto',
       'loadFrequentItems': 'Carica articoli frequenti',
       'frequentItemsDialogTitle': '10 articoli più frequenti:',
       'frequentItemsDialogExplanation':
@@ -1062,6 +1078,7 @@ class AppLocalizations {
       'addCategory': 'Adicionar categoria',
       'save': 'Salvar',
       'cancel': 'Cancelar',
+      'back': 'Voltar',
       'delete': 'Excluir',
       'rename': 'Renomear',
       'edit': 'Editar',
@@ -1110,6 +1127,7 @@ class AppLocalizations {
       'emptyGroceryListItems': 'A lista está vazia.',
       'items': 'itens',
       'addItem': 'Adicionar item',
+      'itemAdded': 'Adicionado',
       'loadFrequentItems': 'Carregar itens frequentes',
       'frequentItemsDialogTitle': '10 itens mais frequentes:',
       'frequentItemsDialogExplanation':
@@ -1197,6 +1215,7 @@ class AppLocalizations {
   String get addCategory => _t('addCategory');
   String get save => _t('save');
   String get cancel => _t('cancel');
+  String get back => _t('back');
   String get delete => _t('delete');
   String get rename => _t('rename');
   String get edit => _t('edit');
@@ -1245,6 +1264,7 @@ class AppLocalizations {
   String get emptyGroceryListItems => _t('emptyGroceryListItems');
   String get items => _t('items');
   String get addItem => _t('addItem');
+  String get itemAdded => _t('itemAdded');
   String get loadFrequentItems => _t('loadFrequentItems');
   String get frequentItemsDialogTitle => _t('frequentItemsDialogTitle');
   String get frequentItemsDialogExplanation =>

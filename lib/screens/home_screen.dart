@@ -610,6 +610,14 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
                   icon: const Icon(Icons.add),
                   label: Text(l10n.add),
                 ),
+              if (_showPublicMaps &&
+                  widget.cloudController.isSignedIn &&
+                  widget.cloudController.profile?.hasStoreCountry == true)
+                FilledButton.icon(
+                  onPressed: _showShareLocalMapPicker,
+                  icon: const Icon(Icons.ios_share_outlined),
+                  label: Text(cloudL10n.text('share')),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1071,6 +1079,95 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
     }
   }
 
+  Future<void> _showShareLocalMapPicker() async {
+    final l10n = AppLocalizations.of(context);
+    final cloudL10n = CloudLocalizations.of(context);
+    final marketLayouts = List<MarketLayout>.of(
+      widget.controller.marketLayouts,
+    );
+    final selectedLayout = await showModalBottomSheet<MarketLayout>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final maxListHeight = MediaQuery.sizeOf(sheetContext).height * 0.55;
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  cloudL10n.text('selectStoreMapToShare'),
+                  style: Theme.of(sheetContext).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 12),
+                if (marketLayouts.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      l10n.emptyMarketLayouts,
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: maxListHeight),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: marketLayouts.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (_, index) {
+                        final layout = marketLayouts[index];
+                        final publicMap = widget.cloudController
+                            .publicMapForLocalId(layout.id);
+                        final hasMoreItems =
+                            layout.categoryOrder.length >
+                            _publicMapPreviewItemLimit;
+                        final previewItems = layout.categoryOrder
+                            .take(_publicMapPreviewItemLimit)
+                            .map(l10n.categoryLabel);
+
+                        return ListTile(
+                          leading: publicMap == null
+                              ? const Icon(Icons.storefront_outlined)
+                              : const Icon(Icons.public),
+                          title: Text(layout.name),
+                          subtitle: Text(
+                            [
+                              if (publicMap != null)
+                                publicMap.location.formattedAddress,
+                              [
+                                ...previewItems,
+                                if (hasMoreItems) '...',
+                              ].join('  →  '),
+                            ].where((value) => value.isNotEmpty).join('\n'),
+                            maxLines: publicMap == null ? 2 : 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () => Navigator.pop(sheetContext, layout),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selectedLayout == null || !mounted) {
+      return;
+    }
+    await _shareLocalMap(
+      selectedLayout,
+      widget.cloudController.publicMapForLocalId(selectedLayout.id),
+    );
+  }
+
   Future<void> _findNearMe(CloudLocalizations l10n) async {
     setState(() {
       _isFindingLocation = true;
@@ -1165,22 +1262,7 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
       return;
     }
     if (value == 'publish') {
-      final published = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(
-          builder: (_) => PublishMarketLayoutScreen(
-            controller: widget.controller,
-            cloudController: widget.cloudController,
-            layout: layout,
-            existingMap: publicMap,
-          ),
-        ),
-      );
-      if (published == true && mounted) {
-        final cloudL10n = CloudLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(cloudL10n.text('storeMapPublished'))),
-        );
-      }
+      await _shareLocalMap(layout, publicMap);
       return;
     }
     if (value == 'unpublish' && publicMap != null) {
@@ -1189,6 +1271,28 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
     }
     if (value == 'delete') {
       await _deleteLayout(layout);
+    }
+  }
+
+  Future<void> _shareLocalMap(
+    MarketLayout layout,
+    SharedMarketLayout? publicMap,
+  ) async {
+    final published = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PublishMarketLayoutScreen(
+          controller: widget.controller,
+          cloudController: widget.cloudController,
+          layout: layout,
+          existingMap: publicMap,
+        ),
+      ),
+    );
+    if (published == true && mounted) {
+      final cloudL10n = CloudLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(cloudL10n.text('storeMapPublished'))),
+      );
     }
   }
 

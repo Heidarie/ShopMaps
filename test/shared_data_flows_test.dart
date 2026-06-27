@@ -155,7 +155,7 @@ void main() {
     appController.dispose();
   });
 
-  testWidgets('list editor remains scrollable with keyboard and many hints', (
+  testWidgets('list editor opens full-screen item composer and limits hints', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(430, 700);
@@ -178,6 +178,10 @@ void main() {
         quantity: 1,
       );
     }
+    expect(
+      appController.findItemHints('Mleko wariant'),
+      hasLength(greaterThan(3)),
+    );
 
     await tester.pumpWidget(
       _testApp(
@@ -188,15 +192,51 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'M');
+    expect(find.byType(TextField), findsNothing);
+    await tester.tap(find.widgetWithText(FilledButton, 'Dodaj produkt'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(OutlinedButton, 'Wróć'), findsOneWidget);
+    await tester.showKeyboard(find.byType(TextField));
+    await tester.enterText(find.byType(TextField), 'Mleko wariant');
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.byType(SingleChildScrollView), findsOneWidget);
+    expect(tester.testTextInput.isVisible, isTrue);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'Mleko wariant',
+    );
+    expect(
+      find.byKey(const ValueKey('grocery-list-item-editor-scroll')),
+      findsOneWidget,
+    );
+    final chipLabels = tester
+        .widgetList<ActionChip>(find.byType(ActionChip, skipOffstage: false))
+        .map((chip) => (chip.label as Text).data)
+        .toList();
+    expect(chipLabels, containsAll(['Mleko wariant 0 -> Nabiał']));
+    expect(
+      chipLabels.where((label) => label?.contains('Mleko wariant') ?? false),
+      hasLength(3),
+    );
+
+    await tester.tap(find.text('Mleko wariant 0 -> Nabiał'));
+    await tester.pumpAndSettle();
+
+    expect(tester.testTextInput.isVisible, isTrue);
     expect(
       find.widgetWithText(FilledButton, 'Dodaj produkt').hitTestable(),
       findsOneWidget,
     );
+    await tester.tap(find.widgetWithText(FilledButton, 'Dodaj produkt'));
+    await tester.pump();
+
+    expect(find.text('Dodano'), findsOneWidget);
+    expect(tester.testTextInput.isVisible, isTrue);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Wróć'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Mleko wariant 0 x 1'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     appController.dispose();
@@ -239,6 +279,8 @@ void main() {
 
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Dodaj produkt'));
+      await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'Chleb');
       await tester.tap(find.text('Dodaj kategorię'));
       await tester.pumpAndSettle();
@@ -259,6 +301,8 @@ void main() {
       expect(cloudController.addedItemNames, ['Chleb']);
       expect(cloudController.notifiedListIds, isEmpty);
 
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
@@ -293,6 +337,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await tester.tap(find.widgetWithText(FilledButton, 'Dodaj produkt'));
+      await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'Odrzucony produkt');
       await tester.tap(find.text('Dodaj kategorię'));
       await tester.pumpAndSettle();
@@ -322,6 +368,8 @@ void main() {
       );
       expect(cloudController.addedItemNames, isEmpty);
 
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
