@@ -1,0 +1,7 @@
+project_id = "shopmaps"
+
+[functions.geoapify-address-search]
+verify_jwt = true
+
+[functions.notify-shared-list-additions]
+verify_jwt = true

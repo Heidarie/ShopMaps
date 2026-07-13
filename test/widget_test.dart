@@ -17,4 +17,15 @@ void main() {
 
     expect(find.byIcon(Icons.shopping_cart_checkout), findsOneWidget);
   });
+
+  testWidgets('Account icon opens groups and login screen', (tester) async {
+    await tester.pumpWidget(const ShopMapsApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Local mode'), findsOneWidget);
+  });
 }

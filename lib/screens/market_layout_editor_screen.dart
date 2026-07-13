@@ -76,12 +76,8 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
                   ? Center(child: Text(l10n.noCategoriesInLayout))
                   : ReorderableListView.builder(
                       itemCount: _orderedCategories.length,
-                      onReorder: (oldIndex, newIndex) {
+                      onReorderItem: (oldIndex, newIndex) {
                         setState(() {
-                          if (newIndex > oldIndex) {
-                            newIndex -= 1;
-                          }
-
                           final item = _orderedCategories.removeAt(oldIndex);
                           _orderedCategories.insert(newIndex, item);
                         });
@@ -336,6 +332,7 @@ class _MarketLayoutEditorScreenState extends State<MarketLayoutEditorScreen> {
       id: widget.layout?.id ?? createId(),
       name: name,
       categoryOrder: _orderedCategories,
+      sourceSharedMarketLayoutId: widget.layout?.sourceSharedMarketLayoutId,
     );
 
     Navigator.pop(context, result);

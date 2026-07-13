@@ -2,17 +2,26 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_controller.dart';
+import 'cloud/cloud_controller.dart';
+import 'cloud/push_notification_service.dart';
+import 'cloud/supabase_config.dart';
 import 'l10n/app_localizations.dart';
 import 'local_store.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  SupabaseConfig.validateRuntimeConfiguration();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      publishableKey: SupabaseConfig.publishableKey,
+    );
+  }
   runApp(const ShopMapsApp());
 }
 
@@ -25,20 +34,30 @@ class ShopMapsApp extends StatefulWidget {
 
 class _ShopMapsAppState extends State<ShopMapsApp> {
   late final AppController _controller;
+  late final CloudController _cloudController;
   ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
     _controller = AppController(LocalStore());
-    _controller.load(
-      localeLanguageCode: WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+    _cloudController = CloudController(
+      SupabaseConfig.isConfigured ? Supabase.instance.client : null,
+      pushNotificationService: PushNotificationService(
+        enabled: SupabaseConfig.pushNotificationsEnabled,
+      ),
     );
+    _controller.load(
+      localeLanguageCode:
+          WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+    );
+    _cloudController.initialize();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _cloudController.dispose();
     super.dispose();
   }
 
@@ -46,12 +65,14 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
     final effectiveBrightness = switch (_themeMode) {
       ThemeMode.light => Brightness.light,
       ThemeMode.dark => Brightness.dark,
-      ThemeMode.system => WidgetsBinding.instance.platformDispatcher.platformBrightness,
+      ThemeMode.system =>
+        WidgetsBinding.instance.platformDispatcher.platformBrightness,
     };
 
     setState(() {
-      _themeMode =
-          effectiveBrightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+      _themeMode = effectiveBrightness == Brightness.dark
+          ? ThemeMode.light
+          : ThemeMode.dark;
     });
   }
 
@@ -63,9 +84,7 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
     const darkBar = Color(0xFF17191B);
     const darkCard = Color(0xFF1C1C1E);
 
-    final lightColorScheme = ColorScheme.fromSeed(
-      seedColor: brandColor,
-    );
+    final lightColorScheme = ColorScheme.fromSeed(seedColor: brandColor);
     final darkColorScheme = ColorScheme.fromSeed(
       seedColor: brandColor,
       brightness: Brightness.dark,
@@ -167,7 +186,10 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: brandColor, width: 1.4),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
         ),
         useMaterial3: true,
       ),
@@ -226,29 +248,19 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFF2C2C2E),
-          hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.58),
-          ),
-          labelStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.72),
-          ),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.58)),
+          labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.72)),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.10),
-            ),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.12),
-            ),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
           ),
           disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.08),
-            ),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -256,25 +268,23 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: darkColorScheme.error,
-              width: 1.2,
-            ),
+            borderSide: BorderSide(color: darkColorScheme.error, width: 1.2),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: darkColorScheme.error,
-              width: 1.4,
-            ),
+            borderSide: BorderSide(color: darkColorScheme.error, width: 1.4),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
         ),
         useMaterial3: true,
       ),
       themeMode: _themeMode,
       home: HomeScreen(
         controller: _controller,
+        cloudController: _cloudController,
         onToggleThemeMode: _toggleThemeMode,
       ),
     );

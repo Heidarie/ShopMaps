@@ -109,10 +109,12 @@ class AppData {
     required this.categories,
     required this.marketLayouts,
     required this.groceryLists,
+    required this.depositVouchers,
     required this.itemCategoryMemory,
     required this.frequentItemStats,
     required this.removeCheckedShoppingItems,
     required this.predefinedItemsSeedVersion,
+    required this.onlineCategoryMappings,
   });
 
   factory AppData.empty({
@@ -124,10 +126,12 @@ class AppData {
       categories: [...(categories ?? defaultCategories)],
       marketLayouts: const [],
       groceryLists: const [],
+      depositVouchers: const [],
       itemCategoryMemory: itemCategoryMemory ?? const [],
       frequentItemStats: const [],
       removeCheckedShoppingItems: true,
       predefinedItemsSeedVersion: predefinedItemsSeedVersion,
+      onlineCategoryMappings: const {},
     );
   }
 
@@ -135,16 +139,22 @@ class AppData {
     Map<String, dynamic> json, {
     List<String>? fallbackCategories,
   }) {
-    final loadedCategories = _uniqueCaseInsensitive(_toStringList(json['categories']));
-    final marketLayouts = _toDynamicList(json['marketLayouts'])
-        .map(MarketLayout.fromJson)
+    final loadedCategories = _uniqueCaseInsensitive(
+      _toStringList(json['categories']),
+    );
+    final marketLayouts = _toDynamicList(
+      json['marketLayouts'],
+    ).map(MarketLayout.fromJson).toList();
+    final groceryLists = _toDynamicList(
+      json['groceryLists'],
+    ).map(GroceryListModel.fromJson).toList();
+    final depositVouchers = _toDynamicList(json['depositVouchers'])
+        .map(DepositVoucher.fromJson)
+        .where((entry) => entry.code.isNotEmpty)
         .toList();
-    final groceryLists = _toDynamicList(json['groceryLists'])
-        .map(GroceryListModel.fromJson)
-        .toList();
-    final memoryFromStorage = _toDynamicList(json['itemCategoryMemory'])
-        .map(RememberedItemCategory.fromJson)
-        .toList();
+    final memoryFromStorage = _toDynamicList(
+      json['itemCategoryMemory'],
+    ).map(RememberedItemCategory.fromJson).toList();
     final memoryFromLists = _rememberedItemsFromLists(groceryLists);
     final mergedMemory = _mergeRememberedItems(
       baseline: memoryFromLists,
@@ -152,7 +162,9 @@ class AppData {
     );
     final frequentItemStats = _toDynamicList(json['frequentItemStats'])
         .map(FrequentItemStat.fromJson)
-        .where((entry) => entry.itemName.isNotEmpty && entry.category.isNotEmpty)
+        .where(
+          (entry) => entry.itemName.isNotEmpty && entry.category.isNotEmpty,
+        )
         .toList();
 
     return AppData(
@@ -161,40 +173,52 @@ class AppData {
           : loadedCategories,
       marketLayouts: marketLayouts,
       groceryLists: groceryLists,
+      depositVouchers: depositVouchers,
       itemCategoryMemory: mergedMemory,
       frequentItemStats: _mergeFrequentItemStats(frequentItemStats),
-      removeCheckedShoppingItems: json['removeCheckedShoppingItems'] as bool? ?? true,
-      predefinedItemsSeedVersion: _toNonNegativeInt(json['predefinedItemsSeedVersion']),
+      removeCheckedShoppingItems:
+          json['removeCheckedShoppingItems'] as bool? ?? true,
+      predefinedItemsSeedVersion: _toNonNegativeInt(
+        json['predefinedItemsSeedVersion'],
+      ),
+      onlineCategoryMappings: _toStringMap(json['onlineCategoryMappings']),
     );
   }
 
   final List<String> categories;
   final List<MarketLayout> marketLayouts;
   final List<GroceryListModel> groceryLists;
+  final List<DepositVoucher> depositVouchers;
   final List<RememberedItemCategory> itemCategoryMemory;
   final List<FrequentItemStat> frequentItemStats;
   final bool removeCheckedShoppingItems;
   final int predefinedItemsSeedVersion;
+  final Map<String, String> onlineCategoryMappings;
 
   AppData copyWith({
     List<String>? categories,
     List<MarketLayout>? marketLayouts,
     List<GroceryListModel>? groceryLists,
+    List<DepositVoucher>? depositVouchers,
     List<RememberedItemCategory>? itemCategoryMemory,
     List<FrequentItemStat>? frequentItemStats,
     bool? removeCheckedShoppingItems,
     int? predefinedItemsSeedVersion,
+    Map<String, String>? onlineCategoryMappings,
   }) {
     return AppData(
       categories: categories ?? this.categories,
       marketLayouts: marketLayouts ?? this.marketLayouts,
       groceryLists: groceryLists ?? this.groceryLists,
+      depositVouchers: depositVouchers ?? this.depositVouchers,
       itemCategoryMemory: itemCategoryMemory ?? this.itemCategoryMemory,
       frequentItemStats: frequentItemStats ?? this.frequentItemStats,
       removeCheckedShoppingItems:
           removeCheckedShoppingItems ?? this.removeCheckedShoppingItems,
       predefinedItemsSeedVersion:
           predefinedItemsSeedVersion ?? this.predefinedItemsSeedVersion,
+      onlineCategoryMappings:
+          onlineCategoryMappings ?? this.onlineCategoryMappings,
     );
   }
 
@@ -203,12 +227,62 @@ class AppData {
       'categories': categories,
       'marketLayouts': marketLayouts.map((layout) => layout.toJson()).toList(),
       'groceryLists': groceryLists.map((list) => list.toJson()).toList(),
-      'itemCategoryMemory':
-          itemCategoryMemory.map((entry) => entry.toJson()).toList(),
-      'frequentItemStats':
-          frequentItemStats.map((entry) => entry.toJson()).toList(),
+      'depositVouchers': depositVouchers
+          .map((voucher) => voucher.toJson())
+          .toList(),
+      'itemCategoryMemory': itemCategoryMemory
+          .map((entry) => entry.toJson())
+          .toList(),
+      'frequentItemStats': frequentItemStats
+          .map((entry) => entry.toJson())
+          .toList(),
       'removeCheckedShoppingItems': removeCheckedShoppingItems,
       'predefinedItemsSeedVersion': predefinedItemsSeedVersion,
+      'onlineCategoryMappings': onlineCategoryMappings,
+    };
+  }
+}
+
+class DepositVoucher {
+  const DepositVoucher({
+    required this.id,
+    required this.code,
+    required this.format,
+    required this.scannedAt,
+    required this.amount,
+    required this.storeName,
+    required this.validUntil,
+  });
+
+  factory DepositVoucher.fromJson(Map<String, dynamic> json) {
+    return DepositVoucher(
+      id: (json['id'] ?? '').toString(),
+      code: (json['code'] ?? '').toString().trim(),
+      format: (json['format'] ?? '').toString().trim(),
+      scannedAt: _toDateTime(json['scannedAt']),
+      amount: _toNonNegativeDouble(json['amount']),
+      storeName: (json['storeName'] ?? '').toString().trim(),
+      validUntil: _toNullableDateTime(json['validUntil']),
+    );
+  }
+
+  final String id;
+  final String code;
+  final String format;
+  final DateTime scannedAt;
+  final double amount;
+  final String storeName;
+  final DateTime? validUntil;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'format': format,
+      'scannedAt': scannedAt.toUtc().toIso8601String(),
+      'amount': amount,
+      'storeName': storeName,
+      'validUntil': validUntil?.toUtc().toIso8601String(),
     };
   }
 }
@@ -218,6 +292,7 @@ class MarketLayout {
     required this.id,
     required this.name,
     required this.categoryOrder,
+    this.sourceSharedMarketLayoutId,
   });
 
   factory MarketLayout.fromJson(Map<String, dynamic> json) {
@@ -225,27 +300,39 @@ class MarketLayout {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       categoryOrder: _toStringList(json['categoryOrder']),
+      sourceSharedMarketLayoutId: json['sourceSharedMarketLayoutId']
+          ?.toString(),
     );
   }
 
   final String id;
   final String name;
   final List<String> categoryOrder;
+  final String? sourceSharedMarketLayoutId;
 
   MarketLayout copyWith({
     String? id,
     String? name,
     List<String>? categoryOrder,
+    String? sourceSharedMarketLayoutId,
   }) {
     return MarketLayout(
       id: id ?? this.id,
       name: name ?? this.name,
       categoryOrder: categoryOrder ?? this.categoryOrder,
+      sourceSharedMarketLayoutId:
+          sourceSharedMarketLayoutId ?? this.sourceSharedMarketLayoutId,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'categoryOrder': categoryOrder};
+    return {
+      'id': id,
+      'name': name,
+      'categoryOrder': categoryOrder,
+      if (sourceSharedMarketLayoutId != null)
+        'sourceSharedMarketLayoutId': sourceSharedMarketLayoutId,
+    };
   }
 }
 
@@ -281,7 +368,11 @@ class GroceryListModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'items': items.map((item) => item.toJson()).toList()};
+    return {
+      'id': id,
+      'name': name,
+      'items': items.map((item) => item.toJson()).toList(),
+    };
   }
 }
 
@@ -308,12 +399,7 @@ class GroceryItem {
   final int quantity;
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'category': category,
-      'quantity': quantity,
-    };
+    return {'id': id, 'name': name, 'category': category, 'quantity': quantity};
   }
 }
 
@@ -334,10 +420,7 @@ class RememberedItemCategory {
   final String category;
 
   Map<String, dynamic> toJson() {
-    return {
-      'itemName': itemName,
-      'category': category,
-    };
+    return {'itemName': itemName, 'category': category};
   }
 }
 
@@ -418,6 +501,16 @@ List<Map<String, dynamic>> _toDynamicList(dynamic source) {
       .toList();
 }
 
+Map<String, String> _toStringMap(dynamic source) {
+  if (source is! Map) {
+    return const {};
+  }
+
+  return source.map((key, value) {
+    return MapEntry(key.toString().trim(), value.toString().trim());
+  })..removeWhere((key, value) => key.isEmpty || value.isEmpty);
+}
+
 int _toPositiveInt(dynamic source, {int fallback = 1}) {
   final parsed = switch (source) {
     int value => value,
@@ -438,6 +531,16 @@ int _toNonNegativeInt(dynamic source, {int fallback = 0}) {
   return parsed < 0 ? fallback : parsed;
 }
 
+double _toNonNegativeDouble(dynamic source, {double fallback = 0}) {
+  final parsed = switch (source) {
+    num value => value.toDouble(),
+    String value => double.tryParse(value.replaceAll(',', '.')) ?? fallback,
+    _ => fallback,
+  };
+
+  return parsed < 0 ? fallback : parsed;
+}
+
 DateTime _toDateTime(dynamic source) {
   if (source is String) {
     final parsed = DateTime.tryParse(source);
@@ -447,6 +550,14 @@ DateTime _toDateTime(dynamic source) {
   }
 
   return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+}
+
+DateTime? _toNullableDateTime(dynamic source) {
+  if (source is String) {
+    return DateTime.tryParse(source);
+  }
+
+  return null;
 }
 
 List<String> _uniqueCaseInsensitive(List<String> source) {
@@ -475,8 +586,10 @@ List<RememberedItemCategory> _rememberedItemsFromLists(
       if (name.isEmpty || category.isEmpty) {
         continue;
       }
-      byItem[name.toLowerCase()] =
-          RememberedItemCategory(itemName: name, category: category);
+      byItem[name.toLowerCase()] = RememberedItemCategory(
+        itemName: name,
+        category: category,
+      );
     }
   }
 
