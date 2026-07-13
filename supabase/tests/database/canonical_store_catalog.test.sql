@@ -24,13 +24,15 @@ insert into public.profiles (
   id,
   display_name,
   display_name_normalized,
-  discriminator
+  discriminator,
+  country_code
 )
 values (
   '00000000-0000-0000-0000-000000001001',
   'Catalog User',
   'catalog user',
-  1001
+  1001,
+  'pl'
 );
 
 insert into public.spaces (id, name, created_by)
