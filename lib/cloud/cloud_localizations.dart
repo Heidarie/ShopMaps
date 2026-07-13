@@ -336,6 +336,8 @@ class CloudLocalizations {
       'copiedToGroup': 'Liste in die Gruppe kopiert.',
       'movedToGroup': 'Pfandcode in die Gruppe verschoben.',
       'membersCanEdit': 'Alle Gruppenmitglieder haben Zugriff auf diese Daten.',
+      'share': 'Teilen',
+      'selectStoreMapToShare': 'Karte zum Teilen auswählen',
     },
     'nl': {
       'account': 'Account',
@@ -387,6 +389,8 @@ class CloudLocalizations {
       'copiedToGroup': 'Lijst naar de groep gekopieerd.',
       'movedToGroup': 'Statiegeldcode naar de groep verplaatst.',
       'membersCanEdit': 'Alle groepsleden hebben toegang tot deze gegevens.',
+      'share': 'Delen',
+      'selectStoreMapToShare': 'Kaart kiezen om te delen',
     },
     'es': {
       'account': 'Cuenta',
@@ -439,6 +443,8 @@ class CloudLocalizations {
       'movedToGroup': 'Código de depósito movido al grupo.',
       'membersCanEdit':
           'Todos los miembros del grupo tienen acceso a estos datos.',
+      'share': 'Compartir',
+      'selectStoreMapToShare': 'Seleccionar mapa para compartir',
     },
     'fr': {
       'account': 'Compte',
@@ -490,6 +496,8 @@ class CloudLocalizations {
       'copiedToGroup': 'Liste copiée dans le groupe.',
       'movedToGroup': 'Code de consigne déplacé dans le groupe.',
       'membersCanEdit': 'Tous les membres du groupe ont accès à ces données.',
+      'share': 'Partager',
+      'selectStoreMapToShare': 'Sélectionner la carte à partager',
     },
     'uk': {
       'account': 'Обліковий запис',
@@ -541,6 +549,8 @@ class CloudLocalizations {
       'copiedToGroup': 'Список скопійовано до групи.',
       'movedToGroup': 'Код застави переміщено до групи.',
       'membersCanEdit': 'Усі учасники групи мають доступ до цих даних.',
+      'share': 'Поділитися',
+      'selectStoreMapToShare': 'Виберіть мапу для поширення',
     },
     'it': {
       'account': 'Account',
@@ -593,6 +603,8 @@ class CloudLocalizations {
       'movedToGroup': 'Codice cauzione spostato nel gruppo.',
       'membersCanEdit':
           'Tutti i membri del gruppo hanno accesso a questi dati.',
+      'share': 'Condividi',
+      'selectStoreMapToShare': 'Seleziona mappa da condividere',
     },
     'pt': {
       'account': 'Conta',
@@ -644,6 +656,8 @@ class CloudLocalizations {
       'copiedToGroup': 'Lista copiada para o grupo.',
       'movedToGroup': 'Código de caução movido para o grupo.',
       'membersCanEdit': 'Todos os membros do grupo têm acesso a estes dados.',
+      'share': 'Partilhar',
+      'selectStoreMapToShare': 'Selecionar mapa para partilhar',
     },
   };
 
