@@ -121,7 +121,7 @@ class CloudLocalizations {
       'reportStoreMap': 'Report map',
       'hideUserMaps': 'Hide maps from this user',
       'hideUserMapsConfirmation':
-          'You will no longer see maps shared by {user}.',
+          'You will no longer see maps shared by this user.',
       'hideUserMapsAction': 'Hide maps',
       'userMapsHidden': 'Maps from this user are now hidden.',
       'reportReasonIncorrect': 'Incorrect or outdated information',
@@ -264,7 +264,7 @@ class CloudLocalizations {
       'reportStoreMap': 'Zgłoś mapę',
       'hideUserMaps': 'Ukryj mapy tego użytkownika',
       'hideUserMapsConfirmation':
-          'Nie będziesz już widzieć map udostępnionych przez użytkownika {user}.',
+          'Nie będziesz już widzieć map udostępnionych przez tego użytkownika.',
       'hideUserMapsAction': 'Ukryj mapy',
       'userMapsHidden': 'Mapy tego użytkownika zostały ukryte.',
       'reportReasonIncorrect': 'Nieprawidłowe lub nieaktualne informacje',
@@ -350,7 +350,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Karte zum Teilen auswählen',
       'hideUserMaps': 'Karten dieses Nutzers ausblenden',
       'hideUserMapsConfirmation':
-          'Du siehst keine von {user} geteilten Karten mehr.',
+          'Du siehst keine von diesem Nutzer geteilten Karten mehr.',
       'hideUserMapsAction': 'Karten ausblenden',
       'userMapsHidden': 'Die Karten dieses Nutzers wurden ausgeblendet.',
     },
@@ -408,7 +408,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Kaart kiezen om te delen',
       'hideUserMaps': 'Kaarten van deze gebruiker verbergen',
       'hideUserMapsConfirmation':
-          'Je ziet geen kaarten meer die door {user} zijn gedeeld.',
+          'Je ziet geen kaarten meer die door deze gebruiker zijn gedeeld.',
       'hideUserMapsAction': 'Kaarten verbergen',
       'userMapsHidden': 'De kaarten van deze gebruiker zijn verborgen.',
     },
@@ -467,7 +467,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Seleccionar mapa para compartir',
       'hideUserMaps': 'Ocultar mapas de este usuario',
       'hideUserMapsConfirmation':
-          'Ya no verás los mapas compartidos por {user}.',
+          'Ya no verás los mapas compartidos por este usuario.',
       'hideUserMapsAction': 'Ocultar mapas',
       'userMapsHidden': 'Los mapas de este usuario se han ocultado.',
     },
@@ -525,7 +525,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Sélectionner la carte à partager',
       'hideUserMaps': 'Masquer les cartes de cet utilisateur',
       'hideUserMapsConfirmation':
-          'Vous ne verrez plus les cartes partagées par {user}.',
+          'Vous ne verrez plus les cartes partagées par cet utilisateur.',
       'hideUserMapsAction': 'Masquer les cartes',
       'userMapsHidden': 'Les cartes de cet utilisateur sont masquées.',
     },
@@ -583,7 +583,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Виберіть мапу для поширення',
       'hideUserMaps': 'Приховати мапи цього користувача',
       'hideUserMapsConfirmation':
-          'Ви більше не бачитимете мапи, якими поділився користувач {user}.',
+          'Ви більше не бачитимете мапи, якими поділився цей користувач.',
       'hideUserMapsAction': 'Приховати мапи',
       'userMapsHidden': 'Мапи цього користувача приховано.',
     },
@@ -642,7 +642,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Seleziona mappa da condividere',
       'hideUserMaps': 'Nascondi le mappe di questo utente',
       'hideUserMapsConfirmation':
-          'Non vedrai più le mappe condivise da {user}.',
+          'Non vedrai più le mappe condivise da questo utente.',
       'hideUserMapsAction': 'Nascondi mappe',
       'userMapsHidden': 'Le mappe di questo utente sono state nascoste.',
     },
@@ -700,7 +700,7 @@ class CloudLocalizations {
       'selectStoreMapToShare': 'Selecionar mapa para partilhar',
       'hideUserMaps': 'Ocultar mapas deste utilizador',
       'hideUserMapsConfirmation':
-          'Deixará de ver os mapas partilhados por {user}.',
+          'Deixará de ver os mapas partilhados por este utilizador.',
       'hideUserMapsAction': 'Ocultar mapas',
       'userMapsHidden': 'Os mapas deste utilizador foram ocultados.',
     },

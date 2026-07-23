@@ -753,8 +753,7 @@ void main() {
 
     expect(
       find.text(
-        'Nie będziesz już widzieć map udostępnionych przez użytkownika '
-        'Endriu#0042.',
+        'Nie będziesz już widzieć map udostępnionych przez tego użytkownika.',
       ),
       findsOneWidget,
     );

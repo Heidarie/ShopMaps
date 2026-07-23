@@ -1423,11 +1423,7 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: Text(cloudL10n.text('hideUserMaps')),
-            content: Text(
-              cloudL10n
-                  .text('hideUserMapsConfirmation')
-                  .replaceAll('{user}', map.creatorHandle),
-            ),
+            content: Text(cloudL10n.text('hideUserMapsConfirmation')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
