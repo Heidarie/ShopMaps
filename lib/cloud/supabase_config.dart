@@ -30,12 +30,17 @@ class SupabaseConfig {
   static const firebaseProjectId = String.fromEnvironment(
     'FIREBASE_PROJECT_ID',
   );
-  static const privacyPolicyUrl = String.fromEnvironment('PRIVACY_POLICY_URL');
+  static const privacyPolicyUrl = String.fromEnvironment(
+    'PRIVACY_POLICY_URL',
+    defaultValue: 'https://heidarie.github.io/ShopMaps/#privacy',
+  );
   static const termsOfServiceUrl = String.fromEnvironment(
     'TERMS_OF_SERVICE_URL',
+    defaultValue: 'https://heidarie.github.io/ShopMaps/#rules',
   );
   static const accountDeletionUrl = String.fromEnvironment(
     'ACCOUNT_DELETION_URL',
+    defaultValue: 'https://heidarie.github.io/ShopMaps/#account-deletion',
   );
   static const supportEmail = String.fromEnvironment('SUPPORT_EMAIL');
   static const productionConfirmation = String.fromEnvironment(

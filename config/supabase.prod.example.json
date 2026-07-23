@@ -7,9 +7,9 @@
   "FACEBOOK_SSO_ENABLED": false,
   "PUSH_NOTIFICATIONS_ENABLED": true,
   "FIREBASE_PROJECT_ID": "YOUR_PRODUCTION_FIREBASE_PROJECT_ID",
-  "PRIVACY_POLICY_URL": "https://YOUR_PUBLIC_DOMAIN/privacy",
-  "TERMS_OF_SERVICE_URL": "https://YOUR_PUBLIC_DOMAIN/terms",
-  "ACCOUNT_DELETION_URL": "https://YOUR_PUBLIC_DOMAIN/account-deletion",
+  "PRIVACY_POLICY_URL": "https://heidarie.github.io/ShopMaps/#privacy",
+  "TERMS_OF_SERVICE_URL": "https://heidarie.github.io/ShopMaps/#rules",
+  "ACCOUNT_DELETION_URL": "https://heidarie.github.io/ShopMaps/#account-deletion",
   "SUPPORT_EMAIL": "support@YOUR_PUBLIC_DOMAIN",
   "PRODUCTION_CONFIRMATION": "I_UNDERSTAND_THIS_BUILD_USES_PRODUCTION_SERVICES"
 }

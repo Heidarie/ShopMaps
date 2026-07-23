@@ -31,17 +31,20 @@ Nie zmieniaj identyfikatorów po utworzeniu aplikacji w sklepach.
 
 ## 2. Dokończ dokumenty prawne
 
-1. Uzupełnij wszystkie pola `[DO UZUPEŁNIENIA]` i `[DO WERYFIKACJI]` w
-   `docs/index.html`.
-2. Dokończ `docs/regulamin-template-pl.md`, usuń oznaczenie szablonu i poddaj
-   dokument weryfikacji prawnej.
-3. Uzupełnij właściwy adres wsparcia w `docs/account-deletion.html`.
-4. Opublikuj politykę prywatności, regulamin i
-   `docs/account-deletion.html` pod publicznymi adresami HTTPS.
-5. Upewnij się, że adresy działają bez logowania.
-6. Wpisz te adresy do `config/supabase.prod.json`.
+1. Poddaj sekcję regulaminu w `docs/index.html` weryfikacji prawnej.
+2. Opublikuj `docs/index.html` pod publicznym adresem HTTPS.
+3. Upewnij się, że dokument działa bez logowania, a odnośniki do sekcji
+   `#privacy`, `#rules` i `#account-deletion` przewijają do właściwej treści.
+4. Wpisz adres jednego dokumentu z odpowiednimi kotwicami do
+   `config/supabase.prod.json`, na przykład:
 
-Skrypt release nie przejdzie, dopóki `docs/index.html` zawiera placeholdery.
+   ```json
+   {
+     "PRIVACY_POLICY_URL": "https://heidarie.github.io/ShopMaps/#privacy",
+     "TERMS_OF_SERVICE_URL": "https://heidarie.github.io/ShopMaps/#rules",
+     "ACCOUNT_DELETION_URL": "https://heidarie.github.io/ShopMaps/#account-deletion"
+   }
+   ```
 
 ## 3. Utwórz produkcyjny Supabase
 

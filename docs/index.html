@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ShopMaps app privacy policy">
-  <title>Privacy Policy - ShopMaps</title>
+  <meta
+    name="description"
+    content="ShopMaps privacy policy, terms of service, and account deletion information"
+  >
+  <title>Legal Information - ShopMaps</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -21,6 +24,11 @@
 
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 24px;
     }
 
     body {
@@ -43,7 +51,8 @@
     }
 
     h1,
-    h2 {
+    h2,
+    h3 {
       line-height: 1.25;
     }
 
@@ -53,6 +62,11 @@
     }
 
     h2 {
+      margin-top: 0;
+      font-size: 1.75rem;
+    }
+
+    h3 {
       margin-top: 40px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
@@ -60,7 +74,8 @@
     }
 
     p,
-    ul {
+    ul,
+    ol {
       margin: 12px 0;
     }
 
@@ -77,6 +92,54 @@
       color: var(--muted);
     }
 
+    .toc {
+      margin: 32px 0 48px;
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--background);
+    }
+
+    .toc h2 {
+      margin: 0 0 12px;
+      font-size: 1.25rem;
+    }
+
+    .toc ol {
+      margin: 0;
+      padding-left: 24px;
+    }
+
+    .toc a {
+      font-weight: 650;
+    }
+
+    .document-section {
+      scroll-margin-top: 24px;
+    }
+
+    .document-section + .document-section {
+      margin-top: 64px;
+      padding-top: 48px;
+      border-top: 3px solid var(--border);
+    }
+
+    .section-heading {
+      margin-bottom: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      transition: background-color 160ms ease;
+    }
+
+    .document-section:target > .section-heading {
+      background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    }
+
+    .back-to-contents {
+      margin-top: 36px;
+      font-size: 0.95rem;
+    }
+
     .notice {
       margin: 24px 0 32px;
       padding: 16px 18px;
@@ -85,10 +148,6 @@
       border-radius: 8px;
       background: var(--notice-background);
       color: var(--notice-text);
-    }
-
-    .placeholder {
-      font-weight: 700;
     }
 
     .summary {
@@ -136,9 +195,30 @@
   </style>
 </head>
 <body>
-  <main>
-    <h1>ShopMaps Privacy Policy</h1>
-    <p class="meta">Last updated: July 13, 2026</p>
+  <main id="top">
+    <header>
+      <h1>ShopMaps Legal Information</h1>
+      <p class="meta">
+        Privacy Policy, Terms of Service, and Account Deletion
+      </p>
+    </header>
+
+    <nav class="toc" aria-labelledby="contents-heading">
+      <h2 id="contents-heading">Contents</h2>
+      <ol>
+        <li><a href="#privacy">Privacy Policy</a></li>
+        <li><a href="#rules">Terms of Service</a></li>
+        <li><a href="#account-deletion">Account Deletion</a></li>
+      </ol>
+    </nav>
+
+    <section
+      id="privacy"
+      class="document-section"
+      aria-labelledby="privacy-heading"
+    >
+    <h2 id="privacy-heading" class="section-heading">Privacy Policy</h2>
+    <p class="meta">Last updated: July 23, 2026</p>
 
     <p class="summary">
       ShopMaps can be used locally without creating an account. Data is sent to
@@ -147,12 +227,12 @@
       vouchers, publishing store maps, and searching for stores near an address.
     </p>
 
-    <h2>1. Data Controller</h2>
+    <h3>1. Data Controller</h3>
     <p>
       The controller of personal data processed in connection with the ShopMaps
       app is Dawid Ogły Software.
     </p>
-    <p class="placeholder">
+    <p>
       Dawid Ogły Software, Tax ID (NIP): 6653049635, Business Registry Number
       (REGON): 522604461, address: ul. Święty Marcin 29/8, 61-806 Poznań, Poland
     </p>
@@ -161,7 +241,7 @@
       <a href="mailto:dawidogly@gmail.com">dawidogly@gmail.com</a>.
     </p>
 
-    <h2>2. Data We Process</h2>
+    <h3>2. Data We Process</h3>
     <p>The scope of the data depends on how the app is used.</p>
 
     <p><strong>Data stored locally on the device</strong></p>
@@ -211,6 +291,10 @@
       <li>the layout and order of categories in the store;</li>
       <li>the map creator's name or designation;</li>
       <li>the publication date and the number of times other users added the map.</li>
+      <li>
+        the User's private preference identifying creators whose maps the User
+        chose to hide.
+      </li>
     </ul>
 
     <p><strong>Address and store searches</strong></p>
@@ -230,7 +314,7 @@
       their privacy policies.
     </p>
 
-    <h2>3. Purposes and Legal Bases</h2>
+    <h3>3. Purposes and Legal Bases</h3>
     <p>Data may be processed to:</p>
     <ul>
       <li>
@@ -255,7 +339,7 @@
       separately.
     </p>
 
-    <h2>4. Data Visibility and Sharing</h2>
+    <h3>4. Data Visibility and Sharing</h3>
     <ul>
       <li>Private local data is not automatically sent to the cloud.</li>
       <li>
@@ -266,11 +350,15 @@
         Public store maps are visible to signed-in ShopMaps users.
       </li>
       <li>
+        A User's list of hidden map creators is private and is not visible to
+        other Users.
+      </li>
+      <li>
         Data may be disclosed to authorized authorities when required by law.
       </li>
     </ul>
 
-    <h2>5. Service Providers</h2>
+    <h3>5. Service Providers</h3>
     <p>ShopMaps uses the following third-party services:</p>
     <ul>
       <li>
@@ -305,7 +393,7 @@
       provider's terms and privacy policies.
     </p>
 
-    <h2>6. Retention Period and Account Deletion</h2>
+    <h3>6. Retention Period and Account Deletion</h3>
     <p>
       Account and cloud data is retained while the service is in use and is then
       deleted or anonymized unless continued retention is required by law, for
@@ -327,7 +415,7 @@
       account.
     </p>
 
-    <h2>7. User Rights</h2>
+    <h3>7. User Rights</h3>
     <p>
       Subject to the conditions set out in the GDPR, the user may have the right
       to access, rectify, and erase their data, restrict processing, receive
@@ -342,7 +430,7 @@
       Protection Office in Poland.
     </p>
 
-    <h2>8. Security</h2>
+    <h3>8. Security</h3>
     <p>
       ShopMaps uses measures designed to restrict access to data, including
       authentication, database access rules, and encrypted transmission
@@ -350,14 +438,14 @@
       storing data can guarantee complete security.
     </p>
 
-    <h2>9. Analytics and Advertising</h2>
+    <h3>9. Analytics and Advertising</h3>
     <p>
       ShopMaps currently does not use advertising or SDKs for user behavior
       analytics. Infrastructure providers may collect technical data necessary
       for the operation, security, and diagnostics of their services.
     </p>
 
-    <h2>10. Children's Privacy</h2>
+    <h3>10. Children's Privacy</h3>
     <p>
       ShopMaps is not a service specifically directed at children. A person who,
       under applicable law, cannot independently accept the terms of service
@@ -365,22 +453,579 @@
       or guardian.
     </p>
 
-    <h2>11. Changes to This Privacy Policy</h2>
+    <h3>11. Changes to This Privacy Policy</h3>
     <p>
       This policy may be updated due to changes in app features, providers, or
       applicable law. The current version and the date of the latest update will
       be published on this page.
     </p>
 
-    <h2>12. Contact and Support</h2>
+    <h3>12. Contact and Support</h3>
     <p>
       Questions about privacy or how the app works, as well as bug reports, can
       be sent to
       <a href="mailto:dawidogly@gmail.com">dawidogly@gmail.com</a>.
     </p>
 
+    <p class="back-to-contents"><a href="#top">Back to contents</a></p>
+    </section>
+
+    <section
+      id="rules"
+      class="document-section"
+      aria-labelledby="rules-heading"
+    >
+      <h2 id="rules-heading" class="section-heading">Terms of Service</h2>
+      <p class="meta">Version 1.0 · Effective July 23, 2026</p>
+
+      <h3>1. General Provisions</h3>
+      <ol>
+        <li>
+          These Terms of Service govern the use of the ShopMaps mobile
+          application, including services provided electronically.
+        </li>
+        <li>
+          The service provider is Dawid Ogły Software, Tax ID (NIP):
+          6653049635, Business Registry Number (REGON): 522604461, address:
+          ul. Święty Marcin 29/8, 61-806 Poznań, Poland, email:
+          <a href="mailto:dawidogly@gmail.com">dawidogly@gmail.com</a>
+          (“Service Provider”).
+        </li>
+        <li>A “User” is any person using the Application.</li>
+        <li>
+          Basic features can be used without an account. Creating an account is
+          optional and is required only for the cloud features described in
+          these Terms.
+        </li>
+        <li>
+          The Application is currently provided free of charge. Any paid
+          feature will be presented together with its terms and price before a
+          purchase is made.
+        </li>
+      </ol>
+
+      <h3>2. Definitions</h3>
+      <ol>
+        <li><strong>Application</strong> means the ShopMaps mobile app.</li>
+        <li>
+          <strong>Account</strong> means the User's individual account used to
+          access cloud features.
+        </li>
+        <li>
+          <strong>Local Data</strong> means data stored only on the User's
+          device, including private shopping lists, store maps, and deposit
+          vouchers.
+        </li>
+        <li>
+          <strong>Group</strong> means a collaboration space created by a User
+          that invited Users may join.
+        </li>
+        <li>
+          <strong>Shared Data</strong> means shopping lists, list items, and
+          deposit vouchers shared with Group members.
+        </li>
+        <li>
+          <strong>Public Store Map</strong> means a publicly shared arrangement
+          of store categories connected to a store name and address.
+        </li>
+        <li>
+          <strong>User Content</strong> means data and information entered,
+          shared, or published by a User through the Application.
+        </li>
+      </ol>
+
+      <h3>3. Scope of Services</h3>
+      <ol>
+        <li>
+          The Application provides features that include:
+          <ol>
+            <li>creating and editing local shopping lists;</li>
+            <li>
+              creating store maps that define the order of product categories;
+            </li>
+            <li>sorting shopping lists according to a selected store map;</li>
+            <li>saving and managing deposit vouchers;</li>
+            <li>
+              optionally creating an Account and signing in with supported
+              identity providers;
+            </li>
+            <li>creating Groups, inviting Users, and sharing data;</li>
+            <li>publishing and browsing Public Store Maps;</li>
+            <li>adding Public Store Maps to the User's local maps; and</li>
+            <li>searching standardized addresses and nearby stores.</li>
+          </ol>
+        </li>
+        <li>
+          The features and appearance of the Application may change as the
+          Application develops.
+        </li>
+        <li>
+          The Service Provider may restrict or discontinue a feature when
+          necessary for security, legal, or technical reasons, or because a
+          third-party service is no longer available.
+        </li>
+      </ol>
+
+      <h3>4. Technical Requirements</h3>
+      <ol>
+        <li>
+          The Application requires a compatible mobile device with a supported
+          operating system and a current or otherwise supported Application
+          version.
+        </li>
+        <li>Cloud features require an internet connection.</li>
+        <li>
+          The User is responsible for securing their device and Account and for
+          keeping their software up to date.
+        </li>
+        <li>
+          Use of the Application may involve data transmission and charges
+          imposed by the User's network provider.
+        </li>
+      </ol>
+
+      <h3>5. Account and Sign-In</h3>
+      <ol>
+        <li>Creating an Account is optional.</li>
+        <li>
+          An Account may be created or authenticated with supported third-party
+          identity providers, including Google, Apple, or Facebook.
+        </li>
+        <li>
+          The User must provide truthful information where required and protect
+          access to their Account.
+        </li>
+        <li>
+          An Account may be created by a person capable of entering into an
+          agreement to use the Application. A minor may require consent from a
+          legal guardian under applicable law.
+        </li>
+        <li>
+          The public username is used, among other purposes, to invite Users to
+          Groups. It must not be unlawful, offensive, misleading, or infringe
+          third-party rights.
+        </li>
+        <li>
+          The User may sign out or delete the Account at any time using the
+          relevant Application feature.
+        </li>
+        <li>
+          Account deletion removes Account-related data as described in the
+          Application, Privacy Policy, and
+          <a href="#account-deletion">Account Deletion section</a>. Local Data
+          may remain on the device.
+        </li>
+        <li>
+          Data created or shared by other Group members is not deleted solely
+          because the User deletes their Account.
+        </li>
+      </ol>
+
+      <h3>6. Local Mode and Local Data</h3>
+      <ol>
+        <li>The Application can be used without an Account in local mode.</li>
+        <li>
+          Local Data remains on the User's device and is not automatically
+          synchronized or recovered after uninstalling the Application, losing
+          the device, or clearing Application data.
+        </li>
+        <li>
+          The User is responsible for backing up the device if they wish to
+          reduce the risk of losing Local Data.
+        </li>
+        <li>The Service Provider does not guarantee recovery of Local Data.</li>
+      </ol>
+
+      <h3>7. Groups and Shared Data</h3>
+      <ol>
+        <li>
+          A User may create a Group or join one after receiving an invitation.
+        </li>
+        <li>
+          Shared Data is available to Group members and may be modified or
+          deleted by them according to the Application's features.
+        </li>
+        <li>
+          Changes to Shared Data may be synchronized in near real time across
+          Group members' devices.
+        </li>
+        <li>
+          Sharing a local shopping list may move it to the Group and remove the
+          private copy from the device.
+        </li>
+        <li>
+          Stopping sharing may remove data from the Group and restore it as
+          private data on the User's device, according to the current behavior
+          of the Application.
+        </li>
+        <li>
+          Users should share deposit vouchers only with people they trust. The
+          Service Provider is not responsible for use of a voucher by a Group
+          member or for consequences of sharing it with the wrong person.
+        </li>
+      </ol>
+
+      <h3>8. Public Store Maps</h3>
+      <ol>
+        <li>
+          A signed-in User may publish a store map together with the store name
+          and address.
+        </li>
+        <li>
+          A Public Store Map may be viewed and added to local maps by other
+          signed-in Users.
+        </li>
+        <li>
+          The Application may display the creator's initial, the map layout,
+          store address, and download count.
+        </li>
+        <li>
+          The creator may update or stop sharing a Public Store Map. Removing
+          the public version does not necessarily remove copies previously
+          added locally by other Users.
+        </li>
+        <li>
+          Users may report a Public Store Map and may hide maps published by a
+          selected creator.
+        </li>
+        <li>
+          The User confirms that a published map is accurate to the best of
+          their knowledge and does not violate law or third-party rights.
+        </li>
+        <li>
+          The Service Provider does not guarantee the accuracy, completeness,
+          or timeliness of Public Store Maps, store names, addresses, or
+          category order.
+        </li>
+      </ol>
+
+      <h3>9. Third-Party Providers</h3>
+      <ol>
+        <li>
+          Cloud features use third-party providers, including:
+          <ol>
+            <li>
+              <strong>Supabase</strong> for authentication, storage,
+              synchronization, and server-side functions;
+            </li>
+            <li>
+              <strong>Google</strong>, <strong>Apple</strong>, and
+              <strong>Facebook</strong> as optional sign-in providers;
+            </li>
+            <li>
+              <strong>Geoapify</strong> for address search, standardization, and
+              nearby store search; and
+            </li>
+            <li>
+              <strong>Firebase Cloud Messaging</strong> for push
+              notifications.
+            </li>
+          </ol>
+        </li>
+        <li>
+          Some features may depend on the availability of third-party services.
+        </li>
+        <li>
+          The <a href="#privacy">Privacy Policy</a> explains how third-party
+          providers process data.
+        </li>
+      </ol>
+
+      <h3>10. Rules for Using the Application</h3>
+      <ol>
+        <li>
+          Users must use the Application in accordance with law, these Terms,
+          generally accepted standards of conduct, and the intended purpose of
+          the Application.
+        </li>
+        <li>
+          In particular, Users must not:
+          <ol>
+            <li>
+              provide unlawful or offensive content or content that infringes
+              third-party rights;
+            </li>
+            <li>impersonate another person or entity;</li>
+            <li>publish deliberately false or misleading information;</li>
+            <li>
+              attempt to gain unauthorized access to Accounts, data,
+              infrastructure, or Application code;
+            </li>
+            <li>
+              disrupt the Application, send automated requests at scale, or
+              bypass security measures; or
+            </li>
+            <li>use the Application for unlawful activity.</li>
+          </ol>
+        </li>
+        <li>
+          The User is responsible for their User Content and the consequences
+          of sharing it.
+        </li>
+        <li>
+          Violations may be reported to
+          <a href="mailto:dawidogly@gmail.com">dawidogly@gmail.com</a> or by
+          using “Report map” next to a Public Store Map.
+        </li>
+      </ol>
+
+      <h3>11. Moderation and Access Restrictions</h3>
+      <ol>
+        <li>
+          The Service Provider may remove or restrict access to User Content
+          if it:
+          <ol>
+            <li>
+              violates law, these Terms, or third-party rights;
+            </li>
+            <li>
+              threatens the security of the Application or its Users; or
+            </li>
+            <li>
+              is subject to a credible report or a request from a competent
+              authority.
+            </li>
+          </ol>
+        </li>
+        <li>
+          For a material or repeated violation, the Service Provider may
+          temporarily restrict cloud features or delete the Account where
+          permitted by law.
+        </li>
+        <li>
+          Where circumstances permit, the User will be informed of the reason
+          for the action.
+        </li>
+      </ol>
+
+      <h3>12. Intellectual Property</h3>
+      <ol>
+        <li>
+          Rights to the Application, its name, interface, code, and materials
+          belong to the Service Provider or the relevant rights holders.
+        </li>
+        <li>
+          The User receives a non-exclusive, revocable, and non-transferable
+          license to use the Application for its intended purpose and in
+          accordance with these Terms.
+        </li>
+        <li>The User retains rights to their User Content.</li>
+        <li>
+          By publishing or sharing User Content, the User grants the Service
+          Provider a non-exclusive, royalty-free license to store, display,
+          synchronize, and share it to the extent required by the feature
+          selected by the User.
+        </li>
+        <li>
+          This license expires when the data is deleted, except where further
+          retention is required by law or justified to establish, exercise, or
+          defend legal claims.
+        </li>
+      </ol>
+
+      <h3>13. Liability and Availability</h3>
+      <ol>
+        <li>
+          The Service Provider uses reasonable care to keep the Application
+          operating correctly and securely but does not guarantee uninterrupted
+          availability of every feature.
+        </li>
+        <li>
+          The Application is an assistive tool. Users should verify deposit
+          vouchers, addresses, store names, and maps before relying on them.
+        </li>
+        <li>
+          To the extent permitted by law, the Service Provider is not liable
+          for:
+          <ol>
+            <li>loss of Local Data;</li>
+            <li>actions of other Users or Group members;</li>
+            <li>
+              inaccurate, outdated, or incomplete User Content; or
+            </li>
+            <li>
+              interruptions or errors caused by a device, network, or
+              third-party service.
+            </li>
+          </ol>
+        </li>
+        <li>
+          Nothing in these Terms limits consumer rights or liability that
+          cannot be excluded under applicable law.
+        </li>
+      </ol>
+
+      <h3>14. Privacy and Personal Data</h3>
+      <ol>
+        <li>
+          The <a href="#privacy">ShopMaps Privacy Policy</a> explains the
+          processing of personal data and use of third-party providers.
+        </li>
+        <li>
+          It includes information about the controller, purposes and legal
+          bases, recipients, retention periods, and User rights.
+        </li>
+        <li>
+          Acceptance of these Terms does not automatically constitute consent
+          to activities that require separate consent under applicable law.
+        </li>
+      </ol>
+
+      <h3>15. Complaints and Contact</h3>
+      <ol>
+        <li>
+          Complaints about the Application or services may be submitted to
+          <a href="mailto:dawidogly@gmail.com">dawidogly@gmail.com</a>.
+        </li>
+        <li>
+          A report should include enough information to identify the issue,
+          such as a description, Application version, and operating system.
+          Passwords, sign-in tokens, and sensitive voucher codes must not be
+          included.
+        </li>
+        <li>
+          The Service Provider will respond without undue delay and no later
+          than 14 days after receiving the complaint.
+        </li>
+        <li>
+          The response will be sent to the address used to submit the
+          complaint, unless another contact method is requested.
+        </li>
+      </ol>
+
+      <h3>16. Entering Into and Terminating the Agreement</h3>
+      <ol>
+        <li>
+          The agreement for local mode is entered into when the User starts
+          using the Application.
+        </li>
+        <li>
+          The agreement for cloud features is entered into when the User
+          accepts these Terms and creates an Account.
+        </li>
+        <li>The User may stop using the Application at any time.</li>
+        <li>
+          The agreement for cloud features is terminated by deleting the
+          Account.
+        </li>
+        <li>
+          Uninstalling the Application does not delete or terminate the
+          Account.
+        </li>
+      </ol>
+
+      <h3>17. Changes to These Terms</h3>
+      <ol>
+        <li>
+          The Service Provider may change these Terms for valid reasons,
+          including changes in law, Application features, security
+          requirements, technology, or third-party platform rules.
+        </li>
+        <li>
+          A User with an Account will be informed about material changes in the
+          Application or through an available contact channel before they take
+          effect.
+        </li>
+        <li>
+          If renewed acceptance is required, access to relevant cloud features
+          may depend on accepting the updated Terms.
+        </li>
+        <li>
+          Changes do not affect acquired rights or mandatory provisions of
+          applicable law.
+        </li>
+      </ol>
+
+      <h3>18. Final Provisions</h3>
+      <ol>
+        <li>
+          These Terms are governed by Polish law, without prejudice to
+          mandatory consumer rights under the law applicable in the consumer's
+          place of residence.
+        </li>
+        <li>
+          A consumer may use available out-of-court complaint and redress
+          procedures under applicable law.
+        </li>
+        <li>
+          If any provision is invalid or unenforceable, the remaining
+          provisions remain in effect.
+        </li>
+        <li>
+          The current version of these Terms is available at
+          <a href="#rules">this page's Terms of Service section</a>.
+        </li>
+      </ol>
+
+      <p class="back-to-contents"><a href="#top">Back to contents</a></p>
+    </section>
+
+    <section
+      id="account-deletion"
+      class="document-section"
+      aria-labelledby="account-deletion-heading"
+    >
+      <h2 id="account-deletion-heading" class="section-heading">
+        Account Deletion
+      </h2>
+      <p class="meta">How to delete a ShopMaps account and associated data</p>
+
+      <h3>Delete Your Account in the Application</h3>
+      <p>
+        You can delete your Account directly in ShopMaps. Open
+        <strong>Account / Groups</strong>, scroll to the bottom of the screen,
+        select <strong>Delete account</strong>, and confirm the action.
+      </p>
+
+      <h3>What Will Be Deleted</h3>
+      <p>Deleting the Account removes or dissociates:</p>
+      <ul>
+        <li>the ShopMaps profile and Account identifiers;</li>
+        <li>Group memberships, roles, and pending invitations;</li>
+        <li>Public Store Maps published by the User;</li>
+        <li>
+          shared lists and deposit vouchers created by the User, subject to the
+          ownership and Group rules described in the Application; and
+        </li>
+        <li>notification devices registered to the Account.</li>
+      </ul>
+      <p>
+        If the User owns a Group, ownership may be transferred to another
+        member. A Group without an eligible successor may be deleted. Content
+        created by other Users is not deleted with the Account.
+      </p>
+
+      <h3>Data Remaining on the Device</h3>
+      <p>
+        Deleting the Account does not delete private Local Data stored on the
+        device. Local shopping lists, store maps, deposit vouchers, history,
+        and settings remain until they are deleted in the Application or the
+        Application is uninstalled or its data is cleared.
+      </p>
+
+      <h3>If You Cannot Access the Application</h3>
+      <p>
+        Send an account deletion request from the email address associated with
+        the Account to
+        <a href="mailto:dawidogly@gmail.com">dawidogly@gmail.com</a>. Include
+        enough information to identify the Account. Do not send passwords,
+        access tokens, or deposit voucher codes.
+      </p>
+
+      <h3>Retention After a Deletion Request</h3>
+      <p>
+        Account and cloud data will be deleted or anonymized unless continued
+        retention is required by law, for service security, or to establish,
+        exercise, or defend legal claims. Infrastructure providers may retain
+        logs and backups for the periods stated in their own policies.
+      </p>
+
+      <p class="back-to-contents"><a href="#top">Back to contents</a></p>
+    </section>
+
     <footer>
-      ShopMaps - Privacy Policy, version dated July 13, 2026
+      ShopMaps Legal Information · Privacy Policy dated July 23, 2026 ·
+      Terms of Service version 1.0 effective July 23, 2026
     </footer>
   </main>
 </body>
