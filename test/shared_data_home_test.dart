@@ -82,6 +82,7 @@ class _PublicMapsCloudController extends CloudController {
   int recordedDownloads = 0;
   String? reportedMapId;
   String? reportReason;
+  String? hiddenCreatorId;
 
   @override
   bool get isSignedIn => true;
@@ -95,7 +96,7 @@ class _PublicMapsCloudController extends CloudController {
   );
 
   @override
-  List<SharedMarketLayout> get publicMarketLayouts => [
+  List<SharedMarketLayout> get publicMarketLayouts => <SharedMarketLayout>[
     if (includeFarMap)
       SharedMarketLayout(
         id: 'far-map',
@@ -193,7 +194,7 @@ class _PublicMapsCloudController extends CloudController {
         ),
         updatedAt: DateTime.utc(2026, 6, 12),
       ),
-  ];
+  ].where((map) => map.createdBy != hiddenCreatorId).toList();
 
   @override
   Future<bool> recordMarketLayoutDownload(String publicMapId) async {
@@ -208,6 +209,13 @@ class _PublicMapsCloudController extends CloudController {
   }) async {
     reportedMapId = publicMapId;
     reportReason = reason;
+    return true;
+  }
+
+  @override
+  Future<bool> hideMarketLayoutCreator(String creatorId) async {
+    hiddenCreatorId = creatorId;
+    notifyListeners();
     return true;
   }
 }
@@ -714,6 +722,47 @@ void main() {
     expect(cloudController.reportedMapId, 'public-map');
     expect(cloudController.reportReason, 'incorrect');
     expect(find.text('Mapa została zgłoszona.'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
+  testWidgets('all maps from a selected creator can be hidden', (tester) async {
+    final appController = AppController(LocalStore());
+    final cloudController = _PublicMapsCloudController();
+    await appController.load(localeLanguageCode: 'pl');
+
+    await tester.pumpWidget(
+      _homeApp(appController: appController, cloudController: cloudController),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Szukaj'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Market Pułaskiego'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byType(PopupMenuButton<String>).first);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -150));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(PopupMenuButton<String>).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Ukryj mapy tego użytkownika'), findsOneWidget);
+    await tester.tap(find.text('Ukryj mapy tego użytkownika'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Nie będziesz już widzieć map udostępnionych przez tego użytkownika.',
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Ukryj mapy'));
+    await tester.pumpAndSettle();
+
+    expect(cloudController.hiddenCreatorId, 'other-user');
+    expect(find.text('Market Pułaskiego'), findsNothing);
+    expect(find.text('Mapy tego użytkownika zostały ukryte.'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     cloudController.dispose();

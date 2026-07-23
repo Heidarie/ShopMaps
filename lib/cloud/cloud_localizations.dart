@@ -119,6 +119,11 @@ class CloudLocalizations {
       'storeMapCopied': 'Store map added to your maps.',
       'storeMapAlreadyAdded': 'Already in my stores',
       'reportStoreMap': 'Report map',
+      'hideUserMaps': 'Hide maps from this user',
+      'hideUserMapsConfirmation':
+          'You will no longer see maps shared by this user.',
+      'hideUserMapsAction': 'Hide maps',
+      'userMapsHidden': 'Maps from this user are now hidden.',
       'reportReasonIncorrect': 'Incorrect or outdated information',
       'reportReasonInappropriate': 'Inappropriate content',
       'reportReasonOther': 'Other issue',
@@ -257,6 +262,11 @@ class CloudLocalizations {
       'storeMapCopied': 'Mapa sklepu została dodana do Twoich map.',
       'storeMapAlreadyAdded': 'Już w moich sklepach',
       'reportStoreMap': 'Zgłoś mapę',
+      'hideUserMaps': 'Ukryj mapy tego użytkownika',
+      'hideUserMapsConfirmation':
+          'Nie będziesz już widzieć map udostępnionych przez tego użytkownika.',
+      'hideUserMapsAction': 'Ukryj mapy',
+      'userMapsHidden': 'Mapy tego użytkownika zostały ukryte.',
       'reportReasonIncorrect': 'Nieprawidłowe lub nieaktualne informacje',
       'reportReasonInappropriate': 'Nieodpowiednia treść',
       'reportReasonOther': 'Inny problem',
@@ -338,6 +348,11 @@ class CloudLocalizations {
       'membersCanEdit': 'Alle Gruppenmitglieder haben Zugriff auf diese Daten.',
       'share': 'Teilen',
       'selectStoreMapToShare': 'Karte zum Teilen auswählen',
+      'hideUserMaps': 'Karten dieses Nutzers ausblenden',
+      'hideUserMapsConfirmation':
+          'Du siehst keine von diesem Nutzer geteilten Karten mehr.',
+      'hideUserMapsAction': 'Karten ausblenden',
+      'userMapsHidden': 'Die Karten dieses Nutzers wurden ausgeblendet.',
     },
     'nl': {
       'account': 'Account',
@@ -391,6 +406,11 @@ class CloudLocalizations {
       'membersCanEdit': 'Alle groepsleden hebben toegang tot deze gegevens.',
       'share': 'Delen',
       'selectStoreMapToShare': 'Kaart kiezen om te delen',
+      'hideUserMaps': 'Kaarten van deze gebruiker verbergen',
+      'hideUserMapsConfirmation':
+          'Je ziet geen kaarten meer die door deze gebruiker zijn gedeeld.',
+      'hideUserMapsAction': 'Kaarten verbergen',
+      'userMapsHidden': 'De kaarten van deze gebruiker zijn verborgen.',
     },
     'es': {
       'account': 'Cuenta',
@@ -445,6 +465,11 @@ class CloudLocalizations {
           'Todos los miembros del grupo tienen acceso a estos datos.',
       'share': 'Compartir',
       'selectStoreMapToShare': 'Seleccionar mapa para compartir',
+      'hideUserMaps': 'Ocultar mapas de este usuario',
+      'hideUserMapsConfirmation':
+          'Ya no verás los mapas compartidos por este usuario.',
+      'hideUserMapsAction': 'Ocultar mapas',
+      'userMapsHidden': 'Los mapas de este usuario se han ocultado.',
     },
     'fr': {
       'account': 'Compte',
@@ -498,6 +523,11 @@ class CloudLocalizations {
       'membersCanEdit': 'Tous les membres du groupe ont accès à ces données.',
       'share': 'Partager',
       'selectStoreMapToShare': 'Sélectionner la carte à partager',
+      'hideUserMaps': 'Masquer les cartes de cet utilisateur',
+      'hideUserMapsConfirmation':
+          'Vous ne verrez plus les cartes partagées par cet utilisateur.',
+      'hideUserMapsAction': 'Masquer les cartes',
+      'userMapsHidden': 'Les cartes de cet utilisateur sont masquées.',
     },
     'uk': {
       'account': 'Обліковий запис',
@@ -551,6 +581,11 @@ class CloudLocalizations {
       'membersCanEdit': 'Усі учасники групи мають доступ до цих даних.',
       'share': 'Поділитися',
       'selectStoreMapToShare': 'Виберіть мапу для поширення',
+      'hideUserMaps': 'Приховати мапи цього користувача',
+      'hideUserMapsConfirmation':
+          'Ви більше не бачитимете мапи, якими поділився цей користувач.',
+      'hideUserMapsAction': 'Приховати мапи',
+      'userMapsHidden': 'Мапи цього користувача приховано.',
     },
     'it': {
       'account': 'Account',
@@ -605,6 +640,11 @@ class CloudLocalizations {
           'Tutti i membri del gruppo hanno accesso a questi dati.',
       'share': 'Condividi',
       'selectStoreMapToShare': 'Seleziona mappa da condividere',
+      'hideUserMaps': 'Nascondi le mappe di questo utente',
+      'hideUserMapsConfirmation':
+          'Non vedrai più le mappe condivise da questo utente.',
+      'hideUserMapsAction': 'Nascondi mappe',
+      'userMapsHidden': 'Le mappe di questo utente sono state nascoste.',
     },
     'pt': {
       'account': 'Conta',
@@ -658,6 +698,11 @@ class CloudLocalizations {
       'membersCanEdit': 'Todos os membros do grupo têm acesso a estes dados.',
       'share': 'Partilhar',
       'selectStoreMapToShare': 'Selecionar mapa para partilhar',
+      'hideUserMaps': 'Ocultar mapas deste utilizador',
+      'hideUserMapsConfirmation':
+          'Deixará de ver os mapas partilhados por este utilizador.',
+      'hideUserMapsAction': 'Ocultar mapas',
+      'userMapsHidden': 'Os mapas deste utilizador foram ocultados.',
     },
   };
 

@@ -975,6 +975,25 @@ class CloudController extends ChangeNotifier {
     }, fallback: false);
   }
 
+  Future<bool> hideMarketLayoutCreator(String creatorId) async {
+    final client = _client;
+    final currentUserId = client?.auth.currentUser?.id;
+    if (client == null || currentUserId == null || creatorId == currentUserId) {
+      return false;
+    }
+
+    return _runWithResult(() async {
+      await client.rpc<Object?>(
+        'hide_market_layout_creator',
+        params: {'target_creator_id': creatorId},
+      );
+      _publicMarketLayouts = _publicMarketLayouts
+          .where((map) => map.createdBy != creatorId)
+          .toList();
+      return true;
+    }, fallback: false);
+  }
+
   Future<void> refreshSharedData() async {
     if (_client == null || !isSignedIn || _profile?.hasStoreCountry != true) {
       return;
@@ -1110,6 +1129,17 @@ class CloudController extends ChangeNotifier {
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'shared_market_layouts',
+          callback: (_) => _scheduleSharedDataRefresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'hidden_market_layout_creators',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
           callback: (_) => _scheduleSharedDataRefresh(),
         )
         .onPostgresChanges(
