@@ -881,6 +881,8 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
                                           await _unpublishMap(map);
                                         } else if (value == 'report') {
                                           await _reportMap(map);
+                                        } else if (value == 'hideCreator') {
+                                          await _hideMapsFromCreator(map);
                                         }
                                       },
                                       itemBuilder: (_) => [
@@ -905,6 +907,14 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
                                             value: 'report',
                                             child: Text(
                                               cloudL10n.text('reportStoreMap'),
+                                            ),
+                                          ),
+                                        if (!widget.cloudController
+                                            .isOwnPublicMap(map))
+                                          PopupMenuItem<String>(
+                                            value: 'hideCreator',
+                                            child: Text(
+                                              cloudL10n.text('hideUserMaps'),
                                             ),
                                           ),
                                       ],
@@ -1394,6 +1404,60 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
       ).showSnackBar(SnackBar(content: Text(l10n.text('reportSubmitted'))));
       return;
     }
+    final message = CloudLocalizations.of(
+      context,
+    ).errorMessage(widget.cloudController);
+    if (message != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      widget.cloudController.clearError();
+    }
+  }
+
+  Future<void> _hideMapsFromCreator(SharedMarketLayout map) async {
+    final cloudL10n = CloudLocalizations.of(context);
+    final appL10n = AppLocalizations.of(context);
+    final shouldHide =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(cloudL10n.text('hideUserMaps')),
+            content: Text(
+              cloudL10n
+                  .text('hideUserMapsConfirmation')
+                  .replaceAll('{user}', map.creatorHandle),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(appL10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(cloudL10n.text('hideUserMapsAction')),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!shouldHide || !mounted) {
+      return;
+    }
+
+    final hidden = await widget.cloudController.hideMarketLayoutCreator(
+      map.createdBy,
+    );
+    if (!mounted) {
+      return;
+    }
+    if (hidden) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(cloudL10n.text('userMapsHidden'))));
+      return;
+    }
+
     final message = CloudLocalizations.of(
       context,
     ).errorMessage(widget.cloudController);
