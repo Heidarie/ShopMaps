@@ -2,7 +2,31 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(9);
+select plan(13);
+
+select is(
+  cardinality(app_private.online_category_ids()),
+  32,
+  'online category registry contains the extended category set'
+);
+
+select is(
+  app_private.online_category_id_for_value('Orzechy i pestki'),
+  'nuts_seeds',
+  'new Polish category labels map to canonical category ids'
+);
+
+select is(
+  app_private.online_category_id_for_value('Kawy'),
+  'coffee',
+  'specific coffee labels map to the new coffee category'
+);
+
+select is(
+  app_private.online_category_id_for_value('Kawa i herbata'),
+  'coffee_tea',
+  'combined coffee and tea labels keep their existing category'
+);
 
 select is(
   app_private.online_category_id_for_value('Napoje'),
@@ -95,10 +119,10 @@ select is(
   public.publish_market_layout(
     '00000000-0000-0000-0000-000000003101',
     'canonical-category-layout',
-    '["drinks", "drinks", "bakery"]'::jsonb
+    '["drinks", "nuts_seeds", "drinks", "bakery"]'::jsonb
   ),
   'published',
-  'publish RPC accepts canonical category ids'
+  'publish RPC accepts existing and newly added canonical category ids'
 );
 
 select is(
@@ -107,7 +131,7 @@ select is(
     from public.shared_market_layouts
     where source_local_id = 'canonical-category-layout'
   ),
-  '["drinks", "bakery"]'::jsonb,
+  '["drinks", "nuts_seeds", "bakery"]'::jsonb,
   'publish RPC deduplicates canonical category order'
 );
 
@@ -115,7 +139,7 @@ select is(
   public.publish_market_layout(
     '00000000-0000-0000-0000-000000003101',
     'duplicate-category-layout',
-    '["drinks", "bakery"]'::jsonb
+    '["drinks", "nuts_seeds", "bakery"]'::jsonb
   ),
   'duplicate',
   'duplicate detection uses canonical category order'

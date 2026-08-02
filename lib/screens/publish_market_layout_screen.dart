@@ -9,7 +9,6 @@ import '../cloud/cloud_localizations.dart';
 import '../cloud/cloud_models.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
-import '../online_categories.dart';
 
 class PublishMarketLayoutScreen extends StatefulWidget {
   const PublishMarketLayoutScreen({
@@ -303,11 +302,14 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
                     localCategory: localCategory,
                   ),
                 ),
-                items: OnlineCategories.all.map((category) {
+                items: widget.controller.onlineCategories.all.map((category) {
                   return DropdownMenuItem<String>(
                     value: category.id,
                     child: Text(
-                      OnlineCategories.label(category.id, languageCode),
+                      widget.controller.onlineCategories.label(
+                        category.id,
+                        languageCode,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -344,7 +346,11 @@ class _PublishMarketLayoutScreenState extends State<PublishMarketLayoutScreen> {
     if (selectedId == null) {
       return l10n.text('selectOnlineCategory');
     }
-    return '$localCategory -> ${OnlineCategories.label(selectedId, languageCode)}';
+    final selectedLabel = widget.controller.onlineCategories.label(
+      selectedId,
+      languageCode,
+    );
+    return '$localCategory -> $selectedLabel';
   }
 
   void _scheduleAddressSearch(String value) {

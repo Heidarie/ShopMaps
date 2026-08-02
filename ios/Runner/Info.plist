@@ -6,6 +6,18 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>pl</string>
+		<string>de</string>
+		<string>nl</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>uk</string>
+		<string>it</string>
+		<string>pt</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>ShopMaps</string>
 	<key>CFBundleURLTypes</key>
@@ -39,6 +51,8 @@
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>
 	<key>FirebaseMessagingAutoInitEnabled</key>
+	<false/>
+	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>

@@ -1,3 +1,8 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'models.dart';
 
 class OnlineCategory {
@@ -5,23 +10,72 @@ class OnlineCategory {
     required this.id,
     required this.labels,
     this.aliases = const [],
+    this.active = true,
   });
 
   final String id;
   final Map<String, String> labels;
   final List<String> aliases;
+  final bool active;
 
   String label(String languageCode) {
     return labels[languageCode] ?? labels['en'] ?? id;
   }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'labels': labels, 'aliases': aliases, 'active': active};
+  }
+
+  static OnlineCategory? tryFromJson(Object? value) {
+    if (value is! Map) {
+      return null;
+    }
+    final json = Map<String, dynamic>.from(value);
+    final id = json['id']?.toString().trim() ?? '';
+    final rawLabels = json['labels'];
+    final rawAliases = json['aliases'];
+    if (id.isEmpty || rawLabels is! Map || rawAliases is! List) {
+      return null;
+    }
+
+    final labels = <String, String>{};
+    for (final entry in rawLabels.entries) {
+      final languageCode = entry.key.toString().trim().toLowerCase();
+      final label = entry.value?.toString().trim() ?? '';
+      if (languageCode.isEmpty || label.isEmpty) {
+        return null;
+      }
+      labels[languageCode] = label;
+    }
+
+    final aliases = <String>[];
+    for (final alias in rawAliases) {
+      final cleanedAlias = alias?.toString().trim() ?? '';
+      if (cleanedAlias.isEmpty) {
+        return null;
+      }
+      aliases.add(cleanedAlias);
+    }
+
+    return OnlineCategory(
+      id: id,
+      labels: Map.unmodifiable(labels),
+      aliases: List.unmodifiable(aliases),
+      active: json['active'] != false,
+    );
+  }
 }
 
-class OnlineCategories {
-  const OnlineCategories._();
+class OnlineCategories extends ChangeNotifier {
+  OnlineCategories() {
+    _replaceCategories(fallback, notify: false);
+  }
 
   static const String otherId = 'other';
+  static const String _cacheKey = 'shopmaps_online_categories_v1';
+  static final RegExp _categoryIdPattern = RegExp(r'^[a-z][a-z0-9_]*$');
 
-  static const List<OnlineCategory> all = [
+  static const List<OnlineCategory> fallback = [
     OnlineCategory(
       id: 'drinks',
       labels: {
@@ -50,7 +104,7 @@ class OnlineCategories {
         'it': 'Caffè e tè',
         'pt': 'Café e chá',
       },
-      aliases: ['coffee', 'tea', 'kawa', 'herbata', 'cafe', 'kaffee', 'tee'],
+      aliases: ['coffee and tea', 'kawa herbata'],
     ),
     OnlineCategory(
       id: 'alcohol',
@@ -215,7 +269,7 @@ class OnlineCategories {
         'it': 'Pasta, riso e farina',
         'pt': 'Massa, arroz e farinha',
       },
-      aliases: ['pasta', 'rice', 'flour', 'makaron', 'ryz', 'maka'],
+      aliases: ['flour', 'maka'],
     ),
     OnlineCategory(
       id: 'canned_jars',
@@ -260,7 +314,7 @@ class OnlineCategories {
         'it': 'Oli e salse',
         'pt': 'Óleos e molhos',
       },
-      aliases: ['oil', 'sauce', 'oleje', 'sosy', 'olive oil'],
+      aliases: ['oil', 'oleje', 'olive oil'],
     ),
     OnlineCategory(
       id: 'ready_meals',
@@ -323,6 +377,171 @@ class OnlineCategories {
       aliases: ['cosmetics', 'kosmetyki', 'body care', 'higiena osobista'],
     ),
     OnlineCategory(
+      id: 'nuts_seeds',
+      labels: {
+        'en': 'Nuts & seeds',
+        'pl': 'Orzechy i pestki',
+        'de': 'Nüsse und Samen',
+        'nl': 'Noten en zaden',
+        'es': 'Frutos secos y semillas',
+        'fr': 'Noix et graines',
+        'uk': 'Горіхи та насіння',
+        'it': 'Frutta secca e semi',
+        'pt': 'Frutos secos e sementes',
+      },
+      aliases: ['nuts', 'seeds', 'orzechy', 'pestki'],
+    ),
+    OnlineCategory(
+      id: 'vegetarian_vegan',
+      labels: {
+        'en': 'Vegetarian & vegan',
+        'pl': 'Wege',
+        'de': 'Vegetarisch & vegan',
+        'nl': 'Vegetarisch en veganistisch',
+        'es': 'Vegetariano y vegano',
+        'fr': 'Végétarien et végan',
+        'uk': 'Вегетаріанські та веганські продукти',
+        'it': 'Vegetariano e vegano',
+        'pt': 'Vegetariano e vegano',
+      },
+      aliases: ['vegetarian', 'vegan', 'plant based', 'wegetarianskie'],
+    ),
+    OnlineCategory(
+      id: 'cheese',
+      labels: {
+        'en': 'Cheese',
+        'pl': 'Sery',
+        'de': 'Käse',
+        'nl': 'Kaas',
+        'es': 'Quesos',
+        'fr': 'Fromages',
+        'uk': 'Сири',
+        'it': 'Formaggi',
+        'pt': 'Queijos',
+      },
+      aliases: ['cheeses', 'ser', 'queso', 'fromage'],
+    ),
+    OnlineCategory(
+      id: 'ham',
+      labels: {
+        'en': 'Ham',
+        'pl': 'Szynki',
+        'de': 'Schinken',
+        'nl': 'Ham',
+        'es': 'Jamones',
+        'fr': 'Jambons',
+        'uk': 'Шинки',
+        'it': 'Prosciutti',
+        'pt': 'Presuntos',
+      },
+      aliases: ['hams', 'szynka', 'prosciutto', 'jamon'],
+    ),
+    OnlineCategory(
+      id: 'world_cuisines',
+      labels: {
+        'en': 'World cuisines',
+        'pl': 'Kuchnie świata',
+        'de': 'Internationale Küche',
+        'nl': 'Wereldkeuken',
+        'es': 'Cocinas del mundo',
+        'fr': 'Cuisines du monde',
+        'uk': 'Кухні світу',
+        'it': 'Cucine dal mondo',
+        'pt': 'Cozinhas do mundo',
+      },
+      aliases: ['international food', 'international cuisine', 'world food'],
+    ),
+    OnlineCategory(
+      id: 'organic',
+      labels: {
+        'en': 'Organic',
+        'pl': 'Bio',
+        'de': 'Bio',
+        'nl': 'Biologisch',
+        'es': 'Ecológico',
+        'fr': 'Bio',
+        'uk': 'Органічні продукти',
+        'it': 'Biologico',
+        'pt': 'Biológico',
+      },
+      aliases: ['eco', 'ecological', 'ekologiczne', 'organic food'],
+    ),
+    OnlineCategory(
+      id: 'pasta',
+      labels: {
+        'en': 'Pasta',
+        'pl': 'Makarony',
+        'de': 'Nudeln',
+        'nl': 'Pasta',
+        'es': 'Pastas',
+        'fr': 'Pâtes',
+        'uk': 'Макаронні вироби',
+        'it': 'Pasta',
+        'pt': 'Massas',
+      },
+      aliases: ['makaron', 'noodles'],
+    ),
+    OnlineCategory(
+      id: 'rice',
+      labels: {
+        'en': 'Rice',
+        'pl': 'Ryże',
+        'de': 'Reis',
+        'nl': 'Rijst',
+        'es': 'Arroces',
+        'fr': 'Riz',
+        'uk': 'Рис',
+        'it': 'Riso',
+        'pt': 'Arroz',
+      },
+      aliases: ['ryz'],
+    ),
+    OnlineCategory(
+      id: 'sauces',
+      labels: {
+        'en': 'Sauces',
+        'pl': 'Sosy',
+        'de': 'Soßen',
+        'nl': 'Sauzen',
+        'es': 'Salsas',
+        'fr': 'Sauces',
+        'uk': 'Соуси',
+        'it': 'Salse',
+        'pt': 'Molhos',
+      },
+      aliases: ['sauce', 'sos'],
+    ),
+    OnlineCategory(
+      id: 'coffee',
+      labels: {
+        'en': 'Coffee',
+        'pl': 'Kawy',
+        'de': 'Kaffee',
+        'nl': 'Koffie',
+        'es': 'Cafés',
+        'fr': 'Cafés',
+        'uk': 'Кава',
+        'it': 'Caffè',
+        'pt': 'Cafés',
+      },
+      aliases: ['kawa', 'cafe'],
+    ),
+    OnlineCategory(
+      id: 'tea',
+      labels: {
+        'en': 'Tea',
+        'pl': 'Herbaty',
+        'de': 'Tee',
+        'nl': 'Thee',
+        'es': 'Tés',
+        'fr': 'Thés',
+        'uk': 'Чай',
+        'it': 'Tè',
+        'pt': 'Chás',
+      },
+      aliases: ['herbata'],
+    ),
+    OnlineCategory(
       id: otherId,
       labels: {
         'en': 'Other',
@@ -339,29 +558,32 @@ class OnlineCategories {
     ),
   ];
 
-  static final Map<String, OnlineCategory> _byId = {
-    for (final category in all) category.id: category,
-  };
+  late List<OnlineCategory> _categories;
+  late List<OnlineCategory> _activeCategories;
+  late Map<String, OnlineCategory> _byId;
+  late Set<String> _ids;
+  bool _initialized = false;
 
-  static final Set<String> ids = _byId.keys.toSet();
+  List<OnlineCategory> get all => _activeCategories;
+  Set<String> get ids => _ids;
 
-  static bool isId(String value) => ids.contains(value.trim());
+  bool isId(String value) => _ids.contains(value.trim());
 
-  static String label(String id, String languageCode) {
+  String label(String id, String languageCode) {
     return _byId[id]?.label(languageCode) ??
         _byId[otherId]!.label(languageCode);
   }
 
-  static String? idForLabelOrAlias(String value, {String? languageCode}) {
+  String? idForLabelOrAlias(String value, {String? languageCode}) {
     final key = normalizeLatinText(value);
     if (key.isEmpty) {
       return null;
     }
-    if (ids.contains(value.trim())) {
+    if (_ids.contains(value.trim())) {
       return value.trim();
     }
 
-    for (final category in all) {
+    for (final category in _categories) {
       final preferredLabel = languageCode == null
           ? null
           : category.labels[languageCode];
@@ -369,16 +591,24 @@ class OnlineCategories {
         category.id,
         ?preferredLabel,
         ...category.labels.values,
-        ...category.aliases,
       ];
       if (candidates.any((candidate) => normalizeLatinText(candidate) == key)) {
         return category.id;
       }
     }
+
+    for (final category in _categories) {
+      if (category.aliases.any(
+        (candidate) => normalizeLatinText(candidate) == key,
+      )) {
+        return category.id;
+      }
+    }
+
     return null;
   }
 
-  static List<String> canonicalizeOrder(Iterable<String> ids) {
+  List<String> canonicalizeOrder(Iterable<String> ids) {
     final result = <String>[];
     final seen = <String>{};
     for (final id in ids) {
@@ -388,5 +618,146 @@ class OnlineCategories {
       }
     }
     return result;
+  }
+
+  Future<bool> restoreCached() async {
+    final preferences = await SharedPreferences.getInstance();
+    final raw = preferences.getString(_cacheKey);
+    if (raw == null || raw.isEmpty) {
+      return false;
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        await preferences.remove(_cacheKey);
+        return false;
+      }
+      final cachedCategories = <OnlineCategory>[];
+      for (final entry in decoded) {
+        final category = OnlineCategory.tryFromJson(entry);
+        if (category == null) {
+          await preferences.remove(_cacheKey);
+          return false;
+        }
+        cachedCategories.add(category);
+      }
+      if (!_isValidCatalog(cachedCategories)) {
+        await preferences.remove(_cacheKey);
+        return false;
+      }
+      _replaceCategories(cachedCategories);
+      return true;
+    } catch (error) {
+      debugPrint('Ignoring invalid cached online category catalog: $error');
+      await preferences.remove(_cacheKey);
+      return false;
+    }
+  }
+
+  Future<bool> replaceFromRemoteRows(List<dynamic> rows) async {
+    final parsedRows = <({int sortOrder, OnlineCategory category})>[];
+    final sortOrders = <int>{};
+
+    for (final row in rows) {
+      if (row is! Map) {
+        return false;
+      }
+      final json = Map<String, dynamic>.from(row);
+      final sortOrder = switch (json['sort_order']) {
+        int value => value,
+        num value => value.toInt(),
+        _ => -1,
+      };
+      final category = OnlineCategory.tryFromJson({
+        'id': json['category_id'],
+        'labels': json['labels'],
+        'aliases': json['aliases'],
+        'active': json['active'],
+      });
+      if (sortOrder <= 0 || !sortOrders.add(sortOrder) || category == null) {
+        return false;
+      }
+      parsedRows.add((sortOrder: sortOrder, category: category));
+    }
+
+    parsedRows.sort((left, right) {
+      final orderComparison = left.sortOrder.compareTo(right.sortOrder);
+      if (orderComparison != 0) {
+        return orderComparison;
+      }
+      return left.category.id.compareTo(right.category.id);
+    });
+    final remoteCategories = parsedRows
+        .map((row) => row.category)
+        .toList(growable: false);
+    if (!_isValidCatalog(remoteCategories)) {
+      return false;
+    }
+
+    _replaceCategories(remoteCategories);
+    try {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        _cacheKey,
+        jsonEncode(_categories.map((category) => category.toJson()).toList()),
+      );
+    } catch (error) {
+      debugPrint('Failed to cache online category catalog: $error');
+    }
+    return true;
+  }
+
+  void resetToFallback() {
+    _replaceCategories(fallback);
+  }
+
+  bool _isValidCatalog(List<OnlineCategory> categories) {
+    if (categories.isEmpty || categories.length > 500) {
+      return false;
+    }
+
+    final categoryIds = <String>{};
+    for (final category in categories) {
+      if (!_categoryIdPattern.hasMatch(category.id) ||
+          !categoryIds.add(category.id) ||
+          (category.labels['en']?.trim().isEmpty ?? true)) {
+        return false;
+      }
+    }
+
+    for (final category in categories) {
+      if (category.id == otherId) {
+        return category.active;
+      }
+    }
+    return false;
+  }
+
+  void _replaceCategories(
+    List<OnlineCategory> categories, {
+    bool notify = true,
+  }) {
+    final nextCategories = List<OnlineCategory>.unmodifiable(categories);
+    final nextJson = jsonEncode(
+      nextCategories.map((category) => category.toJson()).toList(),
+    );
+    final currentJson = _initialized
+        ? jsonEncode(_categories.map((category) => category.toJson()).toList())
+        : null;
+
+    _categories = nextCategories;
+    _activeCategories = List<OnlineCategory>.unmodifiable(
+      nextCategories.where((category) => category.active),
+    );
+    _byId = Map<String, OnlineCategory>.unmodifiable({
+      for (final category in nextCategories) category.id: category,
+    });
+    _ids = Set<String>.unmodifiable(_byId.keys);
+    _initialized = true;
+
+    if (notify && currentJson != nextJson) {
+      notifyListeners();
+    }
   }
 }

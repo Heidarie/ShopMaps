@@ -4,7 +4,6 @@ import 'dart:io';
 const _knownDevelopmentSupabaseUrls = {
   'https://kkytxouitzsmzghzznva.supabase.co',
 };
-const _knownDevelopmentFirebaseProjects = {'shopmaps-a446c'};
 const _confirmation = 'I_UNDERSTAND_THIS_BUILD_USES_PRODUCTION_SERVICES';
 
 const _requiredKeys = {
@@ -119,9 +118,6 @@ void main(List<String> arguments) {
   }
 
   final firebaseProjectId = _string(config, 'FIREBASE_PROJECT_ID');
-  if (_knownDevelopmentFirebaseProjects.contains(firebaseProjectId)) {
-    _fail('FIREBASE_PROJECT_ID points to the known development project.');
-  }
   _validateFirebaseProject(firebaseProjectId);
 
   for (final key in [
@@ -147,9 +143,12 @@ void main(List<String> arguments) {
 
 void _validateFirebaseProject(String expectedProjectId) {
   final firebaseJson = File('firebase.json');
-  final optionsFile = File('lib/firebase_options.dart');
-  if (!firebaseJson.existsSync() || !optionsFile.existsSync()) {
-    _fail('Run flutterfire configure for the production Firebase project.');
+  final androidConfig = File('android/app/google-services.json');
+  final iosConfig = File('ios/Runner/GoogleService-Info.plist');
+  if (!firebaseJson.existsSync() ||
+      !androidConfig.existsSync() ||
+      !iosConfig.existsSync()) {
+    _fail('Native Firebase configuration files are incomplete.');
   }
 
   final firebaseConfig = jsonDecode(firebaseJson.readAsStringSync());
@@ -157,10 +156,22 @@ void _validateFirebaseProject(String expectedProjectId) {
   if (!serializedFirebaseConfig.contains('"projectId":"$expectedProjectId"')) {
     _fail('firebase.json does not point to FIREBASE_PROJECT_ID.');
   }
-  if (!optionsFile.readAsStringSync().contains(
-    "projectId: '$expectedProjectId'",
-  )) {
-    _fail('lib/firebase_options.dart does not point to FIREBASE_PROJECT_ID.');
+
+  final androidConfigJson = jsonDecode(androidConfig.readAsStringSync());
+  if (androidConfigJson is! Map<String, dynamic> ||
+      androidConfigJson['project_info'] is! Map<String, dynamic> ||
+      (androidConfigJson['project_info']
+              as Map<String, dynamic>)['project_id'] !=
+          expectedProjectId) {
+    _fail('google-services.json does not point to FIREBASE_PROJECT_ID.');
+  }
+
+  final iosConfigContents = iosConfig.readAsStringSync();
+  final iosProjectId = RegExp(
+    r'<key>\s*PROJECT_ID\s*</key>\s*<string>\s*([^<]+?)\s*</string>',
+  ).firstMatch(iosConfigContents)?.group(1);
+  if (iosProjectId != expectedProjectId) {
+    _fail('GoogleService-Info.plist does not point to FIREBASE_PROJECT_ID.');
   }
 }
 

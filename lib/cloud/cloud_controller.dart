@@ -49,12 +49,16 @@ class CloudController extends ChangeNotifier {
   CloudController(
     this._client, {
     PushNotificationService? pushNotificationService,
-  }) : _pushNotificationService = pushNotificationService;
+    OnlineCategories? onlineCategories,
+  }) : _pushNotificationService = pushNotificationService,
+       onlineCategories = onlineCategories ?? OnlineCategories();
 
   static const redirectUrl = 'shopmaps://login-callback';
+  static const Duration _onlineCategoryRefreshInterval = Duration(minutes: 15);
 
   final SupabaseClient? _client;
   final PushNotificationService? _pushNotificationService;
+  final OnlineCategories onlineCategories;
   StreamSubscription<AuthState>? _authSubscription;
   RealtimeChannel? _sharedDataChannel;
   Timer? _sharedRefreshTimer;
@@ -66,6 +70,8 @@ class CloudController extends ChangeNotifier {
   String? _registeredPushToken;
   String? _resolvedProfileUserId;
   String? _realtimeUserId;
+  String? _onlineCategoryCatalogUserId;
+  DateTime? _lastOnlineCategoryRefresh;
 
   int _pendingOperations = 0;
   String? _errorMessage;
@@ -160,9 +166,14 @@ class CloudController extends ChangeNotifier {
       return;
     }
 
-    _authSubscription = _client.auth.onAuthStateChange.listen((_) {
-      unawaited(refresh());
-    });
+    _authSubscription = _client.auth.onAuthStateChange.listen(
+      (_) {
+        unawaited(refresh());
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        debugPrint('Supabase auth state stream failed: $error');
+      },
+    );
     await refresh();
   }
 
@@ -319,6 +330,7 @@ class CloudController extends ChangeNotifier {
     }
 
     return _runWithResult(() async {
+      await _revokeAppleAuthorizationIfNeeded(client);
       await _stopPushNotifications(unregister: true);
       await client.rpc<Object?>('delete_account');
       await client.auth.signOut(scope: SignOutScope.global);
@@ -332,6 +344,49 @@ class CloudController extends ChangeNotifier {
       _clearAccountState();
       return true;
     }, fallback: false);
+  }
+
+  Future<void> _revokeAppleAuthorizationIfNeeded(SupabaseClient client) async {
+    final user = client.auth.currentUser;
+    if (user == null || !_hasAppleIdentity(user)) {
+      return;
+    }
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      throw const AuthException(
+        'Apple authorization can only be revoked from the iOS app.',
+      );
+    }
+
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: const [],
+    );
+    final authorizationCode = credential.authorizationCode.trim();
+    if (authorizationCode.isEmpty) {
+      throw const AuthException('Apple did not return an authorization code.');
+    }
+
+    try {
+      await client.functions.invoke(
+        'revoke-apple-token',
+        body: {'authorization_code': authorizationCode},
+      );
+    } on FunctionException {
+      throw const AuthException(
+        'Apple authorization could not be revoked. Please try again.',
+      );
+    }
+  }
+
+  bool _hasAppleIdentity(User user) {
+    if (user.identities?.any((identity) => identity.provider == 'apple') ==
+        true) {
+      return true;
+    }
+
+    final provider = user.appMetadata['provider'];
+    final providers = user.appMetadata['providers'];
+    return provider == 'apple' ||
+        (providers is List && providers.contains('apple'));
   }
 
   Future<void> refresh() {
@@ -363,9 +418,13 @@ class CloudController extends ChangeNotifier {
       _sharedVouchers = const [];
       _publicMarketLayouts = const [];
       _hasLoadedSharedData = false;
+      _onlineCategoryCatalogUserId = null;
+      _lastOnlineCategoryRefresh = null;
       notifyListeners();
       return;
     }
+
+    await _refreshOnlineCategoryCatalog(client, user.id);
 
     await _run(() async {
       final profileJson = await client
@@ -407,6 +466,40 @@ class CloudController extends ChangeNotifier {
       await _loadAllSharedData();
       await _ensureRealtimeSubscription(user.id);
     });
+  }
+
+  Future<void> _refreshOnlineCategoryCatalog(
+    SupabaseClient client,
+    String userId,
+  ) async {
+    final now = DateTime.now();
+    final lastRefresh = _lastOnlineCategoryRefresh;
+    if (_onlineCategoryCatalogUserId == userId &&
+        lastRefresh != null &&
+        now.difference(lastRefresh) < _onlineCategoryRefreshInterval) {
+      return;
+    }
+
+    _onlineCategoryCatalogUserId = userId;
+    _lastOnlineCategoryRefresh = now;
+
+    try {
+      final rows = await client.rpc<List<dynamic>>(
+        'get_online_category_catalog',
+      );
+      final accepted = await onlineCategories.replaceFromRemoteRows(rows);
+      if (!accepted) {
+        throw const FormatException(
+          'Supabase returned an invalid online category catalog.',
+        );
+      }
+      notifyListeners();
+    } catch (error) {
+      debugPrint(
+        'Online categories: using cached or bundled fallback after '
+        'refresh failure: $error',
+      );
+    }
   }
 
   Future<bool> completeProfile({
@@ -879,10 +972,10 @@ class CloudController extends ChangeNotifier {
     required NearbyStoreSuggestion store,
     required List<String> onlineCategoryOrder,
   }) async {
-    if (onlineCategoryOrder.any((id) => !OnlineCategories.isId(id))) {
+    if (onlineCategoryOrder.any((id) => !onlineCategories.isId(id))) {
       return PublishMarketLayoutResult.failed;
     }
-    final canonicalCategoryOrder = OnlineCategories.canonicalizeOrder(
+    final canonicalCategoryOrder = onlineCategories.canonicalizeOrder(
       onlineCategoryOrder,
     );
     final client = _client;
@@ -1327,6 +1420,8 @@ class CloudController extends ChangeNotifier {
     _sharedVouchers = const [];
     _publicMarketLayouts = const [];
     _hasLoadedSharedData = false;
+    _onlineCategoryCatalogUserId = null;
+    _lastOnlineCategoryRefresh = null;
     unawaited(_removeRealtimeSubscription());
   }
 

@@ -1126,14 +1126,26 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+          child: Text(
+            title,
+            softWrap: true,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
         ),
-        TextButton.icon(
-          onPressed: onAction,
-          icon: const Icon(Icons.add_rounded),
-          label: Text(actionLabel),
+        const SizedBox(width: 8),
+        Flexible(
+          child: TextButton.icon(
+            onPressed: onAction,
+            icon: const Icon(Icons.add_rounded),
+            label: Text(
+              actionLabel,
+              softWrap: true,
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
       ],
     );

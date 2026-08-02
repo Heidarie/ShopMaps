@@ -723,6 +723,43 @@ void main() {
     appController.dispose();
   });
 
+  testWidgets('group section headers wrap without overflowing narrow screens', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final cloudController = _GroupMembersCloudController();
+    final appController = AppController(LocalStore());
+
+    await tester.pumpWidget(
+      _localizedApp(
+        GroupDetailsScreen(
+          group: const CloudGroup(id: 'group-id', name: 'Dom', role: 'member'),
+          cloudController: cloudController,
+          appController: appController,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Współdzielone listy zakupów'),
+      200,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.scrollUntilVisible(
+      find.text('Współdzielone kody kaucji'),
+      200,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    cloudController.dispose();
+    appController.dispose();
+  });
+
   testWidgets('group details allow the user to leave after confirmation', (
     tester,
   ) async {
