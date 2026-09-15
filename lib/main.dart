@@ -10,6 +10,7 @@ import 'cloud/push_notification_service.dart';
 import 'cloud/supabase_config.dart';
 import 'l10n/app_localizations.dart';
 import 'local_store.dart';
+import 'online_categories.dart';
 import 'screens/home_screen.dart';
 
 Future<void> main() async {
@@ -22,11 +23,15 @@ Future<void> main() async {
       publishableKey: SupabaseConfig.publishableKey,
     );
   }
-  runApp(const ShopMapsApp());
+  final onlineCategories = OnlineCategories();
+  await onlineCategories.restoreCached();
+  runApp(ShopMapsApp(onlineCategories: onlineCategories));
 }
 
 class ShopMapsApp extends StatefulWidget {
-  const ShopMapsApp({super.key});
+  const ShopMapsApp({super.key, this.onlineCategories});
+
+  final OnlineCategories? onlineCategories;
 
   @override
   State<ShopMapsApp> createState() => _ShopMapsAppState();
@@ -35,14 +40,20 @@ class ShopMapsApp extends StatefulWidget {
 class _ShopMapsAppState extends State<ShopMapsApp> {
   late final AppController _controller;
   late final CloudController _cloudController;
+  late final OnlineCategories _onlineCategories;
   ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
-    _controller = AppController(LocalStore());
+    _onlineCategories = widget.onlineCategories ?? OnlineCategories();
+    _controller = AppController(
+      LocalStore(),
+      onlineCategories: _onlineCategories,
+    );
     _cloudController = CloudController(
       SupabaseConfig.isConfigured ? Supabase.instance.client : null,
+      onlineCategories: _onlineCategories,
       pushNotificationService: PushNotificationService(
         enabled: SupabaseConfig.pushNotificationsEnabled,
       ),
@@ -58,6 +69,7 @@ class _ShopMapsAppState extends State<ShopMapsApp> {
   void dispose() {
     _controller.dispose();
     _cloudController.dispose();
+    _onlineCategories.dispose();
     super.dispose();
   }
 

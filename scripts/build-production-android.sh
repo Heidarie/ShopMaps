@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 CONFIG_PATH="${PRODUCTION_CONFIG:-config/supabase.prod.json}"
 scripts/use-firebase-environment.sh prod
-scripts/check-production-release.sh "$CONFIG_PATH"
+scripts/check-production-release.sh "$CONFIG_PATH" android
 
 flutter build appbundle --release \
   --dart-define-from-file="$CONFIG_PATH" \

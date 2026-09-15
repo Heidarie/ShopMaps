@@ -54,7 +54,8 @@ class CategoryUsageSummary {
 }
 
 class AppController extends ChangeNotifier {
-  AppController(this._store);
+  AppController(this._store, {OnlineCategories? onlineCategories})
+    : onlineCategories = onlineCategories ?? OnlineCategories();
 
   static const Duration _frequentItemRetention = Duration(days: 14);
   static const int _maxFavoriteFrequentItems = 10;
@@ -62,6 +63,7 @@ class AppController extends ChangeNotifier {
   static const int _maxFrequentItemsToSuggest = 10;
 
   final LocalStore _store;
+  final OnlineCategories onlineCategories;
 
   AppData _data = AppData.empty();
   bool _isLoading = true;
@@ -672,12 +674,12 @@ class AppController extends ChangeNotifier {
     if (useRememberedMappings) {
       final mappedId =
           _data.onlineCategoryMappings[normalizeLatinText(cleaned)];
-      if (mappedId != null && OnlineCategories.isId(mappedId)) {
+      if (mappedId != null && onlineCategories.isId(mappedId)) {
         return mappedId;
       }
     }
 
-    return OnlineCategories.idForLabelOrAlias(
+    return onlineCategories.idForLabelOrAlias(
       cleaned,
       languageCode: languageCode,
     );
@@ -716,13 +718,13 @@ class AppController extends ChangeNotifier {
             languageCode: languageCode,
             useRememberedMappings: useRememberedMappings,
           );
-      if (resolvedId == null || !OnlineCategories.isId(resolvedId)) {
+      if (resolvedId == null || !onlineCategories.isId(resolvedId)) {
         return null;
       }
       ids.add(resolvedId);
     }
 
-    return OnlineCategories.canonicalizeOrder(ids);
+    return onlineCategories.canonicalizeOrder(ids);
   }
 
   Future<List<String>?> ensureLocalCategoriesForOnlineOrder(
@@ -732,9 +734,9 @@ class AppController extends ChangeNotifier {
     final onlineIds = <String>[];
     final seenOnlineIds = <String>{};
     for (final rawValue in onlineCategoryOrder) {
-      final onlineId = OnlineCategories.isId(rawValue)
+      final onlineId = onlineCategories.isId(rawValue)
           ? rawValue.trim()
-          : OnlineCategories.idForLabelOrAlias(rawValue) ??
+          : onlineCategories.idForLabelOrAlias(rawValue) ??
                 OnlineCategories.otherId;
       if (seenOnlineIds.add(onlineId)) {
         onlineIds.add(onlineId);
@@ -753,7 +755,7 @@ class AppController extends ChangeNotifier {
         categories: nextCategories,
         mappings: nextMappings,
       );
-      localCategory ??= OnlineCategories.label(onlineId, languageCode);
+      localCategory ??= onlineCategories.label(onlineId, languageCode);
 
       final existingLocalCategory = _findCategoryInList(
         nextCategories,
@@ -1362,7 +1364,7 @@ class AppController extends ChangeNotifier {
     }
 
     for (final category in categories) {
-      if (OnlineCategories.idForLabelOrAlias(category) == onlineCategoryId) {
+      if (onlineCategories.idForLabelOrAlias(category) == onlineCategoryId) {
         return category;
       }
     }

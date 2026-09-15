@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.notify-shared-list-additions]
 verify_jwt = true
+
+[functions.revoke-apple-token]
+verify_jwt = true

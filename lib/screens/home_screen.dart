@@ -10,7 +10,6 @@ import '../cloud/cloud_models.dart';
 import '../device_location_service.dart';
 import '../l10n/app_localizations.dart';
 import '../models.dart';
-import '../online_categories.dart';
 import 'account_groups_screen.dart';
 import 'categories_configuration_screen.dart';
 import 'deposit_vouchers_screen.dart';
@@ -1348,7 +1347,7 @@ class _MarketLayoutsTabState extends State<_MarketLayoutsTab> {
   }
 
   String _publicCategoryLabel(String categoryId) {
-    return OnlineCategories.label(
+    return widget.controller.onlineCategories.label(
       categoryId,
       Localizations.localeOf(context).languageCode,
     );

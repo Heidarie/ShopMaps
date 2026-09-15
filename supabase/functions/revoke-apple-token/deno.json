@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "edge-runtime": "jsr:@supabase/functions-js@2.110.8/edge-runtime.d.ts",
+    "jose": "npm:jose@6.2.4"
+  }
+}
